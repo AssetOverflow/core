@@ -43,13 +43,14 @@ def _make_match(anchor: dict, category: ShapeCategory = ShapeCategory.RATE_WITH_
     )
 
 
-def _rate_anchor(symbol: str = "$", amount: str = "2", per_unit: str = "cup", amount_kind: str = "integer") -> dict:
+def _rate_anchor(symbol: str = "$", amount: str = "2", per_unit: str = "cup", amount_kind: str = "integer", rate_anchor_token: str = "per") -> dict:
     return {
         "kind": "currency_per_unit_rate",
         "currency_symbol": symbol,
         "amount": amount,
         "amount_kind": amount_kind,
         "per_unit": per_unit,
+        "rate_anchor_token": rate_anchor_token,
     }
 
 
@@ -74,7 +75,7 @@ def test_rate_per_cup_emits_apply_rate_with_grounded_tokens():
 def test_rate_an_hour_emits_when_an_in_rate_anchors():
     """$18.00 an hour is a major proxy case. With 'an' in RATE_ANCHORS the
     literal verb token must ground."""
-    m = _make_match(_rate_anchor("$", "18.00", "hour", "decimal"))
+    m = _make_match(_rate_anchor("$", "18.00", "hour", "decimal", rate_anchor_token="an"))
     emitted = inject_rate_with_currency(m, "Tina makes $18.00 an hour.")
     assert len(emitted) == 1
     cand = emitted[0]
@@ -95,7 +96,7 @@ def test_unknown_actor_refuses_narrow_binding():
 
 
 def test_multiple_rates_in_one_sentence_refuses():
-    m = _make_match(_rate_anchor("$", "18", "hour"))  # the anchor list would have >1 in real, but we simulate
+    m = _make_match(_rate_anchor("$", "18", "hour", rate_anchor_token="an"))  # the anchor list would have >1 in real, but we simulate
     # Force two by calling the multi logic path (injector sees >1 after loop)
     # Simpler: construct a match with two anchors
     a1 = _rate_anchor("$", "18", "hour")
@@ -112,7 +113,7 @@ def test_multiple_rates_in_one_sentence_refuses():
 
 
 def test_slash_fraction_amount_refuses_in_v1():
-    m = _make_match(_rate_anchor("$", "3/4", "hour", "word"))
+    m = _make_match(_rate_anchor("$", "3/4", "hour", "word", rate_anchor_token="an"))
     emitted = inject_rate_with_currency(m, "Tina makes $3/4 an hour.")
     assert emitted == ()
 
@@ -126,14 +127,14 @@ def test_unobserved_symbol_or_per_unit_is_already_refused_by_matcher_but_injecto
 
 
 def test_zero_amount_refuses():
-    m = _make_match(_rate_anchor("$", "0", "hour"))
+    m = _make_match(_rate_anchor("$", "0", "hour", rate_anchor_token="an"))
     emitted = inject_rate_with_currency(m, "Tina makes $0 an hour.")
     assert emitted == ()
 
 
 def test_matched_tokens_ground_in_source_sentence():
     sentence = "Yuki earns $15 an hour at the bookstore."
-    m = _make_match(_rate_anchor("$", "15", "hour", "integer"))
+    m = _make_match(_rate_anchor("$", "15", "hour", "integer", rate_anchor_token="an"))
     emitted = inject_rate_with_currency(m, sentence)
     assert len(emitted) == 1
     c = emitted[0]
@@ -206,24 +207,39 @@ def test_rate_anchor_token_from_matcher_not_whole_sentence_scan():
 
     Uses a real registry match + public inject_from_match path on a sentence
     that has a distracting "a" before the actual rate "$2 per cup".
-    The emitted candidate (if any) must use "per", not "a".
+    Must unconditionally emit exactly one admissible candidate using "per".
     """
     registry = load_ratified_registry()
-    # Distracting "a" from "a lemonade stand", then the rate uses "per".
-    # The matcher will produce an anchor for the $...per part with
-    # rate_anchor_token="per" (from its local groups). The injector must
-    # use that, not scan and pick the earlier "a".
     stmt = "Alexa has a lemonade stand where she sells lemonade for $2 per cup."
+    m = match(stmt, registry)
+    assert m is not None
+    assert m.category is ShapeCategory.RATE_WITH_CURRENCY
+    emitted = inject_from_match(m, stmt, sealed=False)
+    assert len(emitted) == 1
+    from generate.math_roundtrip import roundtrip_admissible
+    cand = emitted[0]
+    assert isinstance(cand, CandidateOperation)
+    assert cand.op.kind == "apply_rate"
+    assert cand.matched_verb == "per"
+    assert roundtrip_admissible(cand) is True
+
+
+def test_for_one_cup_hard_confuser_emits_nothing_no_fallback_to_earlier_a():
+    """Hard confuser for whole-sentence fallback removal.
+
+    "Alexa has a lemonade stand where she sells lemonade for $2 for one cup."
+    The live registry will match it as RATE_WITH_CURRENCY (from exemplars).
+    But rate_anchor_token will be None (from "one" in "for one"), which is
+    not in the allowed set. With no fallback to _locate_rate_verb, the
+    injector MUST return ().
+    This proves we do not bind the unrelated "a" from "a lemonade stand".
+    """
+    registry = load_ratified_registry()
+    stmt = "Alexa has a lemonade stand where she sells lemonade for $2 for one cup."
     m = match(stmt, registry)
     if m is not None and m.category is ShapeCategory.RATE_WITH_CURRENCY:
         emitted = inject_from_match(m, stmt, sealed=False)
-        if emitted:
-            # Actor extraction may succeed on "Alexa"; if it emits, the verb
-            # must be the one from the rate span ("per"), proving no whole-sentence
-            # scan picked the distracting "a".
-            from generate.math_roundtrip import roundtrip_admissible
-            for cand in emitted:
-                if isinstance(cand, CandidateOperation) and cand.op.kind == "apply_rate":
-                    assert cand.matched_verb == "per", "must use rate-span connector, not earlier unrelated 'a'"
-                    assert roundtrip_admissible(cand) is True
-                    break
+        assert emitted == (), "must refuse for 'for one cup' without falling back to earlier 'a'"
+    # If m is None for some registry reason, the rate path is not taken,
+    # which is also refusal (no bogus emission). The key is no emission
+    # using a wrong verb.

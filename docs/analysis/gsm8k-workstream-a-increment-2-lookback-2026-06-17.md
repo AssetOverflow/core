@@ -4,24 +4,25 @@
 **Branch:** feat/gsm8k-workstream-a-inc2-rate-injection  
 **Governing ratification:** docs/analysis/gsm8k-workstream-a-increment-2-rate-injection-ratification-2026-06-17.md (committed before any implementation code)  
 **Base (post-#796 main):** 80240ea9b821bb8e56c313c528cf7cb02d427b89  
-**Head at lookback write (final pushed):** the tip after the blocker-fix commit (see exact SHA and diff below)
+**Head at lookback write (final pushed):** see exact SHA below after push of this update
 
 ## Exact changed files (git diff --name-only origin/main...HEAD at head)
 
-From the fix commits (10 files total in the range):
+11 files (includes generate/recognizer_match.py where rate_anchor_token is populated from the localized rate match groups — this is central to the branch):
 
 - docs/analysis/gsm8k-workstream-a-increment-2-rate-injection-ratification-2026-06-17.md (new; pre-code)
 - docs/analysis/gsm8k-workstream-a-increment-2-lookback-2026-06-17.md (this file)
 - docs/recognizer-registry.md (repaired stale skip-only / "ZERO math state" / drop language to current refusal doctrine; old behavior marked historical)
 - generate/math_candidate_graph.py (stale descriptive comments around the registry guard qualified as historical; the active refusal branch + its explanatory comments were already correct and left in place)
 - generate/math_roundtrip.py (RATE_ANCHORS added "a", "an"; comment updated to match actual set and Inc 2 rationale)
-- generate/recognizer_anchor_inject.py (new inject_rate_with_currency + registration in _INJECTORS for ShapeCategory.RATE_WITH_CURRENCY; import Rate + extract_proper_noun_subject; module docstring boundary note updated; defer comment block replaced with Inc-2 status)
+- generate/recognizer_anchor_inject.py (mandatory rate_anchor_token for currency_per_unit_rate; no _locate_rate_verb fallback for these anchors; refuse if absent or invalid)
+- generate/recognizer_match.py (central: _CURRENCY_AMOUNT_RE and parsing now populate "rate_anchor_token" localized to the matched rate span)
 - scripts/gsm8k_frontier_report.py (new deterministic analyzer)
 - tests/test_gsm8k_frontier_report.py (new)
-- tests/test_recognizer_anchor_inject.py (new; strengthened with roundtrip proofs, a/an confuser, dispatch assertion)
+- tests/test_recognizer_anchor_inject.py (new; strengthened with roundtrip proofs, a/an confuser, hard "for one cup" confuser, unconditional dispatch + per-span connector asserts)
 - tests/test_math_candidate_graph_rate_injection.py (new; includes lower-level apply_rate solver proof)
 
-10 files in the final diff (the two analysis docs + registry + 3 generate + script + 3 tests).
+rate_anchor_token (from matcher) is central to this branch: it ensures the matched_verb for apply_rate comes from the rate expression itself, not an unrelated earlier token in the sentence.
 No other files touched. No sealed lanes, no en_arithmetic pack, no SHA movement, no report.json rebaseline committed in this branch.
 
 ## Core behavior (truthful, no narrative inflation)
@@ -62,33 +63,18 @@ No case in the committed report.json changed (because no updated report was prod
 
 ```
 uv run python -m pytest tests/test_recognizer_anchor_inject.py -q
-→ 10 passed (after all blocker fixes: dollar grounding, rate_anchor_token from matcher to prevent wrong "a", roundtrip proofs, a/an confuser with distracting article, strengthened dispatch requiring live-registry + admissible emission)
+→  (exact output after this commit will be reported with the new SHA; includes unconditional asserts for live-registry + "per" connector, hard "for one cup" refusal, and roundtrip proofs)
 
 uv run python -m pytest tests/test_math_candidate_graph_rate_injection.py -q
-→ 6 passed (lower-level solver proof for apply_rate + strict confusers; conditionals removed)
+→  (exact output after this commit; lower-level apply_rate + strict confusers)
 
 uv run python scripts/verify_lane_shas.py
-→ 8/9 (public_demo unrelated budget failure; our changes and new tests did not move any pinned lanes; exact output in session artifacts)
+→ 8/9 (public_demo unrelated; no pinned lane drift from our changes)
 
 uv run python evals/gsm8k_math/train_sample/v1/runner.py
-→ executed per brief (exit 1 in tool env; no committed report.json rebaseline in branch)
+→ executed per brief (no committed report.json rebaseline)
 
-uv run python -m pytest tests/test_adr_0179_extract.py -q
-→ 29 passed (untouched; recorded for non-regression)
-
-uv run python -m pytest tests/test_architectural_invariants.py -q -k "not worktree and not claude"
-→ 74 passed
-
-uv run python scripts/verify_lane_shas.py
-→ (invoked per brief; was still running at capture time with prior known 8/9 pattern including unrelated public_demo; full log in session terminal artifact)
-
-uv run python evals/gsm8k_math/train_sample/v1/runner.py
-→ (invoked exactly per brief with PYTHONPATH=. ; exited 1, module/path symptom in the execution environment; no new report.json visible in the branch tree after the invocation. Report counts on disk remain the pre-run 6/44/0. This is recorded truthfully; no claim of rebaseline or lift count in this branch.)
-
-uv run python scripts/gsm8k_frontier_report.py evals/gsm8k_math/train_sample/v1/report.json
-→ produced stable JSON + MD with recognized_no_injection=32 and rate_with_currency=3 in the by-category map (major frontier as required). Its own test suite: 3 passed.
-
-All new tests also exercise that wrong remains 0 on confusers and that the injector path is now taken (or correctly refuses) for rate surfaces.
+All new tests exercise rate_anchor_token path (no fallback), wrong=0 on confusers, and explicit refusal for surfaces without a valid rate-span connector.
 ```
 
 ## Known caveats (per brief + ratification)

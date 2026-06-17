@@ -665,24 +665,18 @@ def inject_rate_with_currency(
         if not actor:
             return ()
 
-        # The rate connector (matched_verb) **must** come from the matched
-        # rate surface span, not a whole-sentence scan (which could pick
-        # an unrelated "a" from "a lemonade stand" before the "$2 per cup").
-        # The matcher now populates "rate_anchor_token" from the local
-        # _CURRENCY_AMOUNT_RE match groups.
+        # For currency_per_unit_rate, the rate_anchor_token from the matcher
+        # (localized to the rate span in _CURRENCY_AMOUNT_RE) is mandatory.
+        # No whole-sentence fallback is allowed, because _locate_rate_verb
+        # can still pick an unrelated earlier "a".
         rate_anchor_token = anchor.get("rate_anchor_token")
-        if rate_anchor_token:
-            if rate_anchor_token not in ("per", "each", "every", "a", "an"):
-                # Not a connector admissible for apply_rate in this scope.
-                # (e.g. "one" from "for one cup" in Inc 2.) Refuse this anchor.
-                continue
-            verb_token = rate_anchor_token
-        else:
-            # Fallback (for older anchors or composition paths). Still
-            # better than before because we only reach here for rate category.
-            verb_token = _locate_rate_verb(sentence)
-        if verb_token is None:
+        if not rate_anchor_token or rate_anchor_token not in ("per", "each", "every", "a", "an"):
+            # Missing or invalid connector for this rate surface (e.g. "one"
+            # from "for one cup", or absent token). Refuse — do not emit
+            # a CandidateOperation with a verb that does not belong to the
+            # matched rate expression.
             return ()
+        verb_token = rate_anchor_token
 
         try:
             rate = Rate(
