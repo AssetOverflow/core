@@ -83,7 +83,7 @@ All new tests exercise rate_anchor_token path (no fallback), wrong=0 on confuser
 
 - Categories deferred: temporal_aggregation, pure currency_amount, comparisons, etc. remain in the "no injection" bucket (visible in the frontier output). Only rate_with_currency received the injector in this narrow PR.
 
-- CI status: local verification only. Shas script was long-running at the moment of capture (historical behavior for the public_demo lane). Full GitHub smoke + lane-shas on the pushed branch + this head required before any merge discussion.
+- CI status: local verification only. No PR opened yet, no CI run on the remote head. Shas 8/9 (public_demo unrelated budget). Full GitHub smoke + lane-shas required before merge.
 
 - Denom state for time nouns ("hour"): the classic "works 3 hours + $X per hour" synthetic may still refuse at graph/solver level because the discrete injector + current registry may not yet surface "hours" as a countable unit for the actor. Per ratification, this gap is acceptable; the wiring is proven with covered units (apples/cups etc.) and the solver refusal path is exercised. Recorded for follow-up.
 
