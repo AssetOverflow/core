@@ -387,7 +387,7 @@ def _scene5_replay_now_grounded(transient: Path) -> SceneResult:
         _tg._CORPUS_PATH = transient  # type: ignore[assignment]
         _tg.TEACHING_CORPORA = swapped_specs  # type: ignore[misc]
         _tg.clear_teaching_caches()
-        rt2 = ChatRuntime()
+        rt2 = ChatRuntime(no_load_state=True)
         response = rt2.chat(_DEMO_PROMPT)
     finally:
         _tg._CORPUS_PATH = real_path  # type: ignore[assignment]
@@ -440,7 +440,7 @@ def run_demo(*, emit_json: bool = False) -> dict[str, Any]:
     _VERBOSE = not emit_json
 
     active_bytes_before = _active_bytes()
-    rt = ChatRuntime()
+    rt = ChatRuntime(no_load_state=True)
     sink = _BufferSink()
     rt.attach_discovery_sink(sink)
     rt.attach_contemplation(enabled=True)
