@@ -33,6 +33,7 @@ from collections import Counter
 from generate.derivation.clauses import segment_clauses
 from generate.derivation.extract import extract_quantities
 from generate.derivation.model import GroundedDerivation, Quantity, Step
+from generate.derivation.state.bind import PRONOUNS, leading_subject_token
 from generate.derivation.target import _question_clause
 from generate.derivation.verify import Resolution, SelfVerification
 from generate.math_candidate_parser import _init_mutation_admitted
@@ -51,6 +52,10 @@ _GOAL_INTENT: Final[frozenset[str]] = frozenset(
     {"want", "wants", "wanted", "need", "needs", "hoping", "hopes", "plans", "aims", "goal"}
 )
 _POSSESSION_CUES: Final[frozenset[str]] = frozenset({"has", "have", "had"})
+_QUESTION_POSSESSION_RE: Final[re.Pattern[str]] = re.compile(
+    r"how\s+many\b.+?\bdoes\s+(\w+)\s+have\b",
+    re.IGNORECASE,
+)
 
 
 def _asks_subject_total(question_clause: str) -> bool:
@@ -63,6 +68,43 @@ def _affine_match(problem_text: str) -> re.Match[str] | None:
     if len(matches) != 1:
         return None
     return matches[0]
+
+
+def _affine_clause(problem_text: str) -> str | None:
+    match = _affine_match(problem_text)
+    if match is None:
+        return None
+    for clause in segment_clauses(problem_text):
+        if match.group(0) in clause:
+            return clause
+    return None
+
+
+def _affine_subject(problem_text: str) -> str | None:
+    clause = _affine_clause(problem_text)
+    if clause is None:
+        return None
+    subject = leading_subject_token(clause)
+    return subject.lower() if subject is not None else None
+
+
+def _question_possession_subject(question_clause: str) -> str | None:
+    match = _QUESTION_POSSESSION_RE.search(question_clause)
+    if match is None:
+        return None
+    return match.group(1).lower()
+
+
+def _question_subject_matches_affine(
+    problem_text: str, question_clause: str
+) -> bool:
+    affine_subject = _affine_subject(problem_text)
+    asked_subject = _question_possession_subject(question_clause)
+    if affine_subject is None or asked_subject is None:
+        return False
+    if asked_subject in PRONOUNS:
+        return False
+    return asked_subject == affine_subject
 
 
 def _has_hazard_surface(problem_text: str, question_clause: str) -> bool:
@@ -117,6 +159,8 @@ def build_affine_fraction_delta(problem_text: str) -> GroundedDerivation | None:
     """Construct ``reference × (N/M) + K``, or ``None``."""
     question_clause = _question_clause(problem_text)
     if not _asks_subject_total(question_clause):
+        return None
+    if not _question_subject_matches_affine(problem_text, question_clause):
         return None
     if _has_hazard_surface(problem_text, question_clause):
         return None
@@ -202,8 +246,6 @@ def _self_verifies_affine_fraction_delta(
         + [step.operand.source_token for step in derivation.steps]
     )
     if match is not None:
-        used[match.group(4)] += 1
-        used[f"{match.group(1)}/{match.group(2)}"] += 1
         used[match.group(1)] += 1
         used[match.group(2)] += 1
         reference_candidate = _reference_candidate(problem_text, match.group(3))

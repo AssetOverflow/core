@@ -82,7 +82,7 @@ def _total_population(problem_text: str, question_clause: str) -> Quantity | Non
         lowered = clause.lower()
         if "half" in lowered or _PERCENT_OF_GROUP_RE.search(clause):
             continue
-        if "group" in lowered:
+        if "group" in lowered and "group of" not in lowered:
             continue
         quantities = [q for q in extract_quantities(clause) if q.unit]
         if len(quantities) == 1:
