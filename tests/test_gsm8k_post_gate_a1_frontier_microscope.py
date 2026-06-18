@@ -77,7 +77,7 @@ def test_live_microscope_refusal_partition_is_complete():
 def test_live_microscope_partition_seed_case_is_tagged():
     summary = build_microscope_report(_load_cases())
     assert (
-        "gsm8k-train-sample-v1-0002"
+        "gsm8k-train-sample-v1-0003"
         in summary["implementation_slice_candidates"]["partition_chunking"]["case_ids"]
     )
 
@@ -104,16 +104,15 @@ def test_markdown_render_surfaces_partition_candidate():
     summary = build_microscope_report(_load_cases())
     md = render_markdown(summary)
     assert "partition_chunking" in md
-    assert "| 0002 |" in md
+    assert "| 0003 |" in md
     assert "Gate A2a unit_partition" in md
 
 
-def test_case_0002_post_gate_a2a_reclassified_off_partition_misroute():
-    """After Gate A2a, 0002 refuses downstream (fraction give), not partition no-injection."""
+def test_gate_a2_lifts_are_not_in_refusal_table():
+    """Cases solved by Gate A2b/A2c must not appear among live refusals."""
     summary = build_microscope_report(_load_cases())
-    row = next(
-        r for r in summary["refusal_table"] if r["case_id"].endswith("0002")
-    )
-    assert "25-foot sections" not in (row.get("reason") or "")
+    refused_ids = {r["case_id"] for r in summary["refusal_table"]}
+    assert "gsm8k-train-sample-v1-0002" not in refused_ids
+    assert "gsm8k-train-sample-v1-0008" not in refused_ids
+    assert summary["counts"]["correct"] >= 8
     assert summary["closed_injector_buckets"]["unit_partition_no_injection"] == 0
-    assert row["top_refusal_bucket"] == "no_admissible_statement"

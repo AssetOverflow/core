@@ -57,9 +57,11 @@ from generate.math_candidate_parser import (
     _to_seconds,
 )
 from generate.math_problem_graph import (
+    InitialPossession,
     MathGraphError,
     Operation,
     MathProblemGraph,
+    PartitionChunk,
 )
 from generate.math_completeness import uncovered_quantities
 from generate.derivation.r1_reconstruction import reconstruct_r1_total
@@ -202,37 +204,67 @@ def _bind_parser_pronoun_actor(
     antecedent: str | None,
     multi_actor_ambiguous: bool,
 ) -> SentenceChoice | None:
-    """Bind parser-emitted pronoun actors to a discourse antecedent."""
-    if not isinstance(choice, CandidateOperation):
-        return choice
-    if choice.matched_actor_token.lower() not in _PARSER_PRONOUN_ACTORS:
-        return choice
+    """Bind parser-emitted pronoun actors/entities to a discourse antecedent."""
     if multi_actor_ambiguous or not antecedent:
-        return None
+        if isinstance(choice, CandidateOperation) and (
+            choice.matched_actor_token.lower() in _PARSER_PRONOUN_ACTORS
+        ):
+            return None
+        if isinstance(choice, CandidateInitial) and (
+            choice.matched_entity_token.lower() in _PARSER_PRONOUN_ACTORS
+        ):
+            return None
+        return choice
     from generate.math_candidate_parser import _normalize_entity
 
     bound_actor = _normalize_entity(antecedent)
-    if bound_actor == choice.op.actor:
-        return choice
-    try:
-        rebound = Operation(
-            actor=bound_actor,
-            kind=choice.op.kind,
-            operand=choice.op.operand,
-            target=choice.op.target,
+    if isinstance(choice, CandidateOperation):
+        if choice.matched_actor_token.lower() not in _PARSER_PRONOUN_ACTORS:
+            return choice
+        if bound_actor == choice.op.actor:
+            return choice
+        try:
+            rebound = Operation(
+                actor=bound_actor,
+                kind=choice.op.kind,
+                operand=choice.op.operand,
+                target=choice.op.target,
+            )
+        except MathGraphError:
+            return None
+        return CandidateOperation(
+            op=rebound,
+            source_span=choice.source_span,
+            matched_verb=choice.matched_verb,
+            matched_value_token=choice.matched_value_token,
+            matched_unit_token=choice.matched_unit_token,
+            matched_actor_token=choice.matched_actor_token,
+            matched_target_token=choice.matched_target_token,
+            matched_reference_actor_token=choice.matched_reference_actor_token,
         )
-    except MathGraphError:
-        return None
-    return CandidateOperation(
-        op=rebound,
-        source_span=choice.source_span,
-        matched_verb=choice.matched_verb,
-        matched_value_token=choice.matched_value_token,
-        matched_unit_token=choice.matched_unit_token,
-        matched_actor_token=choice.matched_actor_token,
-        matched_target_token=choice.matched_target_token,
-        matched_reference_actor_token=choice.matched_reference_actor_token,
-    )
+    if isinstance(choice, CandidateInitial):
+        if choice.matched_entity_token.lower() not in _PARSER_PRONOUN_ACTORS:
+            return choice
+        if bound_actor == choice.initial.entity:
+            return choice
+        try:
+            rebound_initial = InitialPossession(
+                entity=bound_actor,
+                quantity=choice.initial.quantity,
+            )
+        except MathGraphError:
+            return None
+        return CandidateInitial(
+            initial=rebound_initial,
+            source_span=choice.source_span,
+            matched_anchor=choice.matched_anchor,
+            matched_value_token=choice.matched_value_token,
+            matched_unit_token=choice.matched_unit_token,
+            matched_entity_token=choice.matched_entity_token,
+            composition_evidence=choice.composition_evidence,
+            consumed_value_tokens=choice.consumed_value_tokens,
+        )
+    return choice
 
 
 def _filtered_statement_choices(sentence: str) -> list[SentenceChoice]:
@@ -487,6 +519,29 @@ def _build_graph(
     if question_choice.unknown.entity is not None:
         if question_choice.unknown.entity not in seen_entities:
             return None  # question references unknown entity
+
+    # Gate A2c — inject yield partition before solve when the question
+    # carries a typed per-unit consumption rate from the conditional clause.
+    if (
+        question_choice.yield_chunk_value is not None
+        and question_choice.yield_chunk_unit is not None
+        and question_choice.yield_quotient_unit is not None
+        and question_choice.unknown.entity is not None
+    ):
+        try:
+            operations_list.append(
+                Operation(
+                    actor=question_choice.unknown.entity,
+                    kind="unit_partition",
+                    operand=PartitionChunk(
+                        value=question_choice.yield_chunk_value,
+                        unit=question_choice.yield_chunk_unit,
+                        result_unit=question_choice.yield_quotient_unit,
+                    ),
+                )
+            )
+        except MathGraphError:
+            return None
 
     try:
         return MathProblemGraph(
