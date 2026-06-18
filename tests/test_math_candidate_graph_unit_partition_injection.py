@@ -46,6 +46,24 @@ def test_stmt_only_partition_refuses_end_to_end():
     assert res.refusal_reason is not None
 
 
+def test_pronoun_partition_refuses_without_antecedent():
+    res = _run("She splits it into 25-foot sections. How many sections does she have?")
+    assert res.answer is None
+    assert res.refusal_reason is not None
+
+
+def test_pronoun_partition_refuses_multi_actor_ambiguity():
+    text = (
+        "Jan buys 1000 feet of cable. "
+        "Bob buys 200 feet of rope. "
+        "She splits it into 25-foot sections. "
+        "How many sections does Jan have?"
+    )
+    res = _run(text)
+    assert res.answer is None
+    assert res.refusal_reason is not None
+
+
 def test_non_exact_quotient_refuses_at_solver():
     chunk = PartitionChunk(value=30.0, unit="feet", result_unit="sections")
     op = Operation(actor="Jan", kind="unit_partition", operand=chunk)
