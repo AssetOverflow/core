@@ -729,6 +729,36 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_admissible=1,
         )
 
+    # Gate A2g — duration segment total (Sprint 6 experience-guided lift).
+    from generate.derivation.duration_segment_total import (
+        resolve_promotable_duration_segment_total,
+    )
+
+    duration_resolution = resolve_promotable_duration_segment_total(text)
+    if duration_resolution is not None:
+        return CandidateGraphResult(
+            answer=duration_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
+    # Gate A2h — survey rate earnings (Sprint 6 experience-guided lift).
+    from generate.derivation.survey_rate_earnings import (
+        resolve_promotable_survey_rate_earnings,
+    )
+
+    survey_resolution = resolve_promotable_survey_rate_earnings(text)
+    if survey_resolution is not None:
+        return CandidateGraphResult(
+            answer=survey_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
     if len(statement_sentences) == 1:
