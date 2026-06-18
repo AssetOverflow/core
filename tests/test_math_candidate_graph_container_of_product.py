@@ -118,6 +118,19 @@ def test_confuser_non_integer_quotient_refuses():
     assert res.refusal_reason is not None
 
 
+def test_confuser_multi_actor_pronoun_initial_refuses():
+    text = (
+        "Marnie makes bead bracelets. "
+        "Alice sorts craft beads. "
+        "She bought 5 bags of 50 beads and 2 bags of 100 beads. "
+        "If 50 beads are used to make one bracelet, how many bracelets "
+        "will Marnie be able to make?"
+    )
+    res = _run(text)
+    assert res.answer is None
+    assert res.refusal_reason is not None
+
+
 def test_regression_0042_embedded_quantifier_still_solves():
     text = (
         "Ella has 4 bags with 20 apples in each bag and "
