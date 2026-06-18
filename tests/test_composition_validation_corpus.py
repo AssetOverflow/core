@@ -15,7 +15,7 @@ It enforces two kinds of obligation:
   - frozen baseline snapshot for those non-positive rows matches the live tree.
 
 * **Current snapshot** (the one assertion a Phase 5b slice updates when it
-  flips a positive): the aggregate is ``6 solve / 16 refuse / 0 wrong`` today.
+  flips a positive): the aggregate is ``8 solve / 14 refuse / 0 wrong`` today.
 
 A future positive (``gate`` like ``5b-R1``) is *expected* to flip
 refuse -> solve when its slice lands; that flip must still satisfy the firewall,
@@ -52,9 +52,11 @@ _REQUIRED_FIELDS = frozenset(
 )
 
 _EXPECTED_TOTAL = 22
-# 2026-06-04: product_bridge + goal_residual serving promotions disabled (unsound on
-# the sealed 1,319: 0 correct / 5 wrong). cv-0020 (solved only via product_bridge)
-# reclassified baseline -> 5b-product; cv-0005 (R4) reverts to refusing.
+# 2026-06-04: product_bridge serving promotion was disabled after sealed
+# held-out bisection showed 0 correct / 5 wrong. cv-0020 (solved only via
+# product_bridge) reclassified baseline -> 5b-product.
+# 2026-06-17: Batch 4 re-wires goal_residual serving promotion after the
+# scout/frontier audit selected its self-verified residual-to-goal slice.
 _EXPECTED_BASELINE_CONTROLS = 3
 _EXPECTED_PERMANENT = 7
 _EXPECTED_FUTURE_POSITIVE = 12
