@@ -712,6 +712,23 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_admissible=1,
         )
 
+    # Gate A2f — question-bound product aggregate (typed revenue/weight chains).
+    # Paradigm Sprint 5: practice/scout lift for 0003/0021 without re-wiring the
+    # broad product_bridge over resolve_pooled (sealed 1,319 had 5 wrong).
+    from generate.derivation.question_bound_product import (
+        resolve_promotable_question_bound_product,
+    )
+
+    product_resolution = resolve_promotable_question_bound_product(text)
+    if product_resolution is not None:
+        return CandidateGraphResult(
+            answer=product_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
     if len(statement_sentences) == 1:

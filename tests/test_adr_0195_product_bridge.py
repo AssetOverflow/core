@@ -41,11 +41,10 @@ def test_promotable_product_cases_resolve(case_suffix: str, expected: float) -> 
     assert resolution is not None
     assert resolution.answer == expected
 
-    # ...but its SERVING promotion is DISABLED (2026-06-04): the bridge committed
-    # 0 correct / 5 WRONG on the sealed 1,319, so serving now REFUSES rather than
-    # promote a product reading unsound on held-out. wrong=0 over train "correct".
+    # ...but broad product_bridge SERVING promotion stays DISABLED (2026-06-04).
+    # Gate A2f question_bound_product lifts 0003/0021 via a narrower typed organ.
     result = parse_and_solve(row["question"])
-    assert result.answer is None
+    assert result.answer == expected
 
 
 @pytest.mark.parametrize(
@@ -67,16 +66,13 @@ def test_known_pooled_wrong_commits_are_not_promotable(case_suffix: str) -> None
 
 
 def test_product_bridge_serving_promotion_is_disabled() -> None:
-    """DISABLED 2026-06-04: product_bridge commits 0 correct / 5 WRONG on held-out.
-
-    Goal-residual (ADR-0207 R4) is re-wired separately; product_bridge stays off.
-    Train-sample 0003/0021 refuse; 0037 lifts via goal_residual only."""
+    """Broad product_bridge stays off; Gate A2f typed organ promotes 0003/0021."""
     report = build_report(_load_cases(_CASES_PATH))
     counts = report["counts"]
     assert counts["wrong"] == 0
-    assert counts["correct"] >= 10
+    assert counts["correct"] >= 12
     by_case = {row["case_id"]: row for row in report["per_case"]}
-    assert by_case["gsm8k-train-sample-v1-0003"]["verdict"] == "refused"
-    assert by_case["gsm8k-train-sample-v1-0021"]["verdict"] == "refused"
+    assert by_case["gsm8k-train-sample-v1-0003"]["verdict"] == "correct"
+    assert by_case["gsm8k-train-sample-v1-0021"]["verdict"] == "correct"
     assert by_case["gsm8k-train-sample-v1-0037"]["verdict"] == "correct"
     assert by_case["gsm8k-train-sample-v1-0050"]["verdict"] == "refused"
