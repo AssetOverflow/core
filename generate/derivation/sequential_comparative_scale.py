@@ -58,6 +58,9 @@ _SCALE_PREVIOUS_RE: Final[re.Pattern[str]] = re.compile(
     r"(\d+)\s+times\s+the\s+previous\s+length\b",
     re.IGNORECASE,
 )
+_READING_CHAIN_TOKENS: Final[frozenset[str]] = frozenset(
+    {"book", "books", "comic", "comics", "novel", "novels", "story", "stories"}
+)
 _TEXT_BLOCKERS: Final[frozenset[str]] = frozenset(
     {
         "doubled",
@@ -65,8 +68,11 @@ _TEXT_BLOCKERS: Final[frozenset[str]] = frozenset(
         "percent",
         "percentage",
         "profit",
+        "profits",
         "weight",
         "weighed",
+        "weighs",
+        "weighing",
         "pounds",
         "pound",
     }
@@ -108,6 +114,20 @@ def _question_target_matches_reader(problem_text: str, question_clause: str) -> 
     return body_reader is not None and explicit_reader == body_reader
 
 
+def _clause_around(problem_text: str, start: int, end: int) -> str:
+    left_candidates = [problem_text.rfind(mark, 0, start) for mark in ".?!"]
+    left = max(left_candidates)
+    right_candidates = [
+        idx for mark in ".?!" if (idx := problem_text.find(mark, end)) != -1
+    ]
+    right = min(right_candidates) if right_candidates else len(problem_text)
+    return problem_text[left + 1 : right]
+
+
+def _scale_clause_is_reading_chain(problem_text: str, start: int, end: int) -> bool:
+    return bool(_tokens(_clause_around(problem_text, start, end)) & _READING_CHAIN_TOKENS)
+
+
 def _has_hazard_surface(problem_text: str, question_clause: str) -> bool:
     if _FRACTION_RE.search(problem_text):
         return True
@@ -134,21 +154,17 @@ def _initial_pages(problem_text: str) -> Quantity | None:
 
 def _scale_factors_in_order(problem_text: str) -> list[tuple[float, str, str]]:
     """Return ``(value, source_token, cue)`` for each scale clause in narrative order."""
-    factors: list[tuple[float, str, str]] = []
-    for match in _SCALE_LONGER_RE.finditer(problem_text):
-        factors.append((float(match.group(1)), match.group(1), "longer"))
-    for match in _SCALE_PREVIOUS_RE.finditer(problem_text):
-        factors.append((float(match.group(1)), match.group(1), "previous"))
-    if not factors:
-        return []
-    # Re-sort by position in text to preserve narrative order when both patterns appear.
     ordered: list[tuple[float, str, str, int]] = []
     for match in _SCALE_LONGER_RE.finditer(problem_text):
-        ordered.append((float(match.group(1)), match.group(1), "longer", match.start()))
+        if _scale_clause_is_reading_chain(problem_text, match.start(), match.end()):
+            ordered.append((float(match.group(1)), match.group(1), "longer", match.start()))
     for match in _SCALE_PREVIOUS_RE.finditer(problem_text):
-        ordered.append(
-            (float(match.group(1)), match.group(1), "previous", match.start())
-        )
+        if _scale_clause_is_reading_chain(problem_text, match.start(), match.end()):
+            ordered.append(
+                (float(match.group(1)), match.group(1), "previous", match.start())
+            )
+    if not ordered:
+        return []
     ordered.sort(key=lambda item: item[3])
     return [(v, token, cue) for v, token, cue, _ in ordered]
 
