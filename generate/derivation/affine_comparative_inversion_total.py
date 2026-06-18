@@ -48,6 +48,13 @@ _TOTAL_QUESTION_RE: Final[re.Pattern[str]] = re.compile(
     r"\bhow\s+many\s+total\s+(\w+)\b",
     re.IGNORECASE,
 )
+_TOTAL_QUESTION_SUBJECT_RE: Final[re.Pattern[str]] = re.compile(
+    r"\bhow\s+many\s+total\s+\w+\s+(?:does|do)\s+(\w+)\s+(?:have|own)\b",
+    re.IGNORECASE,
+)
+_PRONOUN_SUBJECTS: Final[frozenset[str]] = frozenset(
+    {"he", "she", "they", "them", "him", "her", "it", "we", "you", "i"}
+)
 _TEXT_BLOCKERS: Final[frozenset[str]] = frozenset(
     {
         "dollar",
@@ -93,12 +100,22 @@ def _asks_total_aggregate(question_clause: str) -> re.Match[str] | None:
     return _TOTAL_QUESTION_RE.search(question_clause)
 
 
+def _explicit_total_question_subject(question_clause: str) -> str | None:
+    match = _TOTAL_QUESTION_SUBJECT_RE.search(question_clause)
+    if match is None:
+        return None
+    subject = match.group(1).lower()
+    if subject in _PRONOUN_SUBJECTS:
+        return None
+    return subject
+
+
 def _has_hazard_surface(problem_text: str, question_clause: str) -> bool:
     if _FRACTION_RE.search(problem_text):
         return True
     text_tokens = _tokens(problem_text)
     question_tokens = _tokens(question_clause)
-    if "%" in problem_text or "percent" in text_tokens:
+    if "%" in problem_text:
         return True
     if text_tokens & _TEXT_BLOCKERS:
         return True
@@ -143,10 +160,13 @@ def build_affine_comparative_inversion_total(
     given_unit = conditional.group(3).lower().rstrip("s")
     question_actor = conditional.group(1).lower()
     total_unit = total_q.group(1).lower().rstrip("s")
+    explicit_total_subject = _explicit_total_question_subject(question_clause)
 
     if offset is None or factor is None or factor == 0:
         return None
     if body_actor_name != question_actor:
+        return None
+    if explicit_total_subject is not None and explicit_total_subject != body_actor_name:
         return None
     if given_unit != unit_a:
         return None
