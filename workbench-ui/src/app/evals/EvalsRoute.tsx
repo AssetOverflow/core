@@ -227,14 +227,8 @@ export function EvalsRoute() {
 
                 <EvalWrongZeroLedger result={currentRunState.result} />
 
-                {/* NEW: Experience Flywheel — practice memory for sealed GSM8K work (capability mastery) */}
-                <ExperienceFlywheelPanel
-                  records={[]}
-                  isLoading={false}
-                  // TODO: Wire real data via dedicated query hook + backend endpoint when available
-                />
+                <ExperienceFlywheelPanel />
 
-                {/* NEW: Capability Paradigm overview */}
                 <CapabilityParadigmPanel />
 
                 <div>
