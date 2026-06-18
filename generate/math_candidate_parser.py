@@ -575,6 +575,8 @@ def extract_initial_candidates(sentence: str) -> list[CandidateInitial]:
     out.extend(_conj_subject_each_candidates(sentence))
     out.extend(_conj_object_candidates(sentence))
     out.extend(_embedded_quantifier_candidates(sentence))
+    # Gate A2c — "N bags of M <unit>" acquisition composition.
+    out.extend(_bags_of_product_candidates(sentence))
     # ADR-0189a — day-of-week count enumeration → summed initial.
     out.extend(_day_enumeration_candidates(sentence))
 
@@ -804,6 +806,13 @@ class CandidateUnknown:
     # ADR-0163.D.4 — Pattern B comparative marker ("how many more X").
     # Default False keeps existing constructions byte-identical.
     comparative_marker: bool = False
+    # Gate A2c — production-yield partition injected at graph-build time.
+    # When all three are set, ``math_candidate_graph._build_graph`` appends
+    # a ``unit_partition`` step (inventory unit ÷ chunk size → product unit).
+    yield_chunk_value: float | None = None
+    yield_chunk_unit: str | None = None
+    yield_quotient_unit: str | None = None
+    consumed_value_tokens: tuple[str, ...] = ()
 
 
 _Q_ENTITY_RE: Final[re.Pattern[str]] = re.compile(
@@ -945,6 +954,11 @@ def extract_question_candidates(
     # Gate A2b — "How much does <entity> keep on hand?" with partition noun
     # unit inferred from the enclosing problem text.
     out.extend(_pattern_d_keep_on_hand_candidates(sentence, problem_text))
+    if out:
+        return out
+
+    # Gate A2c — production yield: "how many <product> will <entity> be able to make"
+    out.extend(_pattern_yield_question_candidates(sentence, problem_text))
     if out:
         return out
 
@@ -1916,6 +1930,113 @@ def _embedded_quantifier_candidates(sentence: str) -> list[CandidateInitial]:
         return []
 
 
+# Gate A2c — "N <container> of M <unit>" acquisition composition.
+# Distinct from G.4 embedded quantifier ("with M in each"); this shape
+# uses "of" without a per-container "in each" tail.
+_ACQUIRE_BAGS_OF_VERBS: Final[str] = (
+    r"(?:bought|buys|buy|got|gets|get|received|receives|receive)"
+)
+_BAGS_OF_PRODUCT_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<entity>{_ACTOR_OR_PRONOUN})\s+"
+    rf"(?P<anchor>{_ACQUIRE_BAGS_OF_VERBS})\s+"
+    rf"(?P<n>{_VALUE})\s+(?P<container>\w+)\s+of\s+"
+    rf"(?P<m>{_VALUE})\s+(?P<unit>\w+)"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
+)
+_CONJ_BAGS_OF_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<entity>{_ACTOR_OR_PRONOUN})\s+"
+    rf"(?P<anchor>{_ACQUIRE_BAGS_OF_VERBS})\s+"
+    rf"(?P<n1>{_VALUE})\s+(?P<c1>\w+)\s+of\s+(?P<m1>{_VALUE})\s+(?P<u1>\w+)\s+and\s+"
+    rf"(?P<n2>{_VALUE})\s+(?P<c2>\w+)\s+of\s+(?P<m2>{_VALUE})\s+(?P<u2>\w+)"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
+)
+
+
+def _build_conj_bags_of_sum(
+    m: re.Match[str], sentence: str
+) -> list[CandidateInitial]:
+    """Single SUM candidate for conjoined bags-of-product."""
+    n1_raw, m1_raw = m.group("n1"), m.group("m1")
+    n2_raw, m2_raw = m.group("n2"), m.group("m2")
+    for raw in (n1_raw, m1_raw, n2_raw, m2_raw):
+        if _is_indefinite_quantifier(raw):
+            return []
+    u1 = _canonicalize_unit(m.group("u1"))
+    u2 = _canonicalize_unit(m.group("u2"))
+    if u1 != u2:
+        return []
+    rv_n1 = _resolve_value(n1_raw)
+    rv_m1 = _resolve_value(m1_raw)
+    rv_n2 = _resolve_value(n2_raw)
+    rv_m2 = _resolve_value(m2_raw)
+    if any(rv is None for rv in (rv_n1, rv_m1, rv_n2, rv_m2)):
+        return []
+    total = (rv_n1.value * rv_m1.value) + (rv_n2.value * rv_m2.value)  # type: ignore[union-attr]
+    entity = _normalize_entity(m.group("entity"))
+    anchor = m.group("anchor").lower()
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=entity,
+                    quantity=Quantity(value=total, unit=u1),
+                ),
+                source_span=sentence,
+                matched_anchor=anchor,
+                matched_value_token=m1_raw,
+                matched_unit_token=m.group("u1"),
+                matched_entity_token=m.group("entity"),
+                consumed_value_tokens=(n1_raw, m1_raw, n2_raw, m2_raw),
+            )
+        ]
+    except Exception:
+        return []
+
+
+def _bags_of_product_candidates(sentence: str) -> list[CandidateInitial]:
+    """``N bags of M beads`` acquisition → derived total inventory."""
+    s = sentence.strip().rstrip(".")
+
+    m = _CONJ_BAGS_OF_RE.match(s)
+    if m is not None:
+        return _build_conj_bags_of_sum(m, sentence)
+
+    m = _BAGS_OF_PRODUCT_RE.match(s)
+    if m is None:
+        return []
+    n_raw, m_raw = m.group("n"), m.group("m")
+    if _is_indefinite_quantifier(n_raw) or _is_indefinite_quantifier(m_raw):
+        return []
+    rv_n = _resolve_value(n_raw)
+    rv_per = _resolve_value(m_raw)
+    if rv_n is None or rv_per is None:
+        return []
+    total = rv_n.value * rv_per.value
+    entity = _normalize_entity(m.group("entity"))
+    unit_raw = m.group("unit")
+    unit = _canonicalize_unit(unit_raw)
+    anchor = m.group("anchor").lower()
+    try:
+        return [
+            CandidateInitial(
+                initial=InitialPossession(
+                    entity=entity,
+                    quantity=Quantity(value=total, unit=unit),
+                ),
+                source_span=sentence,
+                matched_anchor=anchor,
+                matched_value_token=m_raw,
+                matched_unit_token=unit_raw,
+                matched_entity_token=m.group("entity"),
+                consumed_value_tokens=(n_raw, m_raw),
+            )
+        ]
+    except Exception:
+        return []
+
+
 # ---------------------------------------------------------------------------
 # Per-shape admitted-only wrappers (used by the G4 runner).
 # Each filters its extractor's output through _initial_admissible from
@@ -2761,6 +2882,41 @@ def _infer_partition_count_unit(problem_text: str | None) -> str | None:
     return _canonicalize_unit(m.group(1))
 
 
+# Gate A2c — production yield question + conditional rate clause.
+_YIELD_RATE_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?i)if\s+(?P<n>\d+(?:\.\d+)?)\s+(?P<unit>\w+)\s+"
+    r"(?:are|is)\s+used\s+to\s+make\s+one\s+(?P<product>\w+)"
+)
+_Q_YIELD_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+(?P<product>\w+)\s+will\s+"
+    rf"(?P<entity>{_ENTITY})\s+"
+    r"be\s+able\s+to\s+make"
+    r"(?:\s+out\s+of\s+.*?)?\??\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def _infer_yield_partition(
+    problem_text: str | None, question_product: str
+) -> tuple[float, str, str, tuple[str, ...]] | None:
+    """Infer yield partition + consumed rate tokens from a conditional clause."""
+    if problem_text is None:
+        return None
+    m = _YIELD_RATE_RE.search(problem_text)
+    if m is None:
+        return None
+    product_unit = _canonicalize_unit(m.group("product"))
+    if product_unit != _canonicalize_unit(question_product):
+        return None
+    inventory_unit = _canonicalize_unit(m.group("unit"))
+    if inventory_unit == product_unit:
+        return None
+    chunk_size = float(m.group("n"))
+    if chunk_size <= 0:
+        return None
+    return chunk_size, inventory_unit, product_unit, (m.group("n"), "one")
+
+
 _Q_MASS_NOUN_RE: Final[re.Pattern[str]] = re.compile(
     r"^How\s+much\s+"
     rf"(?P<unit>{_MASS_NOUN_PATTERN})"
@@ -2906,6 +3062,34 @@ def _resolve_question_entity(
             return None
         return _normalize_entity(resolved), raw_entity
     return _normalize_entity(raw_entity), raw_entity
+
+
+def _pattern_yield_question_candidates(
+    sentence: str, problem_text: str | None
+) -> list[CandidateUnknown]:
+    """Gate A2c — quotient question after inventory + per-unit yield rate."""
+    s = sentence.strip()
+    m = _Q_YIELD_RE.match(s)
+    if m is None:
+        return []
+    product_raw = m.group("product")
+    partition = _infer_yield_partition(problem_text, product_raw)
+    if partition is None:
+        return []
+    chunk_size, inventory_unit, product_unit, rate_tokens = partition
+    entity = _normalize_entity(m.group("entity"))
+    return [
+        CandidateUnknown(
+            unknown=Unknown(entity=entity, unit=product_unit),
+            source_span=sentence,
+            matched_unit_token=product_raw,
+            matched_entity_token=m.group("entity"),
+            yield_chunk_value=chunk_size,
+            yield_chunk_unit=inventory_unit,
+            yield_quotient_unit=product_unit,
+            consumed_value_tokens=rate_tokens,
+        )
+    ]
 
 
 def _pattern_d_keep_on_hand_candidates(
