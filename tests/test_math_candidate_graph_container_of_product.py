@@ -7,6 +7,8 @@ from generate.math_candidate_parser import (
     extract_initial_candidates,
     extract_question_candidates,
 )
+
+
 def _run(text: str):
     return parse_and_solve(text, sealed=False)
 
