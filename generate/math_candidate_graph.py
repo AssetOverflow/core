@@ -883,6 +883,21 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_admissible=1,
         )
 
+    # Gate A2q — calendar-grounded piecewise daily hours (Sprint 11 ClusterContract).
+    from generate.derivation.piecewise_daily_hours_total import (
+        resolve_promotable_piecewise_daily_hours_total,
+    )
+
+    piecewise_hours_resolution = resolve_promotable_piecewise_daily_hours_total(text)
+    if piecewise_hours_resolution is not None:
+        return CandidateGraphResult(
+            answer=piecewise_hours_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
     if len(statement_sentences) == 1:
