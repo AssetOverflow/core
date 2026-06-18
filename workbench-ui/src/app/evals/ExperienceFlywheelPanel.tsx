@@ -9,7 +9,8 @@ import {
   TruncatedCell,
   MetadataTable,
 } from '../../design';
-import type { ExperienceRecord } from '../../types/api'; // Will be extended in api.ts
+import { useExperienceFlywheelRecords } from '../../api/queries';
+import type { ExperienceRecord } from '../../types/api';
 
 /**
  * ExperienceFlywheelPanel
@@ -18,39 +19,10 @@ import type { ExperienceRecord } from '../../types/api'; // Will be extended in 
  * Shows compacted ExperienceRecords with retention gates, hazard/family blocking,
  * provenance, and promotion candidates.
  *
- * Designed to be dropped into EvalsRoute (right pane) or used as a standalone
- * view. Fully compliant with ADR-0160 (read-only evidence) and ADR-0162
- * (design system, honest states, no cognitive theater).
+ * Now uses real TanStack Query hook (useExperienceFlywheelRecords).
+ * Designed to be dropped into EvalsRoute.
  */
 
-interface ExperienceFlywheelPanelProps {
-  records?: ExperienceRecord[];
-  isLoading?: boolean;
-  error?: Error | null;
-  onRecordSelect?: (record: ExperienceRecord) => void;
-  className?: string;
-}
-
-// Temporary local type until backend types land in api.ts
-// Matches description from PR #816 (compaction, retention, provenance)
-export interface ExperienceRecord {
-  id: string;
-  case_id: string;
-  candidate_family: string;
-  arithmetic_chain_signature?: string;
-  hazard_tags: string[];
-  status: 'retained' | 'compacted' | 'promoted' | 'dropped';
-  retention_reason?: string;
-  count: number;
-  source_report_hash?: string;
-  source_run_id?: string;
-  promotion_candidate?: boolean;
-  created_at?: string;
-  // Additional compacted metadata
-  compacted_from_count?: number;
-}
-
-// Simple classification for tone
 function getRecordTone(record: ExperienceRecord): 'success' | 'warning' | 'danger' | 'neutral' {
   if (record.promotion_candidate) return 'success';
   if (record.hazard_tags.length > 0) return 'danger';
@@ -117,13 +89,8 @@ function RecordRow({
   );
 }
 
-export function ExperienceFlywheelPanel({
-  records = [],
-  isLoading = false,
-  error = null,
-  onRecordSelect,
-  className,
-}: ExperienceFlywheelPanelProps) {
+export function ExperienceFlywheelPanel() {
+  const { data: records = [], isLoading, error, refetch } = useExperienceFlywheelRecords();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<ExperienceRecord | null>(null);
 
@@ -149,12 +116,11 @@ export function ExperienceFlywheelPanel({
 
   const handleSelect = (record: ExperienceRecord) => {
     setSelectedRecord(record);
-    onRecordSelect?.(record);
   };
 
   if (isLoading) {
     return (
-      <Panel title="Experience Flywheel" className={className}>
+      <Panel title="Experience Flywheel">
         <LoadingState label="Loading practice memory records..." />
       </Panel>
     );
@@ -162,12 +128,12 @@ export function ExperienceFlywheelPanel({
 
   if (error) {
     return (
-      <Panel title="Experience Flywheel" className={className}>
+      <Panel title="Experience Flywheel">
         <ErrorState
           title="Failed to load flywheel"
           message={error.message}
           reproducer="Run the sealed scout + flywheel compaction script again"
-          onRetry={() => window.location.reload()}
+          onRetry={() => refetch()}
         />
       </Panel>
     );
@@ -175,14 +141,13 @@ export function ExperienceFlywheelPanel({
 
   if (records.length === 0) {
     return (
-      <Panel title="Experience Flywheel" className={className}>
+      <Panel title="Experience Flywheel">
         <EmptyState
           title="No practice records yet"
           description="The bounded experience flywheel is empty. High-signal GSM8K sealed scout cases will appear here after compaction."
           actionLabel="Run flywheel"
           onAction={() => {
-            // Placeholder — in real integration this could trigger a command palette action
-            alert('Run: scripts/gsm8k_experience_flywheel.py --out ...');
+            alert('Run: scripts/gsm8k_experience_flywheel.py --out ... (or trigger via CLI palette)');
           }}
         />
       </Panel>
@@ -193,12 +158,8 @@ export function ExperienceFlywheelPanel({
     <Panel
       title="Experience Flywheel"
       subtitle={`${summary.total} records • ${summary.retained} retained • ${summary.promotionCandidates} promotion candidates`}
-      className={className}
       actions={[
-        {
-          label: 'Refresh',
-          onClick: () => window.location.reload(),
-        },
+        { label: 'Refresh', onClick: () => refetch() },
       ]}
     >
       <div className="space-y-4">
@@ -230,7 +191,6 @@ export function ExperienceFlywheelPanel({
           </div>
         </div>
 
-        {/* Search */}
         <SearchInput
           value={searchTerm}
           onChange={setSearchTerm}
@@ -238,7 +198,6 @@ export function ExperienceFlywheelPanel({
           className="w-full"
         />
 
-        {/* Record list */}
         <div className="space-y-2">
           {filteredRecords.length === 0 ? (
             <div className="py-8 text-center text-sm text-[var(--color-text-secondary)]">
@@ -251,7 +210,6 @@ export function ExperienceFlywheelPanel({
           )}
         </div>
 
-        {/* Detail inspector (inline for now; can move to RightInspector later) */}
         {selectedRecord && (
           <div className="mt-6 rounded border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-4">
             <div className="mb-3 flex items-center justify-between">
