@@ -20,7 +20,8 @@ Promotion requires:
 
 - question binds ``more``, ``give``, and ``left``;
 - exactly one possession quantity in the anchor clause;
-- at least one giveaway progress clause with licensed giveaway cues;
+- at least one giveaway progress clause bound to the anchor owner;
+- comparative ``more than`` references the established first recipient;
 - hazard refusal (goal language, comparative questions, competing possessions).
 
 Deterministic; sealed module (no ``chat/`` import).
@@ -47,6 +48,7 @@ _GOAL_INTENT: Final[frozenset[str]] = frozenset(
 _COMPARATIVE_TARGET_CUES: Final[frozenset[str]] = frozenset({"than"})
 _GIVEAWAY_CUES: Final[frozenset[str]] = frozenset({"got", "gave", "gives", "give"})
 _POSSESSION_CUES: Final[frozenset[str]] = frozenset({"has", "have", "had"})
+_SOURCE_PRONOUNS: Final[frozenset[str]] = frozenset({"her", "him", "them"})
 
 
 def _asks_giveaway_residual(question_clause: str) -> bool:
@@ -75,6 +77,36 @@ def _competing_possession_hazard(subclause: str) -> bool:
     return not (_GIVEAWAY_CUES & tokens)
 
 
+def _source_is_anchor(tokens: set[str], anchor_subject: str | None) -> bool:
+    """Whether a ``from`` source is the possession anchor.
+
+    ``from her/him/them`` is accepted as anaphora to the anchor in this narrow
+    family; named sources must match the anchor subject.  Other named sources
+    (for example ``from Sam`` while the anchor is Martha) refuse.
+    """
+    if "from" not in tokens:
+        return False
+    if anchor_subject and anchor_subject.lower() in tokens:
+        return True
+    return bool(tokens & _SOURCE_PRONOUNS)
+
+
+def _giveaway_bound_to_anchor(
+    *,
+    subclause: str,
+    cue: str,
+    tokens: set[str],
+    anchor_subject: str | None,
+) -> bool:
+    """Require giveaway progress to be grounded in the anchor owner's inventory."""
+    if cue in {"gave", "gives", "give"}:
+        subject = leading_subject_token(subclause)
+        return bool(anchor_subject and subject and subject.lower() == anchor_subject.lower())
+    if cue == "got":
+        return _source_is_anchor(tokens, anchor_subject)
+    return False
+
+
 def build_giveaway_target_residual(problem_text: str) -> GroundedDerivation | None:
     """Construct ``possession − remainder − Σgiveaways``, or ``None``."""
     question_clause = _question_clause(problem_text)
@@ -98,6 +130,10 @@ def build_giveaway_target_residual(problem_text: str) -> GroundedDerivation | No
     if _GOAL_INTENT & anchor_tokens:
         return None
 
+    anchor_subject = leading_subject_token(anchor_clause)
+    if anchor_subject is None:
+        return None
+
     anchor_quantities = extract_quantities(anchor_clause)
     if len(anchor_quantities) != 1:
         return None
@@ -116,6 +152,7 @@ def build_giveaway_target_residual(problem_text: str) -> GroundedDerivation | No
     ]
 
     first_giveaway: Quantity | None = None
+    first_recipient: str | None = None
     giveaway_steps = 0
 
     for clause in quantity_clauses[1:]:
@@ -138,7 +175,11 @@ def build_giveaway_target_residual(problem_text: str) -> GroundedDerivation | No
             if "more" in clause_tokens and "than" in clause_tokens:
                 if len(progress) != 1:
                     return None
-                if first_giveaway is None:
+                if first_giveaway is None or first_recipient is None:
+                    return None
+                if first_recipient.lower() not in clause_tokens:
+                    return None
+                if "from" in clause_tokens and not _source_is_anchor(clause_tokens, anchor_subject):
                     return None
                 increment = progress[0]
                 base = first_giveaway
@@ -167,6 +208,14 @@ def build_giveaway_target_residual(problem_text: str) -> GroundedDerivation | No
                 giveaway_steps += 2
                 continue
 
+            if not _giveaway_bound_to_anchor(
+                subclause=subclause,
+                cue=cue,
+                tokens=clause_tokens,
+                anchor_subject=anchor_subject,
+            ):
+                return None
+
             for q in progress:
                 operand = Quantity(
                     value=q.value, unit=possession.unit, source_token=q.source_token
@@ -175,6 +224,7 @@ def build_giveaway_target_residual(problem_text: str) -> GroundedDerivation | No
                 giveaway_steps += 1
                 if first_giveaway is None:
                     first_giveaway = operand
+                    first_recipient = leading_subject_token(subclause)
 
     if giveaway_steps < 2:
         return None
