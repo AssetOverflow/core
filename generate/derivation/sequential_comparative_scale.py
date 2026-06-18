@@ -38,6 +38,18 @@ _INITIAL_PAGES_RE: Final[re.Pattern[str]] = re.compile(
     r"(\d+)\s+pages\b",
     re.IGNORECASE,
 )
+_READER_RE: Final[re.Pattern[str]] = re.compile(
+    r"\b(\w+)\s+started\s+reading\b",
+    re.IGNORECASE,
+)
+_QUESTION_READER_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(r"\bbooks\s+(\w+)\s+reads\b", re.IGNORECASE),
+    re.compile(r"\b(\w+)'s\s+books\b", re.IGNORECASE),
+    re.compile(r"\bdoes\s+(\w+)\s+read\b", re.IGNORECASE),
+)
+_PRONOUN_SUBJECTS: Final[frozenset[str]] = frozenset(
+    {"he", "she", "they", "them", "him", "her", "it", "we", "you", "i"}
+)
 _SCALE_LONGER_RE: Final[re.Pattern[str]] = re.compile(
     r"(\d+)\s+times\s+longer\b",
     re.IGNORECASE,
@@ -70,12 +82,38 @@ def _asks_page_count(question_clause: str) -> bool:
     return "how" in tokens and "many" in tokens and "pages" in tokens
 
 
+def _reader(problem_text: str) -> str | None:
+    match = _READER_RE.search(problem_text)
+    if match is None:
+        return None
+    return match.group(1).lower()
+
+
+def _explicit_page_question_reader(question_clause: str) -> str | None:
+    for pattern in _QUESTION_READER_PATTERNS:
+        match = pattern.search(question_clause)
+        if match is None:
+            continue
+        subject = match.group(1).lower()
+        if subject not in _PRONOUN_SUBJECTS:
+            return subject
+    return None
+
+
+def _question_target_matches_reader(problem_text: str, question_clause: str) -> bool:
+    explicit_reader = _explicit_page_question_reader(question_clause)
+    if explicit_reader is None:
+        return True
+    body_reader = _reader(problem_text)
+    return body_reader is not None and explicit_reader == body_reader
+
+
 def _has_hazard_surface(problem_text: str, question_clause: str) -> bool:
     if _FRACTION_RE.search(problem_text):
         return True
     text_tokens = _tokens(problem_text)
     question_tokens = _tokens(question_clause)
-    if "%" in problem_text or "percent" in text_tokens:
+    if "%" in problem_text:
         return True
     if text_tokens & _TEXT_BLOCKERS:
         return True
@@ -119,6 +157,8 @@ def build_sequential_comparative_scale(problem_text: str) -> GroundedDerivation 
     """Construct the ungated sequential scale chain, or ``None``."""
     question_clause = _question_clause(problem_text)
     if not _asks_page_count(question_clause):
+        return None
+    if not _question_target_matches_reader(problem_text, question_clause):
         return None
     if _has_hazard_surface(problem_text, question_clause):
         return None
