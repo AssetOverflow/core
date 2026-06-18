@@ -22,6 +22,7 @@ Deterministic; sealed module (no ``chat/`` import).
 
 from __future__ import annotations
 
+from collections import Counter
 import re
 from typing import Final
 
@@ -104,7 +105,6 @@ def _questions_per_survey(problem_text: str) -> Quantity | None:
     for clause in segment_clauses(problem_text):
         if clause == question_clause:
             continue
-        lowered = clause.lower()
         if not _clause_mentions_survey(clause):
             continue
         if not ("each" in _tokens(clause) or "every" in _tokens(clause)):
@@ -187,14 +187,16 @@ def _self_verifies_survey_earnings(
     reasons = list(_base_reasons(derivation, tokens))
 
     body = _body_text(problem_text)
-    body_quantities = {q.source_token for q in extract_quantities(body)}
-    used = {
-        derivation.start.source_token,
-        *(step.operand.source_token for step in derivation.steps),
-    }
+    body_quantities = Counter(q.source_token for q in extract_quantities(body))
+    used = Counter(
+        [
+            derivation.start.source_token,
+            *(step.operand.source_token for step in derivation.steps),
+        ]
+    )
     unused = body_quantities - used
     if unused:
-        reasons.append(f"incomplete: unused body quantities {sorted(unused)}")
+        reasons.append(f"incomplete: unused body quantities {sorted(unused.elements())}")
 
     for step in derivation.steps:
         if not _token_in(step.cue, tokens):
