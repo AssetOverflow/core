@@ -70,9 +70,9 @@ def test_confuser_comparative_more_than_refuses():
     assert compose_goal_residual(text) is None
 
 
-def test_product_bridge_cases_still_refuse():
-    """product_bridge stays disabled — 0003/0021 must not lift via this path."""
-    for text in (
+def test_product_bridge_broad_path_not_serving_promoted():
+    """Broad product_bridge stays disabled; Gate A2f lifts 0003/0021 instead."""
+    texts = (
         (
             "The student council sells scented erasers in the morning before school starts "
             "to help raise money for school dances. The local bookstore donated 48 boxes of "
@@ -83,9 +83,11 @@ def test_product_bridge_cases_still_refuse():
             "John is lifting weights. He bench presses 15 pounds for 10 reps and does 3 sets. "
             "How much total weight does he move?"
         ),
-    ):
+    )
+    expected = (864.0, 450.0)
+    for text, ans in zip(texts, expected, strict=True):
         res = _run(text)
-        assert res.answer is None
+        assert res.answer == ans
 
 
 def test_peer_pick_regression_0025():

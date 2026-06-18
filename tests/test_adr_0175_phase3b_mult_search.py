@@ -114,8 +114,8 @@ class TestSealInvariant:
         build_search_report()  # run practice with the search live
         counts = serving_report(_load_cases(_CASES_PATH))["counts"]
         assert counts["wrong"] == 0
-        assert counts["correct"] >= 10
-        assert counts["refused"] <= 40
+        assert counts["correct"] >= 12
+        assert counts["refused"] <= 38
 
     def test_0050_canary_refuses_in_serving_and_is_not_attempted_wrong(self) -> None:
         from generate.math_candidate_graph import parse_and_solve
