@@ -1,6 +1,6 @@
 /**
  * Documented GSM8K capability milestones — sourced from committed lookback
- * analyses on main through PR 824. These are NOT live API values; labels must
+ * analyses on main through PR 825. These are NOT live API values; labels must
  * stay honest (ADR-0160 / ADR-0162).
  */
 
@@ -26,24 +26,33 @@ export type BlockedFamily = {
   reason: string;
 };
 
-/** Serving baseline after PR 824 (Sprint 11), from lookback evidence. */
+/** Serving baseline after PR 825 (Sprint 12), from lookback evidence. */
 export const DOCUMENTED_TRAIN_SAMPLE_BASELINE: DocumentedScore = {
-  correct: 24,
-  refused: 26,
+  correct: 26,
+  refused: 24,
   wrong: 0,
 };
 
 export const DOCUMENTED_BASELINE_LABEL =
-  "Documented baseline (train_sample after PR 824 — not a live API read)";
+  "Documented baseline (train_sample after PR 825 — not a live API read)";
 
-export const GATE_LADDER_A2E_A2Q: GateMilestone[] = [
+export const GATE_LADDER_A2E_A2S: GateMilestone[] = [
   {
     gate: "A2e",
-    organ: "goal_residual",
+    organ: "goal_residual_question",
     sprint: "Strike batch 4 (PR 814)",
     pr: "PR 814",
-    newlySolved: [],
+    newlySolved: ["0037"],
     scoreAfter: { correct: 10, refused: 40, wrong: 0 },
+    lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint5-lookback-2026-06-17.md",
+  },
+  {
+    gate: "A2f",
+    organ: "question_bound_product_aggregate",
+    sprint: "Sprint 5 follow-on (PR 815)",
+    pr: "PR 815",
+    newlySolved: ["0003", "0021"],
+    scoreAfter: { correct: 12, refused: 38, wrong: 0 },
     lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint5-lookback-2026-06-17.md",
   },
   {
@@ -105,7 +114,7 @@ export const GATE_LADDER_A2E_A2Q: GateMilestone[] = [
     organ: "temporal_tariff",
     sprint: "Sprint 9 (PR 820/PR 822)",
     pr: "PR 820",
-    newlySolved: ["0001"],
+    newlySolved: ["0001", "0017"],
     scoreAfter: { correct: 21, refused: 29, wrong: 0 },
     lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint9-lookback-2026-06-17.md",
   },
@@ -114,7 +123,7 @@ export const GATE_LADDER_A2E_A2Q: GateMilestone[] = [
     organ: "affine_fraction_delta",
     sprint: "Sprint 9 (PR 820/PR 822)",
     pr: "PR 820",
-    newlySolved: ["0010", "0017"],
+    newlySolved: ["0010"],
     scoreAfter: { correct: 21, refused: 29, wrong: 0 },
     lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint9-lookback-2026-06-17.md",
   },
@@ -123,7 +132,7 @@ export const GATE_LADDER_A2E_A2Q: GateMilestone[] = [
     organ: "affine_comparative_inversion_total",
     sprint: "Sprint 10 (PR 823)",
     pr: "PR 823",
-    newlySolved: ["0006"],
+    newlySolved: ["0009"],
     scoreAfter: { correct: 23, refused: 27, wrong: 0 },
     lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint10-lookback-2026-06-17.md",
   },
@@ -132,7 +141,7 @@ export const GATE_LADDER_A2E_A2Q: GateMilestone[] = [
     organ: "sequential_comparative_scale",
     sprint: "Sprint 10 (PR 823)",
     pr: "PR 823",
-    newlySolved: ["0009"],
+    newlySolved: ["0006"],
     scoreAfter: { correct: 23, refused: 27, wrong: 0 },
     lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint10-lookback-2026-06-17.md",
   },
@@ -144,6 +153,24 @@ export const GATE_LADDER_A2E_A2Q: GateMilestone[] = [
     newlySolved: ["0013"],
     scoreAfter: { correct: 24, refused: 26, wrong: 0 },
     lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint11-lookback-2026-06-17.md",
+  },
+  {
+    gate: "A2r",
+    organ: "nested_fraction_remainder_total",
+    sprint: "Sprint 12 (PR 825)",
+    pr: "PR 825",
+    newlySolved: ["0004"],
+    scoreAfter: { correct: 26, refused: 24, wrong: 0 },
+    lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint12-lookback-2026-06-17.md",
+  },
+  {
+    gate: "A2s",
+    organ: "loose_crayon_box_capacity",
+    sprint: "Sprint 12 (PR 825)",
+    pr: "PR 825",
+    newlySolved: ["0007"],
+    scoreAfter: { correct: 26, refused: 24, wrong: 0 },
+    lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint12-lookback-2026-06-17.md",
   },
 ];
 
@@ -166,7 +193,7 @@ export const BLOCKED_FAMILIES: BlockedFamily[] = [
   {
     family: "multiplicative_aggregate (wholesale)",
     cases: ["0006", "0013", "0025", "0047"],
-    reason: "Rejected broad MA promotion — 0025/0047 sealed-wrong share MA surface; end-to-end chain not safe.",
+    reason: "Rejected broad MA promotion — 0006/0013 solved only by narrow typed organs; 0025/0047 remain blocked neighbors.",
   },
 ];
 
@@ -176,6 +203,14 @@ export const CLUSTER_CONTRACT_SPRINT11 = {
   includedCase: "gsm8k-train-sample-v1-0013",
   provenance: "calendar_table:{month_name}",
   lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint11-lookback-2026-06-17.md",
+};
+
+export const CLUSTER_CONTRACT_SPRINT12 = {
+  familyIds: ["nested_fraction_remainder_total", "loose_crayon_box_capacity"],
+  organs: ["nested_fraction_remainder_total (Gate A2r)", "loose_crayon_box_capacity (Gate A2s)"],
+  includedCases: ["gsm8k-train-sample-v1-0004", "gsm8k-train-sample-v1-0007"],
+  blockedNeighbors: ["0026 sealed_elimination", "0047 DCS/divisive"],
+  lookbackDoc: "docs/analysis/gsm8k-capability-paradigm-sprint12-lookback-2026-06-17.md",
 };
 
 export const EXPERIENCE_FLYWHEEL_CLI =
