@@ -55,18 +55,25 @@ _TOTAL_QUESTION_SUBJECT_RE: Final[re.Pattern[str]] = re.compile(
 _PRONOUN_SUBJECTS: Final[frozenset[str]] = frozenset(
     {"he", "she", "they", "them", "him", "her", "it", "we", "you", "i"}
 )
+_UMBRELLA_UNITS: Final[dict[frozenset[str], frozenset[str]]] = {
+    frozenset({"duck", "chicken"}): frozenset({"bird"}),
+    frozenset({"apple", "orange"}): frozenset({"fruit"}),
+}
 _TEXT_BLOCKERS: Final[frozenset[str]] = frozenset(
     {
         "dollar",
         "dollars",
         "earn",
         "earned",
+        "earns",
         "insurance",
         "percent",
         "percentage",
         "profit",
+        "profits",
         "raise",
         "raised",
+        "raises",
         "week",
         "weeks",
     }
@@ -83,6 +90,21 @@ def _parse_numeric_token(token: str) -> float | None:
     if lower in WORD_NUMBERS:
         return float(WORD_NUMBERS[lower])
     return None
+
+
+def _singular_unit(token: str) -> str:
+    unit = token.lower()
+    if unit.endswith("ies"):
+        return unit[:-3] + "y"
+    if unit.endswith("sses"):
+        return unit[:-2]
+    if unit.endswith("s") and not unit.endswith("ss"):
+        return unit[:-1]
+    return unit
+
+
+def _total_unit_licensed(total_unit: str, unit_a: str, unit_b: str) -> bool:
+    return total_unit in _UMBRELLA_UNITS.get(frozenset({unit_a, unit_b}), frozenset())
 
 
 def _nested_comparative(problem_text: str) -> re.Match[str] | None:
@@ -141,9 +163,9 @@ def build_affine_comparative_inversion_total(
         return None
 
     offset_token = nested.group(1)
-    unit_a = nested.group(2).lower().rstrip("s")
+    unit_a = _singular_unit(nested.group(2))
     factor_token = nested.group(3)
-    unit_b = nested.group(4).lower().rstrip("s")
+    unit_b = _singular_unit(nested.group(4))
     # Actor is the subject before "has" in the nested clause — recover from match context.
     actor_match = re.search(
         r"(\w+)\s+has\s+" + re.escape(offset_token) + r"\s+more",
@@ -157,9 +179,9 @@ def build_affine_comparative_inversion_total(
     offset = _parse_numeric_token(offset_token)
     factor = _parse_numeric_token(factor_token)
     given_value = float(conditional.group(2))
-    given_unit = conditional.group(3).lower().rstrip("s")
+    given_unit = _singular_unit(conditional.group(3))
     question_actor = conditional.group(1).lower()
-    total_unit = total_q.group(1).lower().rstrip("s")
+    total_unit = _singular_unit(total_q.group(1))
     explicit_total_subject = _explicit_total_question_subject(question_clause)
 
     if offset is None or factor is None or factor == 0:
@@ -172,8 +194,8 @@ def build_affine_comparative_inversion_total(
         return None
     if unit_a == unit_b:
         return None
-    # Question must ask an aggregate umbrella, not a single compared unit.
-    if total_unit in {unit_a, unit_b}:
+    # Question must ask a positively licensed aggregate umbrella, not any unrelated noun.
+    if not _total_unit_licensed(total_unit, unit_a, unit_b):
         return None
 
     given = Quantity(value=given_value, unit=total_unit, source_token=conditional.group(2))
