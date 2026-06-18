@@ -70,6 +70,11 @@ _TEXT_BLOCKERS: Final[frozenset[str]] = frozenset(
 _QUESTION_BLOCKERS: Final[frozenset[str]] = frozenset(
     {"daily", "left", "per", "rate", "remaining"}
 )
+_DAILY_ANCHORS: Final[frozenset[str]] = frozenset({"each", "every", "per", "a"})
+_UPLOAD_TOKENS: Final[frozenset[str]] = frozenset(
+    {"upload", "uploads", "uploaded", "uploading"}
+)
+_HOUR_TOKENS: Final[frozenset[str]] = frozenset({"hour", "hours", "one-hour"})
 _VAGUE_MONTH_RE: Final[re.Pattern[str]] = re.compile(
     r"\b(?:about|several)\s+(?:a\s+)?month\b",
     re.IGNORECASE,
@@ -86,6 +91,21 @@ def _asks_end_of_month_total_hours(question_clause: str) -> bool:
         and "hours" in tokens
         and "month" in tokens
     )
+
+
+def _clause_around(problem_text: str, start: int, end: int) -> str:
+    left_candidates = [problem_text.rfind(mark, 0, start) for mark in ".?!"]
+    left = max(left_candidates)
+    right_candidates = [
+        idx for mark in ".?!" if (idx := problem_text.find(mark, end)) != -1
+    ]
+    right = min(right_candidates) if right_candidates else len(problem_text)
+    return problem_text[left + 1 : right]
+
+
+def _clause_has_daily_anchor(clause: str) -> bool:
+    tokens = _tokens(clause)
+    return "daily" in tokens or ("day" in tokens and bool(tokens & _DAILY_ANCHORS))
 
 
 def _has_hazard_surface(problem_text: str, question_clause: str) -> bool:
@@ -116,12 +136,22 @@ def _body_actor(problem_text: str) -> str | None:
 
 
 def _daily_hours_rate(problem_text: str) -> Quantity | None:
-    """``N one-hour videos`` → ``N`` hours/day (one-hour detail is unit conversion)."""
-    match = _DAILY_ONE_HOUR_RE.search(problem_text)
-    if match is None:
+    """``N one-hour videos each/per/every day`` → ``N`` hours/day."""
+    candidates: list[Quantity] = []
+    for match in _DAILY_ONE_HOUR_RE.finditer(problem_text):
+        clause = _clause_around(problem_text, match.start(), match.end())
+        if not _clause_has_daily_anchor(clause):
+            continue
+        candidates.append(
+            Quantity(
+                value=float(match.group(1)),
+                unit="hours",
+                source_token=match.group(1),
+            )
+        )
+    if len(candidates) != 1:
         return None
-    value = float(match.group(1))
-    return Quantity(value=value, unit="hours", source_token=match.group(1))
+    return candidates[0]
 
 
 def _halfway_month_matches(month: MonthGrounding, problem_text: str) -> bool:
@@ -132,12 +162,16 @@ def _halfway_month_matches(month: MonthGrounding, problem_text: str) -> bool:
 
 
 def _has_doubled_remaining_pattern(problem_text: str) -> bool:
-    tokens = _tokens(problem_text)
-    return (
-        "doubled" in tokens
-        and "remaining" in tokens
-        and "days" in tokens
-    )
+    for match in re.finditer(r"\bdoubled\b", problem_text, re.IGNORECASE):
+        clause_tokens = _tokens(_clause_around(problem_text, match.start(), match.end()))
+        if (
+            "remaining" in clause_tokens
+            and "days" in clause_tokens
+            and bool(clause_tokens & _UPLOAD_TOKENS)
+            and bool(clause_tokens & _HOUR_TOKENS)
+        ):
+            return True
+    return False
 
 
 def _recompute_total(daily_hours: Quantity, month: MonthGrounding) -> float:
