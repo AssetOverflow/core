@@ -759,6 +759,36 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_admissible=1,
         )
 
+    # Gate A2i — round-trip trip duration (Sprint 7 experience-guided lift).
+    from generate.derivation.round_trip_trip_duration import (
+        resolve_promotable_round_trip_trip_duration,
+    )
+
+    round_trip_resolution = resolve_promotable_round_trip_trip_duration(text)
+    if round_trip_resolution is not None:
+        return CandidateGraphResult(
+            answer=round_trip_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
+    # Gate A2j — giveaway target residual (Sprint 7 experience-guided lift).
+    from generate.derivation.giveaway_target_residual import (
+        resolve_promotable_giveaway_target_residual,
+    )
+
+    giveaway_resolution = resolve_promotable_giveaway_target_residual(text)
+    if giveaway_resolution is not None:
+        return CandidateGraphResult(
+            answer=giveaway_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
     if len(statement_sentences) == 1:

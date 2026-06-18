@@ -173,7 +173,7 @@ class TestTrainSampleScore:
                 wrong += 1
         assert wrong == 0
 
-    def test_aggregate_14_36_0(self):
+    def test_aggregate_16_34_0(self):
         correct = refused = wrong = 0
         for case in _load_train_cases():
             res = _run(case["question"])
@@ -184,8 +184,8 @@ class TestTrainSampleScore:
                 correct += 1
             else:
                 wrong += 1
-        assert correct == 14
-        assert refused == 36
+        assert correct == 16
+        assert refused == 34
         assert wrong == 0
 
 

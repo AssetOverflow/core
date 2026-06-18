@@ -166,6 +166,8 @@ def test_current_baseline_snapshot() -> None:
     Batch 5 (2026-06-17): Gate A2f question_bound_product admits cv-0020 (0021);
     Batch 4 goal_residual admits cv-0005; prior Gate A1/A2 lifts admit others.
     Sprint 6 (2026-06-17): Gate A2g duration_segment_total admits cv-0022 (0015).
+    Sprint 7 (2026-06-17): Gate A2i round_trip_trip_duration admits cv-0006 (0030);
+    Gate A2j giveaway_target_residual admits cv-0021 (0035).
     """
     solve = refuse = wrong = 0
     for case in _CASES:
@@ -177,7 +179,7 @@ def test_current_baseline_snapshot() -> None:
         else:
             refuse += 1
     assert wrong == 0
-    assert (solve, refuse) == (10, 12), (
+    assert (solve, refuse) == (12, 10), (
         f"snapshot moved to {solve} solve / {refuse} refuse — if a Phase 5b "
         f"slice landed, update this expectation and the affected rows' "
         f"baseline fields in lockstep"
