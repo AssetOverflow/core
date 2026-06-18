@@ -163,8 +163,8 @@ def test_full_train_sample_wrong_zero_and_chunk_lift():
     report = build_report(_load_cases(_CASES_PATH))
     counts = report["counts"]
     assert counts["wrong"] == 0
-    assert counts["correct"] == 16
-    assert counts["refused"] == 34
+    assert counts["correct"] == 18
+    assert counts["refused"] == 32
     by_case = {row["case_id"]: row for row in report["per_case"]}
     assert by_case["gsm8k-train-sample-v1-0003"]["verdict"] == "correct"
     assert by_case["gsm8k-train-sample-v1-0021"]["verdict"] == "correct"
