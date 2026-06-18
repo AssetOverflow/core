@@ -40,10 +40,10 @@ _LOOSE_PRIMARY_RE: Final[re.Pattern[str]] = re.compile(
     r"(?i)(\d+)\s+loose\s+(\w+)"
 )
 _FRIEND_LOOSE_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?i)(?:\w+\s+)?friend\s+has\s+(\d+)\s+loose"
+    r"(?i)(?:\w+\s+)?friend\s+has\s+(\d+)\s+loose\s+(\w+)"
 )
 _TOTAL_CONDITIONAL_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?i)total\s+of\s+(\d+)"
+    r"(?i)if\s+(\w+)\s+has\s+a\s+total\s+of\s+(\d+)\s+(\w+)"
 )
 _TEXT_BLOCKERS: Final[frozenset[str]] = frozenset(
     {
@@ -63,6 +63,17 @@ _TEXT_BLOCKERS: Final[frozenset[str]] = frozenset(
 _QUESTION_BLOCKERS: Final[frozenset[str]] = frozenset(
     {"ounces", "weight", "per", "macaroons"}
 )
+
+
+def _singular_unit(token: str) -> str:
+    unit = token.lower()
+    if unit.endswith("ies"):
+        return unit[:-3] + "y"
+    if unit.endswith("sses"):
+        return unit[:-2]
+    if unit.endswith("s") and not unit.endswith("ss"):
+        return unit[:-1]
+    return unit
 
 
 def _box_count_token(problem_text: str, num_boxes: float) -> str:
@@ -97,6 +108,17 @@ def _asks_per_box(question_clause: str) -> bool:
     return "each" in tokens or "per" in tokens
 
 
+def _mentions_all_loose_items(problem_text: str, item_unit: str) -> bool:
+    text = problem_text.lower()
+    plural = item_unit + "s"
+    return (
+        f"all of their loose {item_unit}" in text
+        or f"all of their loose {plural}" in text
+        or f"all their loose {item_unit}" in text
+        or f"all their loose {plural}" in text
+    )
+
+
 def _has_hazard_surface(problem_text: str, question_clause: str) -> bool:
     if "$" in problem_text:
         return True
@@ -119,11 +141,13 @@ def _has_hazard_surface(problem_text: str, question_clause: str) -> bool:
     return False
 
 
-def _parse_bindings(problem_text: str) -> dict[str, float] | None:
+def _parse_bindings(problem_text: str) -> dict[str, float | str] | None:
     boxes_match = _FULL_BOXES_RE.search(problem_text)
     if boxes_match is None:
         return None
+    box_actor = boxes_match.group(1).lower()
     num_boxes = _resolve_count(boxes_match.group(2))
+    full_box_unit = _singular_unit(boxes_match.group(3))
     if num_boxes is None or num_boxes <= 0:
         return None
 
@@ -131,6 +155,8 @@ def _parse_bindings(problem_text: str) -> dict[str, float] | None:
     if friend_match is None:
         return None
     friend_pos = friend_match.start()
+    loose_friend = float(friend_match.group(1))
+    friend_unit = _singular_unit(friend_match.group(2))
 
     loose_primary_matches = [
         match
@@ -140,15 +166,24 @@ def _parse_bindings(problem_text: str) -> dict[str, float] | None:
     if len(loose_primary_matches) != 1:
         return None
     loose_primary = float(loose_primary_matches[0].group(1))
-    loose_friend = float(friend_match.group(1))
+    item_unit = _singular_unit(loose_primary_matches[0].group(2))
+
+    if not {full_box_unit, item_unit, friend_unit} == {item_unit}:
+        return None
+    if not _mentions_all_loose_items(problem_text, item_unit):
+        return None
 
     total_match = _TOTAL_CONDITIONAL_RE.search(_question_clause(problem_text))
     if total_match is None:
         return None
-    total = float(total_match.group(1))
+    total_actor = total_match.group(1).lower()
+    total = float(total_match.group(2))
+    total_unit = _singular_unit(total_match.group(3))
+    if total_actor != box_actor or total_unit != item_unit:
+        return None
 
-    item_unit = loose_primary_matches[0].group(2).lower()
     return {
+        "actor": box_actor,
         "num_boxes": num_boxes,
         "loose_primary": loose_primary,
         "loose_friend": loose_friend,
@@ -157,10 +192,10 @@ def _parse_bindings(problem_text: str) -> dict[str, float] | None:
     }
 
 
-def _recompute_boxes_needed(bindings: dict[str, float]) -> float:
-    boxed = bindings["total"] - bindings["loose_primary"]
-    per_box = boxed / bindings["num_boxes"]
-    loose_total = bindings["loose_primary"] + bindings["loose_friend"]
+def _recompute_boxes_needed(bindings: dict[str, float | str]) -> float:
+    boxed = float(bindings["total"]) - float(bindings["loose_primary"])
+    per_box = boxed / float(bindings["num_boxes"])
+    loose_total = float(bindings["loose_primary"]) + float(bindings["loose_friend"])
     return loose_total / per_box
 
 
@@ -178,45 +213,44 @@ def build_loose_crayon_box_capacity(
     if bindings is None:
         return None
 
-    boxed_total = bindings["total"] - bindings["loose_primary"]
+    boxed_total = float(bindings["total"]) - float(bindings["loose_primary"])
     if boxed_total <= 0:
         return None
 
-    loose_total = bindings["loose_primary"] + bindings["loose_friend"]
     answer = _recompute_boxes_needed(bindings)
 
-    item_unit = bindings["item_unit"]
+    item_unit = str(bindings["item_unit"])
     derivation = GroundedDerivation(
         start=Quantity(
-            value=bindings["loose_primary"],
+            value=float(bindings["loose_primary"]),
             unit=item_unit,
-            source_token=str(int(bindings["loose_primary"])),
+            source_token=str(int(float(bindings["loose_primary"]))),
         ),
         steps=(
             Step(
                 op="add",
                 operand=Quantity(
-                    value=bindings["loose_friend"],
+                    value=float(bindings["loose_friend"]),
                     unit=item_unit,
-                    source_token=str(int(bindings["loose_friend"])),
+                    source_token=str(int(float(bindings["loose_friend"]))),
                 ),
                 cue="friend",
             ),
             Step(
                 op="multiply",
                 operand=Quantity(
-                    value=bindings["num_boxes"],
+                    value=float(bindings["num_boxes"]),
                     unit="boxes",
-                    source_token=_box_count_token(problem_text, bindings["num_boxes"]),
+                    source_token=_box_count_token(problem_text, float(bindings["num_boxes"])),
                 ),
-                cue=_box_count_token(problem_text, bindings["num_boxes"]),
+                cue=_box_count_token(problem_text, float(bindings["num_boxes"])),
             ),
             Step(
                 op="divide",
                 operand=Quantity(
                     value=boxed_total,
                     unit=item_unit,
-                    source_token=str(int(bindings["total"])),
+                    source_token=str(int(float(bindings["total"]))),
                 ),
                 cue="total",
                 comparative=True,
