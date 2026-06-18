@@ -34,7 +34,7 @@ from generate.math_roundtrip import _tokens
 
 _FRACTION_RE: Final[re.Pattern[str]] = re.compile(r"\d+/\d+")
 _DURATION_UNITS: Final[frozenset[str]] = frozenset(
-    {"hour", "hours", "minute", "minutes", "min", "mins"}
+    {"hour", "hours", "hr", "hrs", "minute", "minutes", "min", "mins"}
 )
 _TEXT_BLOCKERS: Final[frozenset[str]] = frozenset(
     {
@@ -83,8 +83,25 @@ def _duration_quantities(clause: str) -> tuple[Quantity, ...]:
     return tuple(
         q
         for q in extract_quantities(clause)
-        if q.unit in _DURATION_UNITS or q.unit.rstrip("s") in {"hour", "minute", "min"}
+        if q.unit in _DURATION_UNITS
+        or q.unit.rstrip("s") in {"hour", "hr", "minute", "min"}
     )
+
+
+def _duration_family(unit: str) -> str | None:
+    stem = unit.rstrip("s")
+    if stem in {"hour", "hr"}:
+        return "hour"
+    if stem in {"minute", "min"}:
+        return "minute"
+    return None
+
+
+def _same_duration_family(a: Quantity, b: Quantity) -> bool:
+    """Refuse mixed duration units instead of adding hours and minutes directly."""
+    fam_a = _duration_family(a.unit)
+    fam_b = _duration_family(b.unit)
+    return fam_a is not None and fam_a == fam_b
 
 
 def _pick_add_cue(problem_text: str, *, prefer: tuple[str, ...]) -> str | None:
@@ -130,6 +147,8 @@ def build_duration_segment_total(problem_text: str) -> GroundedDerivation | None
         return None
 
     leg1, leg3 = durations
+    if not _same_duration_family(leg1, leg3):
+        return None
 
     add_back_cue = _pick_add_cue(problem_text, prefer=("subway", "bus", "ride", "and"))
     if add_back_cue is None:
