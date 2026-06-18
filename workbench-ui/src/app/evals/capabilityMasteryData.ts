@@ -214,7 +214,7 @@ export const CLUSTER_CONTRACT_SPRINT12 = {
 };
 
 export const EXPERIENCE_FLYWHEEL_CLI =
-  "scripts/gsm8k_experience_flywheel.py --limit 50 --out /tmp/gsm8k-experience.json";
+  "uv run python scripts/gsm8k_experience_flywheel.py --limit 50 --out /tmp/gsm8k-experience.json";
 
 export const EXPERIENCE_RECORD_FIELDS: { key: string; value: string }[] = [
   { key: "record_id", value: "SHA-256 of load-bearing fields" },
