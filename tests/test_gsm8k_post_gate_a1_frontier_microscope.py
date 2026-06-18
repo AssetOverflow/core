@@ -54,6 +54,7 @@ def test_live_microscope_meets_monotonic_contract_and_closed_injectors():
     closed = summary["closed_injector_buckets"]
     assert closed["rate_with_currency_no_injection"] == 0
     assert closed["comparative_with_unit_no_injection"] == 0
+    assert closed["unit_partition_no_injection"] == 0
 
 
 def test_live_microscope_refusal_partition_is_complete():
@@ -107,15 +108,12 @@ def test_markdown_render_surfaces_partition_candidate():
     assert "Gate A2a unit_partition" in md
 
 
-def test_case_0002_ratification_candidate_fields():
+def test_case_0002_post_gate_a2a_reclassified_off_partition_misroute():
+    """After Gate A2a, 0002 refuses downstream (fraction give), not partition no-injection."""
     summary = build_microscope_report(_load_cases())
     row = next(
         r for r in summary["refusal_table"] if r["case_id"].endswith("0002")
     )
-    assert row["subfamily"] == "dcs_misroute_unit_partition"
-    assert row["candidate_next_primitive"] == "unit_partition"
-    assert row["expected_movement"] == "downstream_reclassification"
-    assert (
-        summary["recommended_next_ratification_candidate"]
-        == "Gate A2a unit_partition / chunking primitive"
-    )
+    assert "25-foot sections" not in (row.get("reason") or "")
+    assert summary["closed_injector_buckets"]["unit_partition_no_injection"] == 0
+    assert row["top_refusal_bucket"] == "no_admissible_statement"

@@ -518,6 +518,9 @@ def build_microscope_report(
             "comparative_with_unit_no_injection": recognized_by_cat.get(
                 "comparative_with_unit", 0
             ),
+            "unit_partition_no_injection": recognized_by_cat.get(
+                "unit_partition", 0
+            ),
         },
     }
 

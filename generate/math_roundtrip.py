@@ -128,6 +128,8 @@ DIVIDE_VERBS: Final[frozenset[str]] = frozenset({
     "split", "splits", "split",
     "divide", "divides", "divided",
     "share", "shares", "shared",
+    "cut", "cuts", "cutting",
+    "separate", "separates", "separated",
 })
 
 # Comparison "verbs" — the surface anchor for compare_additive /
@@ -163,6 +165,7 @@ KIND_TO_VERBS: Final[Mapping[str, frozenset[str]]] = {
     "apply_rate": RATE_ANCHORS,
     "compare_additive": COMPARE_ADDITIVE_ANCHORS,
     "compare_multiplicative": COMPARE_MULTIPLICATIVE_ANCHORS,
+    "unit_partition": DIVIDE_VERBS,
 }
 
 
@@ -499,6 +502,13 @@ def roundtrip_admissible(c: CandidateOperation) -> bool:
             return False
     elif c.op.kind in ("compare_additive", "compare_multiplicative"):
         if not isinstance(c.op.operand, Comparison):
+            return False
+    elif c.op.kind == "unit_partition":
+        from generate.math_problem_graph import PartitionChunk
+
+        if not isinstance(c.op.operand, PartitionChunk):
+            return False
+        if not _token_in(c.op.operand.result_unit, haystack):
             return False
     else:
         if not isinstance(c.op.operand, Quantity):

@@ -34,6 +34,7 @@ VALID_OPERATION_KINDS: Final[frozenset[str]] = frozenset(
         "apply_rate",
         "compare_additive",
         "compare_multiplicative",
+        "unit_partition",
     }
 )
 
@@ -119,6 +120,54 @@ class Rate:
         return {
             "denominator_unit": self.denominator_unit,
             "numerator_unit": self.numerator_unit,
+            "value": self.value,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PartitionChunk:
+    """Fixed-size chunk measure for unit_partition (Gate A2a).
+
+    ``PartitionChunk(25, "feet", "sections")`` means "split the actor's
+    total in ``unit`` into chunks of size 25, writing the integer chunk
+    count under ``result_unit``". ``value`` is the chunk size (divisor);
+    ``unit`` is the measure unit shared with the prior total; ``result_unit``
+    is the count noun for the quotient (not the dividend unit).
+    """
+
+    value: int | float
+    unit: str
+    result_unit: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.value, (int, float)) or isinstance(self.value, bool):
+            raise MathGraphError(
+                f"PartitionChunk.value must be int or float, got "
+                f"{type(self.value).__name__}"
+            )
+        if self.value <= 0:
+            raise MathGraphError(
+                f"PartitionChunk.value must be strictly positive; got {self.value!r}"
+            )
+        if not isinstance(self.unit, str) or not self.unit:
+            raise MathGraphError(
+                f"PartitionChunk.unit must be a non-empty string, got {self.unit!r}"
+            )
+        if not isinstance(self.result_unit, str) or not self.result_unit:
+            raise MathGraphError(
+                f"PartitionChunk.result_unit must be a non-empty string, got "
+                f"{self.result_unit!r}"
+            )
+        if self.unit == self.result_unit:
+            raise MathGraphError(
+                f"PartitionChunk.unit and PartitionChunk.result_unit must differ; "
+                f"got {self.unit!r} for both"
+            )
+
+    def as_json(self) -> dict[str, Any]:
+        return {
+            "result_unit": self.result_unit,
+            "unit": self.unit,
             "value": self.value,
         }
 
@@ -230,7 +279,7 @@ class Operation:
 
     actor: str
     kind: str
-    operand: "Quantity | Rate | Comparison"
+    operand: "Quantity | Rate | Comparison | PartitionChunk"
     target: str | None = None
 
     def __post_init__(self) -> None:
@@ -246,6 +295,12 @@ class Operation:
                 raise MathGraphError(
                     "Operation.operand must be a Rate when kind='apply_rate'; "
                     f"got {type(self.operand).__name__}"
+                )
+        elif self.kind == "unit_partition":
+            if not isinstance(self.operand, PartitionChunk):
+                raise MathGraphError(
+                    "Operation.operand must be a PartitionChunk when "
+                    f"kind='unit_partition'; got {type(self.operand).__name__}"
                 )
         elif self.kind in ("compare_additive", "compare_multiplicative"):
             if not isinstance(self.operand, Comparison):
@@ -465,13 +520,14 @@ def graph_from_dict(d: Mapping[str, Any]) -> MathProblemGraph:
 
 def _operand_from_dict(
     kind: str, operand: Mapping[str, Any]
-) -> "Quantity | Rate | Comparison":
+) -> "Quantity | Rate | Comparison | PartitionChunk":
     """Reconstruct an Operation.operand from its canonical JSON form.
 
     Dispatches on ``kind``:
 
     - ``apply_rate`` → ``Rate`` (ADR-0122)
     - ``compare_additive`` / ``compare_multiplicative`` → ``Comparison`` (ADR-0123)
+    - ``unit_partition`` → ``PartitionChunk`` (Gate A2a)
     - every other kind → ``Quantity``
 
     Payload shapes are structurally distinct (``Rate`` has
@@ -503,5 +559,11 @@ def _operand_from_dict(
             delta=delta,
             factor=operand.get("factor"),
             direction=operand["direction"],
+        )
+    if kind == "unit_partition":
+        return PartitionChunk(
+            value=operand["value"],
+            unit=operand["unit"],
+            result_unit=operand["result_unit"],
         )
     return Quantity(value=operand["value"], unit=operand["unit"])

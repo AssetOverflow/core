@@ -814,6 +814,10 @@ def _match_discrete_count_statement(
     # COMPARATIVE_WITH_UNIT instead of detection-only DCS fallback.
     if _is_comparative_multiplicative_v1_surface(statement):
         return None
+    # Gate A2a — yield unit-partition surfaces to UNIT_PARTITION instead
+    # of detection-only DCS misread (Initial(chunk_size, material_unit)).
+    if _is_unit_partition_v1_surface(statement):
+        return None
 
     anchor = _try_extract_discrete_count_anchor(statement, padded, spec)
     if anchor is not None:
@@ -1969,6 +1973,123 @@ def _match_comparative_with_unit(
     return ((anchor,), "compare")
 
 
+# ---------------------------------------------------------------------------
+# Gate A2a — unit_partition → unit_partition (Workstream A)
+# ---------------------------------------------------------------------------
+
+_UNIT_PARTITION_VERB_RE: Final[str] = (
+    r"(?:split|splits|divide|divides|divided|cut|cuts|cutting|"
+    r"separate|separates|separated)"
+)
+
+_UNIT_PARTITION_ANCHOR_RE: Final[re.Pattern[str]] = re.compile(
+    rf"""(?ix)
+    ^\s*
+    (?P<actor>[A-Z][a-zA-Z]+|She|He|They|It)
+    \s+
+    (?P<verb>{_UNIT_PARTITION_VERB_RE})
+    (?:\s+\w+){{0,4}}
+    \s+
+    into
+    \s+
+    (?P<chunk_size>\d+)
+    \s*-\s*
+    (?P<chunk_unit>foot|feet|inch|inches|yard|yards|meter|meters)
+    (?:\s+(?P<counted_noun>sections?|pieces?|parts?))?
+    \s*\.?\s*$
+    """
+)
+
+
+def _is_unit_partition_v1_surface(statement: str) -> bool:
+    """True when *statement* matches the Gate A2a closed partition template."""
+    s = statement.strip()
+    if _UNIT_PARTITION_ANCHOR_RE.match(s) is None:
+        return False
+    if len(re.findall(r"\d+", s)) != 1:
+        return False
+    return True
+
+
+def _default_unit_partition_result_noun(chunk_unit: str) -> str:
+    return "pieces"
+
+
+def _try_extract_unit_partition_anchor(
+    statement: str,
+    spec: Mapping[str, Any],
+) -> Mapping[str, Any] | None:
+    """Extract one unit_partition anchor when narrowness holds."""
+    s = statement.strip()
+    observed_verbs = set(spec.get("observed_partition_verbs") or ())
+    observed_units = set(spec.get("observed_chunk_units") or ())
+    observed_nouns = set(spec.get("observed_counted_nouns") or ())
+    if not observed_verbs or not observed_units:
+        return None
+
+    m = _UNIT_PARTITION_ANCHOR_RE.match(s)
+    if m is None:
+        return None
+
+    if len(re.findall(r"\d+", s)) != 1:
+        return None
+
+    actor_token = m.group("actor")
+    verb_token = m.group("verb").lower()
+    if verb_token not in observed_verbs:
+        return None
+
+    chunk_size_token = m.group("chunk_size")
+    chunk_unit_token = m.group("chunk_unit").lower()
+    if chunk_unit_token not in observed_units:
+        return None
+
+    counted_noun_token = m.group("counted_noun")
+    if counted_noun_token is not None:
+        noun_lc = counted_noun_token.lower()
+        if observed_nouns and noun_lc not in {n.lower() for n in observed_nouns}:
+            return None
+        result_noun = counted_noun_token
+    else:
+        if observed_nouns:
+            result_noun = _default_unit_partition_result_noun(chunk_unit_token)
+        else:
+            result_noun = _default_unit_partition_result_noun(chunk_unit_token)
+
+    requires_pronoun_resolution = actor_token.lower() in _REFUSED_SUBJECT_TOKENS
+
+    anchor: dict[str, Any] = {
+        "kind": "unit_partition",
+        "actor_token": actor_token,
+        # ADR-0174 lookback reads subject_role for pronoun resolution.
+        "subject_role": actor_token,
+        "chunk_size_token": chunk_size_token,
+        "chunk_unit_token": chunk_unit_token,
+        "counted_noun_token": result_noun,
+        "partition_verb_token": verb_token,
+        "source_span": s,
+    }
+    if requires_pronoun_resolution:
+        anchor["requires_pronoun_resolution"] = True
+    return anchor
+
+
+def _match_unit_partition(
+    statement: str, spec: Mapping[str, Any]
+) -> tuple[tuple[Mapping[str, Any], ...], Literal["partition"]] | None:
+    """Gate A2a — fixed-size measure chunking with explicit quotient."""
+    if spec.get("anchor_kind") != "unit_partition":
+        return None
+    anchor = _try_extract_unit_partition_anchor(statement, spec)
+    if anchor is None:
+        return None
+    cmin = int(spec.get("anchor_count_min", 1))
+    cmax = int(spec.get("anchor_count_max", 1))
+    if not (cmin <= 1 <= cmax):
+        return None
+    return ((anchor,), "partition")
+
+
 _MATCHERS: Final[dict[ShapeCategory, Any]] = {
     ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY: _match_descriptive_setup_no_quantity,
     ShapeCategory.TEMPORAL_AGGREGATION: _match_temporal_aggregation,
@@ -1977,6 +2098,7 @@ _MATCHERS: Final[dict[ShapeCategory, Any]] = {
     ShapeCategory.MULTIPLICATIVE_AGGREGATION: _match_multiplicative_aggregation,
     ShapeCategory.CURRENCY_AMOUNT: _match_currency_amount,
     ShapeCategory.COMPARATIVE_WITH_UNIT: _match_comparative_with_unit,
+    ShapeCategory.UNIT_PARTITION: _match_unit_partition,
 }
 
 

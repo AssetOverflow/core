@@ -63,6 +63,8 @@ _SUPPORTED_CATEGORIES: frozenset[ShapeCategory] = frozenset({
     ShapeCategory.CURRENCY_AMOUNT,
     # Gate A1 (Workstream A) — multiplicative comparative injection.
     ShapeCategory.COMPARATIVE_WITH_UNIT,
+    # Gate A2a (Workstream A) — fixed-size measure chunking injection.
+    ShapeCategory.UNIT_PARTITION,
 })
 
 
@@ -307,6 +309,40 @@ def _validate_comparative_with_unit(ctx: str, graph: Mapping[str, Any]) -> None:
         raise ExemplarIngestError(f"{ctx} outcome must be 'admissible'")
 
 
+def _validate_unit_partition(ctx: str, graph: Mapping[str, Any]) -> None:
+    anchors = graph["quantity_anchors"]
+    if not isinstance(anchors, list) or not anchors:
+        raise ExemplarIngestError(f"{ctx} unit_partition needs ≥1 anchor")
+    for a in anchors:
+        if not isinstance(a, Mapping):
+            raise ExemplarIngestError(f"{ctx} anchor must be a mapping")
+        _require_keys(ctx, a, frozenset({
+            "kind",
+            "subject_role",
+            "chunk_size_token",
+            "chunk_unit_token",
+            "counted_noun_token",
+            "partition_verb_token",
+        }))
+        if a["kind"] != "unit_partition":
+            raise ExemplarIngestError(
+                f"{ctx} anchor kind must be 'unit_partition'"
+            )
+        for fld in (
+            "subject_role",
+            "chunk_size_token",
+            "chunk_unit_token",
+            "counted_noun_token",
+            "partition_verb_token",
+        ):
+            if not isinstance(a[fld], str) or not a[fld]:
+                raise ExemplarIngestError(f"{ctx} {fld} must be non-empty str")
+    if graph["graph_intent"] != "partition":
+        raise ExemplarIngestError(f"{ctx} graph_intent must be 'partition'")
+    if graph["outcome"] != "admissible":
+        raise ExemplarIngestError(f"{ctx} outcome must be 'admissible'")
+
+
 def _validate_currency_amount(ctx: str, graph: Mapping[str, Any]) -> None:
     anchors = graph["quantity_anchors"]
     if not isinstance(anchors, list) or not anchors:
@@ -348,6 +384,7 @@ _CATEGORY_VALIDATORS = {
     ShapeCategory.MULTIPLICATIVE_AGGREGATION: _validate_multiplicative_aggregation,
     ShapeCategory.CURRENCY_AMOUNT: _validate_currency_amount,
     ShapeCategory.COMPARATIVE_WITH_UNIT: _validate_comparative_with_unit,
+    ShapeCategory.UNIT_PARTITION: _validate_unit_partition,
 }
 
 

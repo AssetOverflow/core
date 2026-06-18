@@ -36,6 +36,7 @@ from generate.math_problem_graph import (
     Comparison,
     MathProblemGraph,
     Operation,
+    PartitionChunk,
     Quantity,
     Rate,
     Unknown,
@@ -57,6 +58,7 @@ _OPERATION_REQUIRED_LEMMAS: dict[str, str] = {
     "apply_rate": "apply_rate",
     "compare_additive": "compare_additive",
     "compare_multiplicative": "compare_multiplicative",
+    "unit_partition": "divide",
 }
 
 
@@ -239,6 +241,8 @@ def _apply(
         return _apply_compare_additive(op, index, state, pack_bindings)
     if op.kind == "compare_multiplicative":
         return _apply_compare_multiplicative(op, index, state, pack_bindings)
+    if op.kind == "unit_partition":
+        return _apply_unit_partition(op, index, state, pack_bindings)
 
     if not isinstance(op.operand, Quantity):
         raise SolveError(
@@ -413,6 +417,66 @@ def _apply_compare_additive(
         operand=cmp,
         target=None,
         before_value=0.0,
+        after_value=after,
+        target_before=None,
+        target_after=None,
+    )
+
+
+def _apply_unit_partition(
+    op: Operation,
+    index: int,
+    state: dict[tuple[str, str], float],
+    pack_bindings: Mapping[str, str],
+) -> SolutionStep:
+    """Apply a fixed-size unit partition (Gate A2a).
+
+    Reads ``(actor, chunk.unit)`` from prior state, requires an exact
+    integer quotient, and writes ``(actor, chunk.result_unit)``.
+    The dividend-unit quantity is preserved (partition is derived state).
+    """
+    if not isinstance(op.operand, PartitionChunk):
+        raise SolveError(
+            f"unit_partition at step {index} requires a "
+            f"PartitionChunk operand; got {type(op.operand).__name__}"
+        )
+    chunk = op.operand
+    dividend_key = (op.actor, chunk.unit)
+    if dividend_key not in state:
+        raise SolveError(
+            f"unit_partition at step {index} requires actor {op.actor!r} "
+            f"to hold a quantity in {chunk.unit!r}, but no such state exists"
+        )
+    before = state[dividend_key]
+    chunk_size = float(chunk.value)
+    if chunk_size == 0:
+        raise SolveError(
+            f"unit_partition at step {index} refuses zero chunk size"
+        )
+    quotient = before / chunk_size
+    if abs(quotient - round(quotient)) > 1e-9 or quotient <= 0:
+        raise SolveError(
+            f"unit_partition at step {index} requires an exact positive "
+            f"integer quotient; got {quotient!r} from {before!r} / "
+            f"{chunk_size!r}"
+        )
+    after = float(int(round(quotient)))
+    result_key = (op.actor, chunk.result_unit)
+    if result_key in state:
+        raise SolveError(
+            f"unit_partition at step {index} would overwrite existing state "
+            f"for ({op.actor!r}, {chunk.result_unit!r}); refuse rather than "
+            f"silently redeclare"
+        )
+    state[result_key] = after
+    return SolutionStep(
+        step_index=index,
+        operation_kind=op.kind,
+        pack_lemma_id=pack_bindings[op.kind],
+        actor=op.actor,
+        operand=chunk,
+        target=None,
+        before_value=before,
         after_value=after,
         target_before=None,
         target_after=None,
