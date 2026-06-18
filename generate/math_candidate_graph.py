@@ -849,6 +849,40 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_admissible=1,
         )
 
+    # Gate A2o — affine comparative inversion total (Sprint 10 lift).
+    from generate.derivation.affine_comparative_inversion_total import (
+        resolve_promotable_affine_comparative_inversion_total,
+    )
+
+    affine_inversion_resolution = (
+        resolve_promotable_affine_comparative_inversion_total(text)
+    )
+    if affine_inversion_resolution is not None:
+        return CandidateGraphResult(
+            answer=affine_inversion_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
+    # Gate A2p — sequential comparative scale (Sprint 10 lift).
+    from generate.derivation.sequential_comparative_scale import (
+        resolve_promotable_sequential_comparative_scale,
+    )
+
+    sequential_scale_resolution = resolve_promotable_sequential_comparative_scale(
+        text
+    )
+    if sequential_scale_resolution is not None:
+        return CandidateGraphResult(
+            answer=sequential_scale_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
     if len(statement_sentences) == 1:

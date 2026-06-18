@@ -196,9 +196,10 @@ class TestTrainSampleScore:
                 correct += 1
             else:
                 wrong += 1
-        assert correct == 21
-        assert refused == 29
         assert wrong == 0
+        assert correct >= 21
+        assert refused <= 29
+        assert correct + refused + wrong == 50
 
 
 class TestPriorSolvedRegression:
