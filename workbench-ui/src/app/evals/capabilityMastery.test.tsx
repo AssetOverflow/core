@@ -14,7 +14,7 @@ describe("Capability mastery surfaces", () => {
     expect(screen.getByTestId("experience-flywheel-panel")).toBeInTheDocument();
     expect(screen.getByText(EXPERIENCE_FLYWHEEL_ABSENCE_STATEMENT)).toBeInTheDocument();
     expect(
-      screen.getByText("scripts/gsm8k_experience_flywheel.py --limit 50 --out /tmp/gsm8k-experience.json"),
+      screen.getByText("uv run python scripts/gsm8k_experience_flywheel.py --limit 50 --out /tmp/gsm8k-experience.json"),
     ).toBeInTheDocument();
     expect(screen.getByText("Measurement-only")).toBeInTheDocument();
   });
