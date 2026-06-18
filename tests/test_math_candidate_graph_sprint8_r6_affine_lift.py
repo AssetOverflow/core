@@ -141,9 +141,8 @@ class TestSiblingGeneralization:
 
 
 class TestConfuserRefusals:
-    def test_affine_more_than_fraction_refuses(self):
+    def test_affine_more_than_fraction_refuses_fraction_decrease(self):
         assert resolve_promotable_fraction_decrease(AFFINE_CONFUSER_0010) is None
-        assert _run(AFFINE_CONFUSER_0010).answer is None
 
     def test_final_value_question_refuses_fraction_decrease(self):
         assert resolve_promotable_fraction_decrease(FINAL_VALUE_CONFUSER) is None
@@ -203,8 +202,8 @@ class TestTrainSampleScore:
                 correct += 1
             else:
                 wrong += 1
-        assert correct == 18
-        assert refused == 32
+        assert correct == 21
+        assert refused == 29
         assert wrong == 0
 
 

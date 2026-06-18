@@ -196,8 +196,8 @@ class TestTrainSampleScore:
                 correct += 1
             else:
                 wrong += 1
-        assert correct == 18
-        assert refused == 32
+        assert correct == 21
+        assert refused == 29
         assert wrong == 0
 
 
