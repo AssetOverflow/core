@@ -98,7 +98,7 @@ See:
 
 ## 8. Honest empty states
 
-- **Experience Flywheel:** states no workbench endpoint; points to `scripts/gsm8k_experience_flywheel.py --limit 50 --out /tmp/gsm8k-experience.json`
+- **Experience Flywheel:** states no workbench endpoint; points to `uv run python scripts/gsm8k_experience_flywheel.py --limit 50 --out /tmp/gsm8k-experience.json`
 - **Capability Paradigm:** labeled "Documented" badge; sprint cards cite lookback doc paths
 - **No lane selected:** lane-selection guidance appears first; capability section follows as documented context
 
