@@ -34,7 +34,7 @@ _DECREASE_TO_FRACTION_RE: Final[re.Pattern[str]] = re.compile(
     r"decrease\s+to\s+(\d+)\s*/\s*(\d+)\s+of",
     re.IGNORECASE,
 )
-_EXTRA_FRACTION_RE: Final[re.Pattern[str]] = re.compile(r"\d+/\d+")
+_EXTRA_FRACTION_RE: Final[re.Pattern[str]] = re.compile(r"\d+\s*/\s*\d+")
 _GOAL_INTENT: Final[frozenset[str]] = frozenset(
     {"want", "wants", "wanted", "need", "needs", "hoping", "hopes", "plans", "aims", "goal"}
 )
@@ -92,6 +92,8 @@ def _has_hazard_surface(problem_text: str, question_clause: str) -> bool:
 
 def _current_base_quantity(problem_text: str, question_clause: str) -> Quantity | None:
     for clause in segment_clauses(problem_text):
+        if _DECREASE_TO_FRACTION_RE.search(clause):
+            continue
         tokens = _tokens(clause)
         if "current" not in tokens and "now" not in tokens:
             continue
@@ -100,6 +102,8 @@ def _current_base_quantity(problem_text: str, question_clause: str) -> Quantity 
             return quantities[0]
     for clause in segment_clauses(problem_text):
         if clause == question_clause:
+            continue
+        if _DECREASE_TO_FRACTION_RE.search(clause):
             continue
         quantities = [q for q in extract_quantities(clause) if q.unit]
         if len(quantities) == 1:
