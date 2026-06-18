@@ -819,6 +819,36 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_admissible=1,
         )
 
+    # Gate A2m — temporal tariff overtime + bundle overflow (Sprint 9 lift).
+    from generate.derivation.temporal_tariff import (
+        resolve_promotable_temporal_tariff,
+    )
+
+    temporal_tariff_resolution = resolve_promotable_temporal_tariff(text)
+    if temporal_tariff_resolution is not None:
+        return CandidateGraphResult(
+            answer=temporal_tariff_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
+    # Gate A2n — affine fraction-delta (Sprint 9 lift).
+    from generate.derivation.affine_fraction_delta import (
+        resolve_promotable_affine_fraction_delta,
+    )
+
+    affine_fraction_resolution = resolve_promotable_affine_fraction_delta(text)
+    if affine_fraction_resolution is not None:
+        return CandidateGraphResult(
+            answer=affine_fraction_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
     if len(statement_sentences) == 1:
