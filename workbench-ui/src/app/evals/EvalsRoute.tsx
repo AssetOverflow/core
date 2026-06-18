@@ -12,6 +12,7 @@ import { EvalFailureViewer } from "./EvalFailureViewer";
 import { EvalArtifactLink } from "./EvalArtifactLink";
 import { EvalWrongZeroLedger } from "./EvalWrongZeroLedger";
 import { ExperienceFlywheelPanel } from "./ExperienceFlywheelPanel";
+import { CapabilityParadigmPanel } from "./CapabilityParadigmPanel";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
@@ -232,6 +233,9 @@ export function EvalsRoute() {
                   isLoading={false}
                   // TODO: Wire real data via dedicated query hook + backend endpoint when available
                 />
+
+                {/* NEW: Capability Paradigm overview */}
+                <CapabilityParadigmPanel />
 
                 <div>
                   <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-primary)]">Metrics</h3>
