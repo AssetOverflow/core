@@ -107,6 +107,36 @@ def test_post_inc3_live_runner_has_zero_rate_no_injection():
     assert cats.get("rate_with_currency", 0) == 0
 
 
+def test_post_gate_a2a_live_runner_has_zero_unit_partition_no_injection():
+    """Live train_sample: unit_partition bucket closed at injector."""
+    import re
+    from collections import Counter
+
+    from evals.gsm8k_math.train_sample.v1.runner import build_report
+    from tests.gsm8k_train_sample_baseline import assert_monotonic_serving_counts
+
+    cases_path = _REPO_ROOT / "evals/gsm8k_math/train_sample/v1/cases.jsonl"
+    cases = [
+        json.loads(line)
+        for line in cases_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    report = build_report(cases)
+    assert_monotonic_serving_counts(report["counts"])
+
+    cats: Counter[str] = Counter()
+    pat = re.compile(r"category=(\w+)")
+    for row in report["per_case"]:
+        reason = row.get("reason") or ""
+        if "recognizer matched but produced no injection" not in reason:
+            continue
+        m = pat.search(reason)
+        if m:
+            cats[m.group(1)] += 1
+
+    assert cats.get("unit_partition", 0) == 0
+
+
 def test_post_gate_a1_live_runner_has_zero_comparative_no_injection():
     """Live train_sample: comparative_with_unit bucket closed at injector."""
     import re
@@ -232,6 +262,7 @@ def test_frontier_report_aligns_with_post_gate_a1_microscope_structure():
     assert sum(microscope["top_buckets"].values()) == refused
     assert microscope["closed_injector_buckets"]["rate_with_currency_no_injection"] == 0
     assert microscope["closed_injector_buckets"]["comparative_with_unit_no_injection"] == 0
+    assert microscope["closed_injector_buckets"]["unit_partition_no_injection"] == 0
 
 
 def test_inc3_connector_makes_rate_no_injection_actionable():

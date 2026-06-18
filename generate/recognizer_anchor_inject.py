@@ -52,6 +52,7 @@ from generate.math_candidate_parser import (
     CandidateInitial,
     CandidateOperation,
     _build_compare_multiplicative,
+    _build_unit_partition,
 )
 from generate.math_problem_graph import (
     InitialPossession,
@@ -779,6 +780,78 @@ def inject_comparative_multiplicative(
     return (cand,)
 
 
+# ---------------------------------------------------------------------------
+# Gate A2a — unit_partition → unit_partition (Workstream A)
+# ---------------------------------------------------------------------------
+
+
+def inject_unit_partition(
+    match: RecognizerMatch,
+    sentence: str,
+) -> tuple[InjectorEmission, ...]:
+    """Narrow injector for ShapeCategory.UNIT_PARTITION.
+
+    Emits ``CandidateOperation(kind="unit_partition")`` when the matcher
+    published a fully grounded partition anchor and roundtrip admissibility
+    holds. Pronoun subjects are emitted with the surface pronoun; the
+    candidate-graph lookback path resolves them to a discourse antecedent.
+    """
+    if not match.parsed_anchors or len(match.parsed_anchors) != 1:
+        return ()
+
+    anchor = match.parsed_anchors[0]
+    if not isinstance(anchor, dict):
+        return ()
+    if anchor.get("kind") != "unit_partition":
+        return ()
+
+    actor_token = anchor.get("actor_token")
+    chunk_size_token = anchor.get("chunk_size_token")
+    chunk_unit_token = anchor.get("chunk_unit_token")
+    counted_noun_token = anchor.get("counted_noun_token")
+    partition_verb_token = anchor.get("partition_verb_token")
+
+    if not all(
+        isinstance(v, str) and v
+        for v in (
+            actor_token,
+            chunk_size_token,
+            chunk_unit_token,
+            counted_noun_token,
+            partition_verb_token,
+        )
+    ):
+        return ()
+
+    if not chunk_size_token.isdigit():
+        return ()
+    chunk_size = int(chunk_size_token)
+    if chunk_size <= 0:
+        return ()
+
+    requires_pronoun = bool(anchor.get("requires_pronoun_resolution"))
+    if not requires_pronoun:
+        actor = extract_proper_noun_subject(sentence)
+        if not actor or actor != actor_token:
+            return ()
+        bound_actor = actor_token
+    else:
+        bound_actor = actor_token
+
+    cand = _build_unit_partition(
+        actor_raw=bound_actor,
+        chunk_size=float(chunk_size),
+        chunk_unit_raw=chunk_unit_token,
+        result_unit_raw=counted_noun_token,
+        matched_verb=partition_verb_token,
+        matched_value_token=chunk_size_token,
+        source=sentence,
+    )
+    if cand is None or not roundtrip_admissible(cand):
+        return ()
+    return (cand,)
+
+
 _INJECTORS: Mapping[ShapeCategory, "type"] = {
     ShapeCategory.DISCRETE_COUNT_STATEMENT: inject_discrete_count_statement,  # type: ignore[dict-item]
     # WAVE-A — multiplicative_aggregation now has a per-category
@@ -798,6 +871,10 @@ _INJECTORS: Mapping[ShapeCategory, "type"] = {
     # CandidateOperation(kind="compare_multiplicative") for the closed
     # v1 multiplicative entity-comparison template family.
     ShapeCategory.COMPARATIVE_WITH_UNIT: inject_comparative_multiplicative,  # type: ignore[dict-item]
+    # Gate A2a (Workstream A) — unit_partition emits
+    # CandidateOperation(kind="unit_partition") for fixed-size measure
+    # chunking with explicit chunk-size unit and result_unit contract.
+    ShapeCategory.UNIT_PARTITION: inject_unit_partition,  # type: ignore[dict-item]
     # All other recognizer categories continue to route to the
     # empty-tuple fallback (explicit "recognizer matched but produced
     # no injection" refusal in the candidate-graph).  That is the
@@ -834,4 +911,5 @@ __all__ = [
     "inject_discrete_count_statement",
     "inject_rate_with_currency",
     "inject_comparative_multiplicative",
+    "inject_unit_partition",
 ]

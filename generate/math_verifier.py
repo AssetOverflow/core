@@ -40,6 +40,7 @@ from typing import Any
 from generate.math_problem_graph import (
     Comparison,
     MathProblemGraph,
+    PartitionChunk,
     Quantity,
     Rate,
     Unknown,
@@ -249,6 +250,9 @@ def _verify_step(step: SolutionStep, state: dict[tuple[str, str], float]) -> Non
     if step.operation_kind == "compare_multiplicative":
         _verify_compare_multiplicative_step(step, state)
         return
+    if step.operation_kind == "unit_partition":
+        _verify_unit_partition_step(step, state)
+        return
 
     if not isinstance(step.operand, Quantity):
         raise VerificationError(
@@ -424,6 +428,64 @@ def _verify_compare_additive_step(
             f"overwrite existing state for ({step.actor!r}, {unit!r})"
         )
     state[actor_key] = fresh_after
+
+
+def _verify_unit_partition_step(
+    step: SolutionStep, state: dict[tuple[str, str], float]
+) -> None:
+    """Verify a unit_partition step (Gate A2a).
+
+    Re-applies fixed chunk-size division against the dividend-unit
+    state, requires an exact integer quotient, and writes the count
+    under ``result_unit``.
+    """
+    if not isinstance(step.operand, PartitionChunk):
+        raise VerificationError(
+            f"step {step.step_index} kind=unit_partition requires "
+            f"PartitionChunk operand; got {type(step.operand).__name__}"
+        )
+    chunk = step.operand
+    dividend_key = (step.actor, chunk.unit)
+    if dividend_key not in state:
+        raise VerificationError(
+            f"step {step.step_index} kind=unit_partition references "
+            f"({step.actor!r}, {chunk.unit!r}) which is not in verifier state"
+        )
+    fresh_before = state[dividend_key]
+    if fresh_before != step.before_value:
+        raise VerificationError(
+            f"step {step.step_index} declares before_value="
+            f"{step.before_value}, verifier computed {fresh_before}"
+        )
+    chunk_size = float(chunk.value)
+    if chunk_size == 0:
+        raise VerificationError(
+            f"step {step.step_index} kind=unit_partition refuses zero chunk size"
+        )
+    quotient = fresh_before / chunk_size
+    if abs(quotient - round(quotient)) > 1e-9 or quotient <= 0:
+        raise VerificationError(
+            f"step {step.step_index} kind=unit_partition requires an exact "
+            f"positive integer quotient; got {quotient!r}"
+        )
+    fresh_after = float(int(round(quotient)))
+    if fresh_after != step.after_value:
+        raise VerificationError(
+            f"step {step.step_index} declares after_value="
+            f"{step.after_value}, verifier computed {fresh_after}"
+        )
+    if step.target is not None:
+        raise VerificationError(
+            f"step {step.step_index} kind=unit_partition must not declare "
+            f"a target; got {step.target!r}"
+        )
+    result_key = (step.actor, chunk.result_unit)
+    if result_key in state:
+        raise VerificationError(
+            f"step {step.step_index} kind=unit_partition would overwrite "
+            f"existing state for ({step.actor!r}, {chunk.result_unit!r})"
+        )
+    state[result_key] = fresh_after
 
 
 def _verify_compare_multiplicative_step(

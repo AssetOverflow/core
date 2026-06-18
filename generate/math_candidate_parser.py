@@ -42,6 +42,7 @@ from generate.math_problem_graph import (
     Comparison,
     InitialPossession,
     Operation,
+    PartitionChunk,
     Quantity,
     Unknown,
 )
@@ -1186,6 +1187,44 @@ def _build_compare_additive(
             matched_unit_token=unit_raw,
             matched_actor_token=actor_raw,
             matched_reference_actor_token=reference_head,
+        )
+    except Exception:
+        return None
+
+
+def _build_unit_partition(
+    *,
+    actor_raw: str,
+    chunk_size: float,
+    chunk_unit_raw: str,
+    result_unit_raw: str,
+    matched_verb: str,
+    matched_value_token: str,
+    source: str,
+) -> CandidateOperation | None:
+    actor = _normalize_entity(actor_raw)
+    chunk_unit = _canonicalize_unit(chunk_unit_raw)
+    result_unit = _canonicalize_unit(result_unit_raw)
+    try:
+        op = Operation(
+            actor=actor,
+            kind="unit_partition",
+            operand=PartitionChunk(
+                value=chunk_size,
+                unit=chunk_unit,
+                result_unit=result_unit,
+            ),
+        )
+    except Exception:
+        return None
+    try:
+        return CandidateOperation(
+            op=op,
+            source_span=source,
+            matched_verb=matched_verb,
+            matched_value_token=matched_value_token,
+            matched_unit_token=chunk_unit_raw,
+            matched_actor_token=actor_raw,
         )
     except Exception:
         return None

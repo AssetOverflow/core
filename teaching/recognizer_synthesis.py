@@ -347,6 +347,57 @@ def _synthesize_multiplicative_aggregation(
     return canonical_pattern, coverage
 
 
+def _synthesize_unit_partition(
+    corpus: ExemplarCorpus,
+) -> tuple[Mapping[str, Any], Mapping[str, int]]:
+    """Gate A2a — fixed-size measure chunking seeds."""
+    exemplars = corpus.exemplars
+    partition_verbs: list[str] = []
+    chunk_units: list[str] = []
+    counted_nouns: list[str] = []
+    anchor_counts: list[int] = []
+    coverage_verb: dict[str, int] = {}
+    coverage_unit: dict[str, int] = {}
+    coverage_noun: dict[str, int] = {}
+
+    for ex in exemplars:
+        anchors = ex.expected_graph["quantity_anchors"]
+        anchor_counts.append(len(anchors))
+        for a in anchors:
+            verb = a["partition_verb_token"]
+            unit = a["chunk_unit_token"]
+            noun = a["counted_noun_token"]
+            partition_verbs.append(verb)
+            chunk_units.append(unit)
+            counted_nouns.append(noun)
+            coverage_verb[verb] = coverage_verb.get(verb, 0) + 1
+            coverage_unit[unit] = coverage_unit.get(unit, 0) + 1
+            coverage_noun[noun] = coverage_noun.get(noun, 0) + 1
+
+    canonical_pattern: dict[str, Any] = {
+        "shape_category": ShapeCategory.UNIT_PARTITION.value,
+        "graph_intent": "partition",
+        "outcome": "admissible",
+        "anchor_kind": "unit_partition",
+        "observed_partition_verbs": _sorted_unique(partition_verbs),
+        "observed_chunk_units": _sorted_unique(chunk_units),
+        "observed_counted_nouns": _sorted_unique(counted_nouns),
+        "anchor_count_min": min(anchor_counts),
+        "anchor_count_max": max(anchor_counts),
+        "unresolved_notes": _collect_author_notes(exemplars),
+    }
+    coverage: dict[str, int] = {
+        "anchors_unit_partition": sum(anchor_counts),
+    }
+    for token, n in sorted(coverage_verb.items()):
+        coverage[f"verb:{token}"] = n
+    for token, n in sorted(coverage_unit.items()):
+        coverage[f"chunk_unit:{token}"] = n
+    for token, n in sorted(coverage_noun.items()):
+        coverage[f"counted_noun:{token}"] = n
+    return canonical_pattern, coverage
+
+
 def _synthesize_comparative_with_unit(
     corpus: ExemplarCorpus,
 ) -> tuple[Mapping[str, Any], Mapping[str, int]]:
@@ -441,6 +492,7 @@ _SYNTHESIZERS = {
     ShapeCategory.MULTIPLICATIVE_AGGREGATION: _synthesize_multiplicative_aggregation,
     ShapeCategory.CURRENCY_AMOUNT: _synthesize_currency_amount,
     ShapeCategory.COMPARATIVE_WITH_UNIT: _synthesize_comparative_with_unit,
+    ShapeCategory.UNIT_PARTITION: _synthesize_unit_partition,
 }
 
 

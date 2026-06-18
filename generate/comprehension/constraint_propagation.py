@@ -82,6 +82,7 @@ VALID_PREDICATE_NAMES: Final[frozenset[str]] = frozenset(
         "operation.reference_actor_grounds",
         "operation.operand_shape_consistent",
         "operation.rate_denominator_grounds",
+        "operation.partition_result_unit_grounds",
     }
 )
 
@@ -434,7 +435,7 @@ def _check_operation(candidate: object) -> ConstraintResult:
     sub-check populates the predicates_run trace so the eliminator can
     record exactly which predicate the candidate failed.
     """
-    from generate.math_problem_graph import Comparison, Quantity, Rate
+    from generate.math_problem_graph import Comparison, PartitionChunk, Quantity, Rate
     from generate.math_roundtrip import (
         KIND_TO_VERBS,
         _tokens, _token_in, _value_grounds, _unit_grounds,
@@ -604,6 +605,29 @@ def _check_operation(candidate: object) -> ConstraintResult:
                 ),
             )
         run.append(("operation.operand_shape_consistent", "ok"))
+    elif op.kind == "unit_partition":
+        if not isinstance(op.operand, PartitionChunk):
+            run.append(("operation.operand_shape_consistent", "fail"))
+            return ConstraintResult(
+                admitted=False,
+                predicates_run=tuple(run),
+                elimination_reason=(
+                    "op.kind='unit_partition' requires PartitionChunk "
+                    f"operand; got {type(op.operand).__name__}"
+                ),
+            )
+        run.append(("operation.operand_shape_consistent", "ok"))
+        if not _token_in(op.operand.result_unit, haystack):
+            run.append(("operation.partition_result_unit_grounds", "fail"))
+            return ConstraintResult(
+                admitted=False,
+                predicates_run=tuple(run),
+                elimination_reason=(
+                    f"PartitionChunk.result_unit "
+                    f"{op.operand.result_unit!r} does not ground"
+                ),
+            )
+        run.append(("operation.partition_result_unit_grounds", "ok"))
     else:
         if not isinstance(op.operand, Quantity):
             run.append(("operation.operand_shape_consistent", "fail"))
