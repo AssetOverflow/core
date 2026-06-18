@@ -47,7 +47,7 @@ These sprints proved that while CORE's geometric runtime can enforce invariants 
 
 ## 5. What Already Exists in ADR-0128 (`en_numerics_v1`)
 
-The sibling specification [ADR-0128](docs/decisions/ADR-0128-numerics-pack.md) defines `en_numerics_v1`. It contains:
+The sibling specification [ADR-0128](../decisions/ADR-0128-numerics-pack.md) defines `en_numerics_v1`. It contains:
 - **Cardinal number words:** Zero to twenty, tens, and magnitudes.
 - **Ordinal number words:** First through thirty-first, plus major anchors.
 - **Fraction words & symbols:** "half", "third", "quarter", "three-quarters", and Unicode symbols (`½`, `¾`, `⅔`).
@@ -60,7 +60,7 @@ The sibling specification [ADR-0128](docs/decisions/ADR-0128-numerics-pack.md) d
 
 ## 6. What Already Exists in ADR-0127 (`en_units_v1`)
 
-[ADR-0127](docs/decisions/ADR-0127-units-pack-and-units-aware-parser.md) defines `en_units_v1`. It contains:
+[ADR-0127](../decisions/ADR-0127-units-pack-and-units-aware-parser.md) defines `en_units_v1`. It contains:
 - **Dimensions:** Closed physical and financial dimensions (`count`, `length`, `time`, `mass`, `money`, `volume`, `wage`, `unit_price`).
 - **Unit definitions:** Standard mappings for `foot`/`feet`, `hour`/`hours`, `dollar`/`dollars`, `cent`/`cents`, and entity units like `person`/`people`, `child`/`children`.
 - **Conversion graphs:** Formal conversion edges between units within the same dimension (e.g., $1 \text{ dollar} = 100 \text{ cents}$).

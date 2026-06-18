@@ -30,7 +30,7 @@ As of PR-0, the baseline scoring metrics after #827 are:
 ---
 
 ## PR 2: ScalarEquivalence Facade
-- **Purpose:** Introduce the `ScalarEquivalence` facade layer querying over the existing [ADR-0128](docs/decisions/ADR-0128-numerics-pack.md) `en_numerics_v1` pack to map and canonicalize number words, fractions, and percentages, unless a later ADR proves a separate pack is necessary.
+- **Purpose:** Introduce the `ScalarEquivalence` facade layer querying over the existing [ADR-0128](../decisions/ADR-0128-numerics-pack.md) `en_numerics_v1` pack to map and canonicalize number words, fractions, and percentages, unless a later ADR proves a separate pack is necessary.
 - **Files Likely Touched:**
   - `language_packs/scalar_equivalence.py` [NEW]
 - **Tests Required:**
