@@ -31,6 +31,7 @@ from collections import Counter
 from generate.derivation.clauses import segment_clauses
 from generate.derivation.extract import extract_quantities
 from generate.derivation.model import GroundedDerivation, Quantity, Step
+from generate.derivation.state.bind import PRONOUNS, leading_subject_token
 from generate.derivation.target import _question_clause
 from generate.derivation.verify import Resolution, SelfVerification
 from generate.math_roundtrip import _token_in, _tokens, _value_grounds
@@ -40,9 +41,24 @@ _HOURLY_RATE_RE: Final[re.Pattern[str]] = re.compile(
     r"\$\s*(\d+(?:\.\d+)?)\s*(?:an\s+hour|/hour|per\s+hour)",
     re.IGNORECASE,
 )
-_THRESHOLD_HOURS_RE: Final[re.Pattern[str]] = re.compile(
-    r"more\s+than\s+(\d+)\s+hours?",
+_THRESHOLD_SHIFT_RE: Final[re.Pattern[str]] = re.compile(
+    r"more\s+than\s+(\d+)\s+hours?\s+(?:a|an|each|per)\s+(?:day|shift|workday)",
     re.IGNORECASE,
+)
+_THRESHOLD_BAD_ANCHOR_RE: Final[re.Pattern[str]] = re.compile(
+    r"more\s+than\s+\d+\s+hours?\s+(?:per|a|an|each|for)\s+(?:week|month|year|total)",
+    re.IGNORECASE,
+)
+_RENT_VERBS: Final[frozenset[str]] = frozenset({"rent", "rents", "rented", "renting"})
+_QUESTION_MONEY_SUBJECT_RE: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(
+        r"how\s+much(?:\s+money)?\s+does\s+(\w+)\s+(?:make|earn)",
+        re.IGNORECASE,
+    ),
+    re.compile(r"how\s+much\s+will\s+it\s+cost\s+(\w+)", re.IGNORECASE),
+    re.compile(r"what\s+does\s+it\s+cost\s+(\w+)", re.IGNORECASE),
+    re.compile(r"how\s+much\s+does\s+(\w+)\s+pay", re.IGNORECASE),
+    re.compile(r"what\s+is\s+the\s+total\s+cost(?:\s+for\s+(\w+))?", re.IGNORECASE),
 )
 _BUNDLE_TARIFF_RE: Final[re.Pattern[str]] = re.compile(
     r"\$\s*(\d+(?:\.\d+)?)\s+per\s+day\s+or\s+\$\s*(\d+(?:\.\d+)?)\s+for\s+(\d+)\s+days?",
@@ -71,9 +87,84 @@ def _asks_money_total(question_clause: str) -> bool:
     tokens = _tokens(question_clause)
     if "money" in tokens and bool(_EARN_VERBS & tokens):
         return True
-    if "how" in tokens and "much" in tokens and bool(_COST_VERBS & tokens):
+    if "how" in tokens and "much" in tokens and bool((_COST_VERBS | _EARN_VERBS) & tokens):
+        return True
+    if "what" in tokens and bool({"cost", "costs", "charge", "charges", "price", "pay", "paid"} & tokens):
         return True
     return False
+
+
+def _question_money_subject(question_clause: str) -> str | None:
+    for pattern in _QUESTION_MONEY_SUBJECT_RE:
+        match = pattern.search(question_clause)
+        if match is None:
+            continue
+        subject = match.group(1)
+        if subject is None:
+            continue
+        return subject.lower()
+    return None
+
+
+def _subjects_match(body_actor: str | None, asked_subject: str | None) -> bool:
+    if body_actor is None or asked_subject is None:
+        return False
+    if asked_subject in PRONOUNS:
+        return True
+    return asked_subject == body_actor.lower()
+
+
+def _overtime_worker(problem_text: str, question_clause: str) -> str | None:
+    for clause in segment_clauses(problem_text):
+        if clause == question_clause:
+            continue
+        if _HOURLY_RATE_RE.search(clause) or re.search(
+            r"makes\s+\$\s*\d", clause, re.IGNORECASE
+        ):
+            subject = leading_subject_token(clause)
+            if subject is not None:
+                return subject.lower()
+    for clause in segment_clauses(problem_text):
+        if clause == question_clause:
+            continue
+        tokens = _tokens(clause)
+        if "hours" not in tokens and "hour" not in tokens:
+            continue
+        if "every" not in tokens and "per" not in tokens and "each" not in tokens:
+            continue
+        subject = leading_subject_token(clause)
+        if subject is not None and subject.lower() not in {"if", "when"}:
+            return subject.lower()
+    return None
+
+
+def _bundle_renter(problem_text: str, question_clause: str) -> str | None:
+    for clause in segment_clauses(problem_text):
+        if clause == question_clause:
+            continue
+        tokens = _tokens(clause)
+        if not (_RENT_VERBS & tokens):
+            continue
+        subject = leading_subject_token(clause)
+        if subject is not None:
+            return subject.lower()
+    return None
+
+
+def _question_target_matches_actor(
+    problem_text: str, question_clause: str, *, pattern: str
+) -> bool:
+    asked = _question_money_subject(question_clause)
+    if pattern == "overtime":
+        body_actor = _overtime_worker(problem_text, question_clause)
+    else:
+        body_actor = _bundle_renter(problem_text, question_clause)
+    if body_actor is None:
+        return False
+    if asked is None:
+        tokens = _tokens(question_clause)
+        return "what" in tokens and "total" in tokens and "cost" in tokens
+    return _subjects_match(body_actor, asked)
 
 
 def _body_text(problem_text: str) -> str:
@@ -113,7 +204,9 @@ def _hourly_rate(problem_text: str) -> Quantity | None:
 
 
 def _threshold_hours(problem_text: str) -> Quantity | None:
-    match = _THRESHOLD_HOURS_RE.search(problem_text)
+    if _THRESHOLD_BAD_ANCHOR_RE.search(problem_text):
+        return None
+    match = _THRESHOLD_SHIFT_RE.search(problem_text)
     if match is None:
         return None
     token = match.group(1)
@@ -167,7 +260,7 @@ def _rental_days(problem_text: str, question_clause: str) -> Quantity | None:
         if clause == question_clause:
             continue
         tokens = _tokens(clause)
-        if "rent" not in tokens and "rents" not in tokens:
+        if not (_RENT_VERBS & tokens):
             continue
         quantities = [
             q
@@ -200,6 +293,8 @@ def build_overtime_shift_earnings(problem_text: str) -> GroundedDerivation | Non
     """Construct overtime shift earnings total, or ``None``."""
     question_clause = _question_clause(problem_text)
     if not _asks_money_total(question_clause):
+        return None
+    if not _question_target_matches_actor(problem_text, question_clause, pattern="overtime"):
         return None
     if _has_hazard_surface(problem_text, question_clause):
         return None
@@ -242,6 +337,8 @@ def build_bundle_overflow_tariff(problem_text: str) -> GroundedDerivation | None
     """Construct bundle + overflow-day tariff total, or ``None``."""
     question_clause = _question_clause(problem_text)
     if not _asks_money_total(question_clause):
+        return None
+    if not _question_target_matches_actor(problem_text, question_clause, pattern="bundle"):
         return None
     if _has_hazard_surface(problem_text, question_clause):
         return None
