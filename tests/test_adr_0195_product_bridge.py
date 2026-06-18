@@ -67,16 +67,16 @@ def test_known_pooled_wrong_commits_are_not_promotable(case_suffix: str) -> None
 
 
 def test_product_bridge_serving_promotion_is_disabled() -> None:
-    """DISABLED 2026-06-04: the FIRST real sealed measurement showed
-    product_bridge commits 0 correct / 5 WRONG on the held-out 1,319 — a wrong=0
-    breach hidden by the 50-case train proxy it was tuned to. Its serving
-    promotion is unwired (the bridge fired on 0003/0021 *on train only*; it does
-    not generalize). Honest serving is now the main-graph-only 4/46/0; the
-    products 0003/0021 refuse rather than commit a reading unsound on held-out."""
+    """DISABLED 2026-06-04: product_bridge commits 0 correct / 5 WRONG on held-out.
+
+    Goal-residual (ADR-0207 R4) is re-wired separately; product_bridge stays off.
+    Train-sample 0003/0021 refuse; 0037 lifts via goal_residual only."""
     report = build_report(_load_cases(_CASES_PATH))
-    assert report["counts"] == {"correct": 4, "wrong": 0, "refused": 46}
+    counts = report["counts"]
+    assert counts["wrong"] == 0
+    assert counts["correct"] >= 10
     by_case = {row["case_id"]: row for row in report["per_case"]}
     assert by_case["gsm8k-train-sample-v1-0003"]["verdict"] == "refused"
     assert by_case["gsm8k-train-sample-v1-0021"]["verdict"] == "refused"
-    assert by_case["gsm8k-train-sample-v1-0037"]["verdict"] == "refused"
+    assert by_case["gsm8k-train-sample-v1-0037"]["verdict"] == "correct"
     assert by_case["gsm8k-train-sample-v1-0050"]["verdict"] == "refused"

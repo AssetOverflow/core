@@ -47,11 +47,16 @@ _GOAL_INTENT: Final[frozenset[str]] = frozenset(
 # Residual-question lexemes: the question asks the remaining distance to the goal.
 _RESIDUAL_CUES: Final[frozenset[str]] = frozenset({"more", "left", "remaining"})
 _GOAL_REACH: Final[frozenset[str]] = frozenset({"meet", "reach", "hit", "achieve"})
+# Comparative questions may also contain "more", but their target is a difference
+# between progress clauses, not distance-to-goal. Prefer refusal over promotion.
+_COMPARATIVE_TARGET_CUES: Final[frozenset[str]] = frozenset({"than"})
 
 
 def _asks_residual(question_clause: str) -> bool:
     """The question asks the remaining distance to a goal (lexeme-level)."""
     q = _tokens(question_clause)
+    if _COMPARATIVE_TARGET_CUES & q:
+        return False
     return bool(_RESIDUAL_CUES & q) or ("goal" in q and bool(_GOAL_REACH & q))
 
 
