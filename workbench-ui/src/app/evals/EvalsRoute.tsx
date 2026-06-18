@@ -11,6 +11,7 @@ import { EvalMetricGrid } from "./EvalMetricGrid";
 import { EvalFailureViewer } from "./EvalFailureViewer";
 import { EvalArtifactLink } from "./EvalArtifactLink";
 import { EvalWrongZeroLedger } from "./EvalWrongZeroLedger";
+import { ExperienceFlywheelPanel } from "./ExperienceFlywheelPanel";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
@@ -191,7 +192,7 @@ export function EvalsRoute() {
               />
             ) : (
               <div className="text-xs text-[var(--color-text-muted)] bg-[var(--color-surface-inset)] p-3 rounded-lg border border-[var(--color-border-subtle)] font-medium">
-                ⚠️ API runs disabled for write-active lane. Use local CLI to execute this lane:
+                API runs disabled for write-active lane. Use local CLI to execute this lane:
                 <code className="block mt-1 font-mono text-[var(--color-text-primary)] bg-[var(--color-surface-base)] p-1.5 rounded">
                   core eval --lane {selectedLane.lane}
                 </code>
@@ -203,61 +204,54 @@ export function EvalsRoute() {
               <LoadingState label="Running eval lane..." />
             ) : currentRunState?.error ? (
               <ErrorState
-                whatFailed={currentRunState.error.message}
+                whatFailed={currentRunState.error.message || "Eval run failed"}
                 mutationStatus="No corpus mutation occurred."
                 reproducer={`core eval --lane ${selectedLane.lane}`}
-                retrySafety="Retry: safe"
+                retrySafety="Safe to retry"
               />
             ) : currentRunState?.result ? (
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-xs text-[var(--color-text-secondary)] font-semibold">
-                    Status:
-                  </span>
+              <>
+                <div className="flex items-center gap-2">
                   <span
-                    className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
-                      currentRunPassed
-                        ? "bg-[var(--color-state-success-bg)] text-[var(--color-state-success-text)] border border-[var(--color-state-success-border)]"
-                        : "bg-[var(--color-state-danger-bg)] text-[var(--color-state-danger-text)] border border-[var(--color-state-danger-border)]"
-                    }`}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${currentRunPassed
+                      ? "bg-[var(--color-state-success-bg)] text-[var(--color-state-success-text)]"
+                      : "bg-[var(--color-state-danger-bg)] text-[var(--color-state-danger-text)]"}`}
                   >
                     {currentRunPassed ? "Passed" : "Failed"}
                   </span>
                   {currentRunState.result.source_digest && (
-                    <EvalArtifactLink
-                      lane={selectedLane.lane}
-                      sourceDigest={currentRunState.result.source_digest}
-                    />
+                    <EvalArtifactLink digest={currentRunState.result.source_digest} />
                   )}
                 </div>
 
                 <EvalWrongZeroLedger result={currentRunState.result} />
 
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Metrics</h3>
+                {/* NEW: Experience Flywheel — practice memory for sealed GSM8K work (capability mastery) */}
+                <ExperienceFlywheelPanel
+                  records={[]}
+                  isLoading={false}
+                  // TODO: Wire real data via dedicated query hook + backend endpoint when available
+                />
+
+                <div>
+                  <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-primary)]">Metrics</h3>
                   <EvalMetricGrid metrics={currentRunState.result.metrics} />
                 </div>
 
-                <EvalFailureViewer
-                  cases={currentRunState.result.cases}
-                  passed={currentRunPassed}
-                  laneName={selectedLane.lane}
-                />
-              </div>
+                {currentRunState.result.failures && currentRunState.result.failures.length > 0 && (
+                  <EvalFailureViewer cases={currentRunState.result.failures} />
+                )}
+              </>
             ) : (
               <EmptyState
-                statement={
-                  selectedLane.read_only
-                    ? `No run results for lane "${selectedLane.lane}" in this session. Trigger a run above.`
-                    : `Eval lane "${selectedLane.lane}" is CLI-only. No session results available.`
-                }
-                nextAction={{ kind: "cli", command: `core eval --lane ${selectedLane.lane}` }}
+                statement="No run result yet for this lane."
+                nextAction={{ kind: "action", label: "Run eval lane", onClick: () => { /* handled by button above */ } }}
               />
             )}
           </>
         ) : (
           <EmptyState
-            statement="Select an eval lane from the list to view results or run checks."
+            statement="Select an eval lane from the list on the left."
             nextAction={{ kind: "cli", command: "core eval --list" }}
           />
         )}
