@@ -9,6 +9,9 @@ import pytest
 
 from evals.gsm8k_math.runner import CaseOutcome
 from evals.gsm8k_math.train_sample.v1.experience import (
+    CompactedExperienceRecord,
+    ExperienceRecord,
+    _extract_category,
     build_experience_report,
     compact_records,
     compute_dedupe_key,
@@ -230,6 +233,176 @@ def test_merge_compacted_runs_increments_count():
     assert merged[0].count == 2
 
 
+def _experience_record(
+    *,
+    case_id: str = "gsm8k-train-sample-v1-0003",
+    serving_status: str = "refused",
+    sealed_status: str = "correct",
+    promotion_status: str = "candidate",
+    signature: str = "lift_refused_to_correct|additive|recognizer_injection|abc123",
+    source_run_id: str = "run-a",
+    source_report_hash: str = "hash-a",
+    positive_refs: tuple[str, ...] = (),
+    negative_refs: tuple[str, ...] = (),
+) -> ExperienceRecord:
+    record = ExperienceRecord(
+        record_id="",
+        case_id=case_id,
+        serving_status=serving_status,  # type: ignore[arg-type]
+        sealed_status=sealed_status,  # type: ignore[arg-type]
+        gold_answer="864",
+        sealed_answer="864",
+        serving_refusal_family="lift_family",
+        sealed_failure_family="lift_family",
+        candidate_family="relation_hypothesis:discrete_count_statement",
+        first_missing_primitive="relation_hypothesis",
+        arithmetic_chain_signature=signature,
+        positive_evidence_refs=positive_refs,
+        negative_evidence_refs=negative_refs,
+        hazard_tags=(),
+        recommended_action="action",
+        promotion_status=promotion_status,  # type: ignore[arg-type]
+        source_run_id=source_run_id,
+        source_report_hash=source_report_hash,
+    )
+    return ExperienceRecord(
+        record_id=compute_record_id(record),
+        case_id=record.case_id,
+        serving_status=record.serving_status,
+        sealed_status=record.sealed_status,
+        gold_answer=record.gold_answer,
+        sealed_answer=record.sealed_answer,
+        serving_refusal_family=record.serving_refusal_family,
+        sealed_failure_family=record.sealed_failure_family,
+        candidate_family=record.candidate_family,
+        first_missing_primitive=record.first_missing_primitive,
+        arithmetic_chain_signature=record.arithmetic_chain_signature,
+        positive_evidence_refs=record.positive_evidence_refs,
+        negative_evidence_refs=record.negative_evidence_refs,
+        hazard_tags=record.hazard_tags,
+        recommended_action=record.recommended_action,
+        promotion_status=record.promotion_status,
+        source_run_id=record.source_run_id,
+        source_report_hash=record.source_report_hash,
+    )
+
+
+def test_merge_preserves_prior_transition_history():
+    prior_rec = _experience_record(
+        promotion_status="candidate",
+        serving_status="refused",
+        source_run_id="run-prior",
+        source_report_hash="hash-prior",
+        positive_refs=("scout:prior=1",),
+    )
+    prior = compact_records((prior_rec,))
+    promoted = _experience_record(
+        promotion_status="promoted_in_pr",
+        serving_status="correct",
+        source_run_id="run-new",
+        source_report_hash="hash-new",
+        positive_refs=("scout:new=2",),
+    )
+    merged = merge_compacted_runs(prior, (promoted,))
+    assert merged[0].status_transitions == (
+        "refused/correct:candidate",
+        "correct/correct:promoted_in_pr",
+    )
+    assert merged[0].first_seen_run_id == "run-prior"
+    assert merged[0].last_seen_run_id == "run-new"
+
+
+def test_merge_accumulates_evidence_refs():
+    row = _lift_row()
+    scout = _scout_summary_from_rows((row,))
+    recs = records_from_scout_rows((row,), scout_summary=scout)
+    prior = compact_records(recs)
+    prior_record = CompactedExperienceRecord(
+        dedupe_key=prior[0].dedupe_key,
+        record_id=prior[0].record_id,
+        case_id=prior[0].case_id,
+        serving_status=prior[0].serving_status,
+        sealed_status=prior[0].sealed_status,
+        gold_answer=prior[0].gold_answer,
+        sealed_answer=prior[0].sealed_answer,
+        serving_refusal_family=prior[0].serving_refusal_family,
+        sealed_failure_family=prior[0].sealed_failure_family,
+        candidate_family=prior[0].candidate_family,
+        first_missing_primitive=prior[0].first_missing_primitive,
+        arithmetic_chain_signature=prior[0].arithmetic_chain_signature,
+        positive_evidence_refs=("scout:alpha=1", "scout:beta=2"),
+        negative_evidence_refs=("scout:neg=1",),
+        hazard_tags=prior[0].hazard_tags,
+        recommended_action=prior[0].recommended_action,
+        promotion_status=prior[0].promotion_status,
+        count=1,
+        first_seen_run_id="run-prior",
+        last_seen_run_id="run-prior",
+        status_transitions=prior[0].status_transitions,
+        source_report_hash="hash-prior",
+    )
+    new_rec = ExperienceRecord(
+        record_id=prior[0].record_id,
+        case_id=prior[0].case_id,
+        serving_status=prior[0].serving_status,
+        sealed_status=prior[0].sealed_status,
+        gold_answer=prior[0].gold_answer,
+        sealed_answer=prior[0].sealed_answer,
+        serving_refusal_family=prior[0].serving_refusal_family,
+        sealed_failure_family=prior[0].sealed_failure_family,
+        candidate_family=prior[0].candidate_family,
+        first_missing_primitive=prior[0].first_missing_primitive,
+        arithmetic_chain_signature=prior[0].arithmetic_chain_signature,
+        positive_evidence_refs=("scout:beta=2", "scout:gamma=3"),
+        negative_evidence_refs=("scout:neg=2",),
+        hazard_tags=prior[0].hazard_tags,
+        recommended_action=prior[0].recommended_action,
+        promotion_status=prior[0].promotion_status,
+        source_run_id="run-new",
+        source_report_hash="hash-new",
+    )
+    merged = merge_compacted_runs((prior_record,), (new_rec,))
+    assert merged[0].positive_evidence_refs == (
+        "scout:alpha=1",
+        "scout:beta=2",
+        "scout:gamma=3",
+    )
+    assert merged[0].negative_evidence_refs == ("scout:neg=1", "scout:neg=2")
+
+
+def test_merge_scales_with_compacted_records_not_prior_count():
+    row = _lift_row()
+    scout = _scout_summary_from_rows((row,))
+    recs = records_from_scout_rows((row,), scout_summary=scout)
+    prior = compact_records(recs)
+    heavy = CompactedExperienceRecord(
+        dedupe_key=prior[0].dedupe_key,
+        record_id=prior[0].record_id,
+        case_id=prior[0].case_id,
+        serving_status=prior[0].serving_status,
+        sealed_status=prior[0].sealed_status,
+        gold_answer=prior[0].gold_answer,
+        sealed_answer=prior[0].sealed_answer,
+        serving_refusal_family=prior[0].serving_refusal_family,
+        sealed_failure_family=prior[0].sealed_failure_family,
+        candidate_family=prior[0].candidate_family,
+        first_missing_primitive=prior[0].first_missing_primitive,
+        arithmetic_chain_signature=prior[0].arithmetic_chain_signature,
+        positive_evidence_refs=prior[0].positive_evidence_refs,
+        negative_evidence_refs=prior[0].negative_evidence_refs,
+        hazard_tags=prior[0].hazard_tags,
+        recommended_action=prior[0].recommended_action,
+        promotion_status=prior[0].promotion_status,
+        count=10_000,
+        first_seen_run_id="run-heavy",
+        last_seen_run_id="run-heavy",
+        status_transitions=prior[0].status_transitions,
+        source_report_hash="hash-heavy",
+    )
+    merged = merge_compacted_runs((heavy,), recs)
+    assert merged[0].count == 10_001
+
+
 def test_blocked_family_cannot_be_candidate_in_summary():
     rows = (_lift_row("gsm8k-train-sample-v1-0003"), _sealed_wrong_row())
     scout = _scout_summary_from_rows(rows)
@@ -392,3 +565,53 @@ def test_injected_scout_adapter_produces_retained_records(injected_scout_summary
     statuses = {r["promotion_status"] for r in report["case_records"]}
     assert "candidate" in statuses
     assert "blocked_by_wrong_risk" in statuses
+
+
+def test_extract_category_canonical_no_injection_reason():
+    reason = (
+        "candidate_graph: recognizer matched but produced no injection "
+        "(category=discrete_count_statement)"
+    )
+    assert _extract_category(reason) == "discrete_count_statement"
+
+
+def test_extract_category_returns_none_for_unrelated_reason():
+    assert _extract_category("candidate_graph: no admissible candidate for statement") is None
+
+
+def test_report_hash_differs_when_row_evidence_differs():
+    base = _scout_summary_from_rows((_lift_row(),))
+    other = dict(base)
+    other["rows"] = [
+        {
+            **_lift_row().as_dict(),
+            "case_id": "gsm8k-train-sample-v1-9999",
+        }
+    ]
+    assert compute_report_hash(base) != compute_report_hash(other)
+
+
+def test_report_hash_stable_for_identical_input():
+    scout = _scout_summary_from_rows((_lift_row(), _sealed_wrong_row()))
+    assert compute_report_hash(scout) == compute_report_hash(scout)
+
+
+def test_live_default_report_uses_real_operation_classes():
+    report = build_experience_report()
+    op_classes = {
+        rec["arithmetic_chain_signature"].split("|")[1]
+        for rec in report["case_records"]
+    }
+    assert op_classes - {"unknown", "additive"}
+    assert any(
+        cls in {"multiplicative", "divisive"}
+        for cls in op_classes
+    )
+
+
+def test_scout_summary_without_cases_uses_unknown_operation_class():
+    row = _lift_row()
+    scout = _scout_summary_from_rows((row,))
+    recs = records_from_scout_rows((row,), scout_summary=scout, cases_by_id={})
+    assert len(recs) == 1
+    assert recs[0].arithmetic_chain_signature.split("|")[1] == "unknown"

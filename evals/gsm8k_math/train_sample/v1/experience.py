@@ -12,7 +12,7 @@ Trust boundary:
 
 from __future__ import annotations
 
-import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -20,13 +20,16 @@ from typing import Any, Literal
 from formation.hashing import canonical_json, sha256_of
 
 from evals.gsm8k_math.practice.v1.runner import classify_operation
+from evals.gsm8k_math.train_sample.v1.runner import _CASES_PATH, _load_cases
 from evals.gsm8k_math.train_sample.v1.scout import (
     SealedAttemptScoutRow,
-    build_scout_rows,
     build_scout_summary,
     classify_delta_kind,
 )
-from scripts.gsm8k_frontier_report import _classify_reason, _extract_category
+
+_RECOGNIZED_NO_INJ = "candidate_graph: recognizer matched but produced no injection"
+_CATEGORY_RE = re.compile(r"category=([a-zA-Z0-9_]+)")
+_UNKNOWN_OPERATION_CLASS = "unknown"
 
 SCHEMA_VERSION = 1
 ADR = "experience_flywheel_pr1"
@@ -230,7 +233,34 @@ def compute_dedupe_key(record: ExperienceRecord) -> str:
     return sha256_of(payload)
 
 
+def _extract_category(reason: str) -> str | None:
+    """Pull (category=...) from recognized-no-injection refusal reasons."""
+    if _RECOGNIZED_NO_INJ not in reason:
+        return None
+    match = _CATEGORY_RE.search(reason)
+    return match.group(1) if match else None
+
+
+def _scout_row_evidence(rows: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    """Compact per-case scout evidence for provenance hashing (not raw traces)."""
+    evidence: list[dict[str, Any]] = []
+    for row in rows or []:
+        evidence.append(
+            {
+                "case_id": row["case_id"],
+                "served_status": row["served_status"],
+                "aggressive_status": row["aggressive_status"],
+                "failure_family": row["failure_family"],
+                "trace_key": row["trace_key"],
+                "candidate_lift_family": row.get("candidate_lift_family"),
+                "first_failed_step": row.get("first_failed_step"),
+            }
+        )
+    return sorted(evidence, key=lambda item: item["case_id"])
+
+
 def compute_run_id(scout_summary: dict[str, Any]) -> str:
+    """Identity of one scout run — includes per-case row evidence, not aggregates alone."""
     payload = {
         "schema_version": scout_summary.get("schema_version"),
         "adr": scout_summary.get("adr"),
@@ -239,13 +269,24 @@ def compute_run_id(scout_summary: dict[str, Any]) -> str:
         "serving_counts": scout_summary.get("serving_counts"),
         "sealed_counts": scout_summary.get("sealed_counts"),
         "delta_counts": scout_summary.get("delta_counts"),
+        "rows": _scout_row_evidence(scout_summary.get("rows")),
     }
     return sha256_of(payload)
 
 
 def compute_report_hash(scout_summary: dict[str, Any]) -> str:
-    payload = {k: v for k, v in scout_summary.items() if k != "rows"}
+    """Hash full load-bearing scout summary evidence, including compact row payloads."""
+    payload = dict(scout_summary)
+    if "rows" in payload:
+        payload["rows"] = _scout_row_evidence(payload["rows"])
     return sha256_of(payload)
+
+
+def _resolve_operation_class(raw_case: dict[str, Any]) -> str:
+    expr = raw_case.get("answer_expression", "")
+    if not expr:
+        return _UNKNOWN_OPERATION_CLASS
+    return classify_operation(expr)
 
 
 def _arithmetic_chain_signature(
@@ -572,7 +613,7 @@ def records_from_scout_rows(
     out: list[ExperienceRecord] = []
     for row in rows:
         raw_case = (cases_by_id or {}).get(row.case_id, {})
-        op_class = classify_operation(raw_case.get("answer_expression", ""))
+        op_class = _resolve_operation_class(raw_case)
         category = (
             _extract_category(row.refusal_reason or "")
             if row.refusal_reason
@@ -638,37 +679,79 @@ def compact_records(
     return tuple(sorted(compacted, key=lambda c: (c.case_id, c.dedupe_key)))
 
 
+def _merge_evidence_refs(
+    prior: tuple[str, ...],
+    new: tuple[str, ...],
+) -> tuple[str, ...]:
+    return tuple(sorted(set(prior) | set(new)))
+
+
+def _append_status_transitions(
+    prior: tuple[str, ...],
+    new: tuple[str, ...],
+) -> tuple[str, ...]:
+    merged = list(prior)
+    for transition in new:
+        if not merged or merged[-1] != transition:
+            merged.append(transition)
+    return tuple(merged)
+
+
+def _merge_compacted_pair(
+    prior: CompactedExperienceRecord,
+    new: CompactedExperienceRecord,
+) -> CompactedExperienceRecord:
+    return CompactedExperienceRecord(
+        dedupe_key=prior.dedupe_key,
+        record_id=new.record_id,
+        case_id=new.case_id,
+        serving_status=new.serving_status,
+        sealed_status=new.sealed_status,
+        gold_answer=new.gold_answer,
+        sealed_answer=new.sealed_answer,
+        serving_refusal_family=new.serving_refusal_family,
+        sealed_failure_family=new.sealed_failure_family,
+        candidate_family=new.candidate_family,
+        first_missing_primitive=new.first_missing_primitive,
+        arithmetic_chain_signature=new.arithmetic_chain_signature,
+        positive_evidence_refs=_merge_evidence_refs(
+            prior.positive_evidence_refs, new.positive_evidence_refs
+        ),
+        negative_evidence_refs=_merge_evidence_refs(
+            prior.negative_evidence_refs, new.negative_evidence_refs
+        ),
+        hazard_tags=new.hazard_tags,
+        recommended_action=new.recommended_action,
+        promotion_status=new.promotion_status,
+        count=prior.count + new.count,
+        first_seen_run_id=prior.first_seen_run_id,
+        last_seen_run_id=new.last_seen_run_id,
+        status_transitions=_append_status_transitions(
+            prior.status_transitions, new.status_transitions
+        ),
+        source_report_hash=new.source_report_hash,
+    )
+
+
 def merge_compacted_runs(
     prior: tuple[CompactedExperienceRecord, ...],
     new_records: tuple[ExperienceRecord, ...],
 ) -> tuple[CompactedExperienceRecord, ...]:
-    """Merge prior compacted state with records from a new scout run."""
-    revived = [
-        ExperienceRecord(
-            record_id=c.record_id,
-            case_id=c.case_id,
-            serving_status=c.serving_status,
-            sealed_status=c.sealed_status,
-            gold_answer=c.gold_answer,
-            sealed_answer=c.sealed_answer,
-            serving_refusal_family=c.serving_refusal_family,
-            sealed_failure_family=c.sealed_failure_family,
-            candidate_family=c.candidate_family,
-            first_missing_primitive=c.first_missing_primitive,
-            arithmetic_chain_signature=c.arithmetic_chain_signature,
-            positive_evidence_refs=c.positive_evidence_refs,
-            negative_evidence_refs=c.negative_evidence_refs,
-            hazard_tags=c.hazard_tags,
-            recommended_action=c.recommended_action,
-            promotion_status=c.promotion_status,
-            source_run_id=c.last_seen_run_id,
-            source_report_hash=c.source_report_hash,
-        )
-        for c in prior
-        for _ in range(c.count)
-    ]
-    combined = tuple(revived) + new_records
-    return compact_records(combined)
+    """Merge prior compacted state with records from a new scout run.
+
+    O(number of compacted records) — never re-expands prior counts.
+    """
+    new_compacted = compact_records(new_records)
+    merged: dict[str, CompactedExperienceRecord] = {
+        record.dedupe_key: record for record in prior
+    }
+    for new_record in new_compacted:
+        existing = merged.get(new_record.dedupe_key)
+        if existing is None:
+            merged[new_record.dedupe_key] = new_record
+        else:
+            merged[new_record.dedupe_key] = _merge_compacted_pair(existing, new_record)
+    return tuple(sorted(merged.values(), key=lambda c: (c.case_id, c.dedupe_key)))
 
 
 def build_family_summaries(
@@ -788,15 +871,15 @@ def build_experience_report(
     prior_compacted: tuple[CompactedExperienceRecord, ...] | None = None,
     include_raw_records: bool = False,
 ) -> dict[str, Any]:
+    loaded_cases = cases
     if scout_summary is None:
-        scout_summary = build_scout_summary(cases, include_rows=True)
+        if loaded_cases is None:
+            loaded_cases = _load_cases(_CASES_PATH)
+        scout_summary = build_scout_summary(loaded_cases, include_rows=True)
     elif "rows" not in scout_summary:
         raise ValueError("scout_summary must include rows")
 
-    cases_by_id = {c["case_id"]: c for c in (cases or [])}
-    if not cases_by_id and scout_summary.get("rows"):
-        for row in scout_summary["rows"]:
-            cases_by_id.setdefault(row["case_id"], {})
+    cases_by_id = {c["case_id"]: c for c in (loaded_cases or [])}
 
     records = records_from_scout_summary(scout_summary, cases_by_id)
     if prior_compacted:
@@ -896,6 +979,7 @@ __all__ = [
     "compute_record_id",
     "compute_report_hash",
     "compute_run_id",
+    "_extract_category",
     "load_compacted_from_report",
     "merge_compacted_runs",
     "records_from_scout_rows",
