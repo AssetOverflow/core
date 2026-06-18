@@ -90,7 +90,7 @@ class SolutionStep:
     operation_kind: str
     pack_lemma_id: str
     actor: str
-    operand: "Quantity | Rate | Comparison"
+    operand: "Quantity | Rate | Comparison | PartitionChunk"
     target: str | None
     before_value: float
     after_value: float
