@@ -1,7 +1,7 @@
 # Workbench Capability Mastery — Implementation Plan
 
 **Branch:** `feat/workbench-capability-mastery-reconcile`  
-**Reconciles:** Draft PR #821 (`feat/workbench-capability-mastery`) onto current `origin/main` after #824  
+**Reconciles:** Draft PR #821 (`feat/workbench-capability-mastery`) onto current `origin/main` after #825  
 **Status:** Reconciled UI surfaces — honest documented milestones, no fake live data
 
 ## 1. What #821 originally attempted
@@ -27,21 +27,23 @@ Capability sprints 9–12 landed on main:
 | #819 | 8 | A2k fraction_decrease, A2l percent_partition | 18/32/0 |
 | #820 / #822 | 9 + hardening | A2m temporal_tariff, A2n affine_fraction_delta | 21/29/0 |
 | #823 | 10 | A2o affine_comparative_inversion_total, A2p sequential_comparative_scale | 23/27/0 |
-| #824 | 11 | A2q calendar_grounded_piecewise_daily_hours_total + ClusterContract | **24/26/0** |
+| #824 | 11 | A2q calendar_grounded_piecewise_daily_hours_total + ClusterContract | 24/26/0 |
+| #825 | 12 | A2r nested_fraction_remainder_total, A2s loose_crayon_box_capacity | **26/24/0** |
 
-Lookback analyses through Sprint 11 are committed under `docs/analysis/gsm8k-capability-paradigm-sprint*-lookback-2026-06-17.md`. Sprint 12 lookback is **not on main** at reconciliation time.
+Lookback analyses through Sprint 12 are committed under `docs/analysis/gsm8k-capability-paradigm-sprint*-lookback-2026-06-17.md`.
 
 ## 3. Current capability baseline
 
-**Documented serving state (train_sample after #824):** `24 correct / 26 refused / 0 wrong`
+**Documented serving state (train_sample after #825):** `26 correct / 24 refused / 0 wrong`
 
 This is shown in the UI as **documented** evidence from lookbacks — not as a live workbench API read.
 
-## 4. Gate ladder (A2e → A2q)
+## 4. Gate ladder (A2e → A2s)
 
 | Gate | Organ | Sprint |
 |------|-------|--------|
-| A2e | goal_residual | Strike #814 |
+| A2e | goal_residual_question | Strike #814 |
+| A2f | question_bound_product_aggregate | PR #815 |
 | A2g | duration_segment_total | 6 (#817) |
 | A2h | survey_rate_earnings | 6 (#817) |
 | A2i | round_trip_trip_duration | 7 (#818) |
@@ -53,6 +55,8 @@ This is shown in the UI as **documented** evidence from lookbacks — not as a l
 | A2o | affine_comparative_inversion_total | 10 (#823) |
 | A2p | sequential_comparative_scale | 10 (#823) |
 | A2q | calendar_grounded_piecewise_daily_hours_total | 11 (#824) |
+| A2r | nested_fraction_remainder_total | 12 (#825) |
+| A2s | loose_crayon_box_capacity | 12 (#825) |
 
 ## 5. Experience Flywheel is measurement-only
 
@@ -63,15 +67,23 @@ PR-1 (#816) adds `scripts/gsm8k_experience_flywheel.py` and `evals/gsm8k_math/tr
 - No serving mutation, no `report.json` writes, no pack/corpus mutation
 - No auto-promotion into teaching or serving
 
-## 6. ClusterContract (Sprint 11 / #824)
+## 6. ClusterContracts / singleton contracts
 
-First ClusterContract sprint ratified `calendar_grounded_piecewise_daily_hours_total` with:
+Sprint 11 ratified `calendar_grounded_piecewise_daily_hours_total` with:
 
 - `piecewise_daily_hours_total` (Gate A2q)
 - `calendar_grounding.py` — `civil_month_day_count_table` with `calendar_table:{month}` provenance
 - Included case: `gsm8k-train-sample-v1-0013`
 
-See `docs/analysis/gsm8k-capability-paradigm-sprint11-lookback-2026-06-17.md`.
+Sprint 12 extended the contract-first discipline with two singleton contracts:
+
+- `nested_fraction_remainder_total` (Gate A2r) for `0004`, blocked against `0026` sealed-elimination confusers
+- `loose_crayon_box_capacity` (Gate A2s) for `0007`, blocked against `0047` DCS/divisive confusers
+
+See:
+
+- `docs/analysis/gsm8k-capability-paradigm-sprint11-lookback-2026-06-17.md`
+- `docs/analysis/gsm8k-capability-paradigm-sprint12-lookback-2026-06-17.md`
 
 ## 7. What is UI-live now
 
@@ -82,13 +94,13 @@ See `docs/analysis/gsm8k-capability-paradigm-sprint11-lookback-2026-06-17.md`.
 | Wrong-zero ledger from session run | Yes | `EvalRunResult` in session |
 | Experience Flywheel records | **No** | Honest empty + CLI guidance |
 | Capability paradigm milestones | **Documented static** | Committed lookback markdown |
-| train_sample 24/26/0 headline | **Documented** | Lookback #824, not live poll |
+| train_sample 26/24/0 headline | **Documented** | Lookbacks through #825, not live poll |
 
 ## 8. Honest empty states
 
 - **Experience Flywheel:** states no workbench endpoint; points to `scripts/gsm8k_experience_flywheel.py --limit 50 --out /tmp/gsm8k-experience.json`
 - **Capability Paradigm:** labeled "Documented" badge; sprint cards cite lookback doc paths
-- **No lane selected:** capability section is the landing view; lane metrics require lane selection + run
+- **No lane selected:** lane-selection guidance appears first; capability section follows as documented context
 
 ## 9. Backend endpoints still pending
 
@@ -104,7 +116,7 @@ See `docs/analysis/gsm8k-capability-paradigm-sprint11-lookback-2026-06-17.md`.
 - Wholesale copy of #821 `types/api.ts` / `queries.ts` deletions
 - Changes to `evals/gsm8k_math/train_sample/v1/report.json`
 - Changes to sealed practice artifacts
-- Sprint 12 live cards (doc absent on main)
+- Live Sprint 12 metrics; Sprint 12 is documented from committed lookback evidence only
 
 ## 11. Invariants preserved
 
@@ -117,11 +129,11 @@ See `docs/analysis/gsm8k-capability-paradigm-sprint11-lookback-2026-06-17.md`.
 
 | File | Action |
 |------|--------|
-| `workbench-ui/src/app/evals/capabilityMasteryData.ts` | New — documented milestones |
+| `workbench-ui/src/app/evals/capabilityMasteryData.ts` | New — documented milestones through #825 |
 | `workbench-ui/src/app/evals/ExperienceFlywheelPanel.tsx` | New — honest empty state |
 | `workbench-ui/src/app/evals/CapabilityParadigmPanel.tsx` | New — documented gate ladder |
 | `workbench-ui/src/app/evals/CapabilityMasterySection.tsx` | New — composition |
-| `workbench-ui/src/app/evals/EvalsRoute.tsx` | Integrate section |
+| `workbench-ui/src/app/evals/EvalsRoute.tsx` | Integrate section; lane guidance remains first on landing |
 | `workbench-ui/src/app/evals/capabilityMastery.test.tsx` | New tests |
 | `docs/workbench/capability-mastery-implementation-plan.md` | This plan |
 
@@ -132,8 +144,7 @@ See `docs/analysis/gsm8k-capability-paradigm-sprint11-lookback-2026-06-17.md`.
 1. Add read-only `GET /experience-flywheel` backed by explicit artifact path config (no default repo writes)
 2. Optional deterministic `capability-paradigm.json` generator from lookback tables for API parity
 3. Wire `ExperienceFlywheelPanel` to real records when endpoint exists; keep empty state as primary until then
-4. Sprint 12 lookback cards when doc lands on main
-5. Close #821 in favor of this PR after review
+4. Close #821 in favor of this PR after review
 
 ## 14. Verification
 
