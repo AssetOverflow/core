@@ -35,7 +35,12 @@ VALID_OPERATION_KINDS: Final[frozenset[str]] = frozenset(
         "compare_additive",
         "compare_multiplicative",
         "unit_partition",
+        "fraction_portion",
     }
+)
+
+VALID_FRACTION_REFERENTS: Final[frozenset[str]] = frozenset(
+    {"that", "it", "them", "rest", "the_rest"}
 )
 
 
@@ -173,6 +178,50 @@ class PartitionChunk:
 
 
 @dataclass(frozen=True, slots=True)
+class FractionPortion:
+    """Fraction of an actor's prior count state (Gate A2b).
+
+    ``FractionPortion(1, 4, "that")`` on a give surface means subtract
+    one quarter of the actor's partition-derived count unit from the actor
+    (not a transfer to a recipient). ``referent="rest"`` means the same
+    count unit after prior fraction steps.
+    """
+
+    numerator: int
+    denominator: int
+    referent: Literal["that", "it", "them", "rest", "the_rest"]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.numerator, int) or isinstance(self.numerator, bool):
+            raise MathGraphError(
+                f"FractionPortion.numerator must be int, got "
+                f"{type(self.numerator).__name__}"
+            )
+        if not isinstance(self.denominator, int) or isinstance(self.denominator, bool):
+            raise MathGraphError(
+                f"FractionPortion.denominator must be int, got "
+                f"{type(self.denominator).__name__}"
+            )
+        if self.numerator <= 0 or self.denominator <= 0:
+            raise MathGraphError(
+                f"FractionPortion requires positive numerator/denominator; "
+                f"got {self.numerator}/{self.denominator}"
+            )
+        if self.referent not in VALID_FRACTION_REFERENTS:
+            raise MathGraphError(
+                f"FractionPortion.referent must be one of "
+                f"{sorted(VALID_FRACTION_REFERENTS)}; got {self.referent!r}"
+            )
+
+    def as_json(self) -> dict[str, Any]:
+        return {
+            "denominator": self.denominator,
+            "numerator": self.numerator,
+            "referent": self.referent,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class Comparison:
     """A comparison between two actors' quantities (ADR-0123).
 
@@ -279,7 +328,7 @@ class Operation:
 
     actor: str
     kind: str
-    operand: "Quantity | Rate | Comparison | PartitionChunk"
+    operand: "Quantity | Rate | Comparison | PartitionChunk | FractionPortion"
     target: str | None = None
 
     def __post_init__(self) -> None:
@@ -301,6 +350,12 @@ class Operation:
                 raise MathGraphError(
                     "Operation.operand must be a PartitionChunk when "
                     f"kind='unit_partition'; got {type(self.operand).__name__}"
+                )
+        elif self.kind == "fraction_portion":
+            if not isinstance(self.operand, FractionPortion):
+                raise MathGraphError(
+                    "Operation.operand must be a FractionPortion when "
+                    f"kind='fraction_portion'; got {type(self.operand).__name__}"
                 )
         elif self.kind in ("compare_additive", "compare_multiplicative"):
             if not isinstance(self.operand, Comparison):
@@ -520,7 +575,7 @@ def graph_from_dict(d: Mapping[str, Any]) -> MathProblemGraph:
 
 def _operand_from_dict(
     kind: str, operand: Mapping[str, Any]
-) -> "Quantity | Rate | Comparison | PartitionChunk":
+) -> "Quantity | Rate | Comparison | PartitionChunk | FractionPortion":
     """Reconstruct an Operation.operand from its canonical JSON form.
 
     Dispatches on ``kind``:
@@ -565,5 +620,11 @@ def _operand_from_dict(
             value=operand["value"],
             unit=operand["unit"],
             result_unit=operand["result_unit"],
+        )
+    if kind == "fraction_portion":
+        return FractionPortion(
+            numerator=operand["numerator"],
+            denominator=operand["denominator"],
+            referent=operand["referent"],
         )
     return Quantity(value=operand["value"], unit=operand["unit"])

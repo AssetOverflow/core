@@ -185,9 +185,10 @@ def verify(graph: MathProblemGraph, trace: SolutionTrace) -> VerifierVerdict:
 
     replay_ok = True
     replay_detail = ""
+    last_count_unit: dict[str, str] = {}
     for step in trace.steps:
         try:
-            _verify_step(step, state)
+            _verify_step(step, state, last_count_unit=last_count_unit)
         except VerificationError as exc:
             replay_ok = False
             replay_detail = str(exc)
@@ -238,7 +239,12 @@ def verify(graph: MathProblemGraph, trace: SolutionTrace) -> VerifierVerdict:
     )
 
 
-def _verify_step(step: SolutionStep, state: dict[tuple[str, str], float]) -> None:
+def _verify_step(
+    step: SolutionStep,
+    state: dict[tuple[str, str], float],
+    *,
+    last_count_unit: dict[str, str],
+) -> None:
     # Kind-discriminated early returns for non-Quantity operands:
     # apply_rate (ADR-0122) uses Rate; compare_* (ADR-0123) uses Comparison.
     if step.operation_kind == "apply_rate":
@@ -251,7 +257,10 @@ def _verify_step(step: SolutionStep, state: dict[tuple[str, str], float]) -> Non
         _verify_compare_multiplicative_step(step, state)
         return
     if step.operation_kind == "unit_partition":
-        _verify_unit_partition_step(step, state)
+        _verify_unit_partition_step(step, state, last_count_unit=last_count_unit)
+        return
+    if step.operation_kind == "fraction_portion":
+        _verify_fraction_portion_step(step, state, last_count_unit=last_count_unit)
         return
 
     if not isinstance(step.operand, Quantity):
@@ -431,7 +440,10 @@ def _verify_compare_additive_step(
 
 
 def _verify_unit_partition_step(
-    step: SolutionStep, state: dict[tuple[str, str], float]
+    step: SolutionStep,
+    state: dict[tuple[str, str], float],
+    *,
+    last_count_unit: dict[str, str],
 ) -> None:
     """Verify a unit_partition step (Gate A2a).
 
@@ -486,6 +498,61 @@ def _verify_unit_partition_step(
             f"existing state for ({step.actor!r}, {chunk.result_unit!r})"
         )
     state[result_key] = fresh_after
+    last_count_unit[step.actor] = chunk.result_unit
+
+
+def _verify_fraction_portion_step(
+    step: SolutionStep,
+    state: dict[tuple[str, str], float],
+    *,
+    last_count_unit: dict[str, str],
+) -> None:
+    """Verify a fraction_portion step (Gate A2b)."""
+    from generate.math_problem_graph import FractionPortion
+
+    if not isinstance(step.operand, FractionPortion):
+        raise VerificationError(
+            f"step {step.step_index} kind=fraction_portion requires "
+            f"FractionPortion operand; got {type(step.operand).__name__}"
+        )
+    portion = step.operand
+    unit = last_count_unit.get(step.actor)
+    if unit is None:
+        raise VerificationError(
+            f"step {step.step_index} kind=fraction_portion requires a "
+            f"prior partition-derived count unit for actor {step.actor!r}"
+        )
+    key = (step.actor, unit)
+    if key not in state:
+        raise VerificationError(
+            f"step {step.step_index} kind=fraction_portion references "
+            f"({step.actor!r}, {unit!r}) which is not in verifier state"
+        )
+    fresh_before = state[key]
+    if fresh_before != step.before_value:
+        raise VerificationError(
+            f"step {step.step_index} declares before_value="
+            f"{step.before_value}, verifier computed {fresh_before}"
+        )
+    amount = fresh_before * float(portion.numerator) / float(portion.denominator)
+    if abs(amount - round(amount)) > 1e-9:
+        raise VerificationError(
+            f"step {step.step_index} kind=fraction_portion requires an exact "
+            f"integer portion; got {amount!r}"
+        )
+    fresh_after = fresh_before - float(int(round(amount)))
+    if fresh_after != step.after_value:
+        raise VerificationError(
+            f"step {step.step_index} declares after_value="
+            f"{step.after_value}, verifier computed {fresh_after}"
+        )
+    if step.target is not None:
+        raise VerificationError(
+            f"step {step.step_index} kind=fraction_portion must not declare "
+            f"a target; got {step.target!r}"
+        )
+    state[key] = fresh_after
+    last_count_unit[step.actor] = unit
 
 
 def _verify_compare_multiplicative_step(
