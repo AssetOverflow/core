@@ -60,6 +60,16 @@ def test_confuser_cross_referent_refuses():
     assert res.answer is None
 
 
+def test_confuser_comparative_more_than_refuses():
+    text = (
+        "Michael wants to lose 10 pounds by June. He lost 3 pounds in March and 4 pounds "
+        "in April. How much more weight did he lose in April than in March?"
+    )
+    res = _run(text)
+    assert res.answer is None
+    assert compose_goal_residual(text) is None
+
+
 def test_product_bridge_cases_still_refuse():
     """product_bridge stays disabled — 0003/0021 must not lift via this path."""
     for text in (
