@@ -11,6 +11,7 @@ import { EvalMetricGrid } from "./EvalMetricGrid";
 import { EvalFailureViewer } from "./EvalFailureViewer";
 import { EvalArtifactLink } from "./EvalArtifactLink";
 import { EvalWrongZeroLedger } from "./EvalWrongZeroLedger";
+import { CapabilityMasterySection } from "./CapabilityMasterySection";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
@@ -254,12 +255,17 @@ export function EvalsRoute() {
                 nextAction={{ kind: "cli", command: `core eval --lane ${selectedLane.lane}` }}
               />
             )}
+
+            <CapabilityMasterySection />
           </>
         ) : (
-          <EmptyState
-            statement="Select an eval lane from the list to view results or run checks."
-            nextAction={{ kind: "cli", command: "core eval --list" }}
-          />
+          <>
+            <EmptyState
+              statement="Select an eval lane from the list to view lane metrics or run read-only checks."
+              nextAction={{ kind: "cli", command: "core eval --list" }}
+            />
+            <CapabilityMasterySection />
+          </>
         )}
       </div>
     </div>
