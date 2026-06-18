@@ -260,11 +260,11 @@ export function EvalsRoute() {
           </>
         ) : (
           <>
-            <CapabilityMasterySection />
             <EmptyState
               statement="Select an eval lane from the list to view lane metrics or run read-only checks."
               nextAction={{ kind: "cli", command: "core eval --list" }}
             />
+            <CapabilityMasterySection />
           </>
         )}
       </div>
