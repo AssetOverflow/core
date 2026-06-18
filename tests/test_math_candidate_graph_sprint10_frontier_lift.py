@@ -159,9 +159,10 @@ class TestTargetCases:
         assert result.answer == 185.0
         assert result.refusal_reason is None
 
-    def test_0013_still_refuses_calendar_grounding(self) -> None:
+    def test_0013_solved_by_sprint11_cluster_contract(self) -> None:
         result = parse_and_solve(CASE_0013)
-        assert result.answer is None
+        assert result.answer == 450.0
+        assert result.refusal_reason is None
 
 
 class TestSiblingGeneralization:
@@ -217,8 +218,8 @@ class TestTrainSampleScore:
         report = build_report(_load_cases(_CASES_PATH))
         counts = report["counts"]
         assert counts["wrong"] == 0
-        assert counts["correct"] >= 23
-        assert counts["refused"] <= 27
+        assert counts["correct"] >= 24
+        assert counts["refused"] <= 26
 
     def test_newly_solved_ids(self) -> None:
         from evals.gsm8k_math.train_sample.v1.runner import build_report, _load_cases
