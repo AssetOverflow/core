@@ -194,6 +194,39 @@ def _step_sentence(
             f"{_render_number(step.operand.value)} groups and keeps one "
             f"group, leaving {_render_number(step.after_value)}."
         )
+    if step.operation_kind == "unit_partition":
+        from generate.math_problem_graph import PartitionChunk
+
+        if not isinstance(step.operand, PartitionChunk):
+            raise RealizerError(
+                f"unit_partition step {step.step_index} requires "
+                f"PartitionChunk operand"
+            )
+        chunk = step.operand
+        return (
+            f"{step.actor} splits {_render_number(step.before_value)} "
+            f"{_unit_surface(chunk.unit, step.before_value)} into "
+            f"{_render_number(chunk.value)}-{_singular(chunk.unit)} "
+            f"{_unit_surface(chunk.result_unit, step.after_value)}, "
+            f"yielding {_render_number(step.after_value)} "
+            f"{_unit_surface(chunk.result_unit, step.after_value)}."
+        )
+    if step.operation_kind == "fraction_portion":
+        from generate.math_problem_graph import FractionPortion
+
+        if not isinstance(step.operand, FractionPortion):
+            raise RealizerError(
+                f"fraction_portion step {step.step_index} requires "
+                f"FractionPortion operand"
+            )
+        portion = step.operand
+        removed = step.before_value - step.after_value
+        return (
+            f"{step.actor} gives away {_render_number(removed)} "
+            f"({_render_number(portion.numerator)}/"
+            f"{_render_number(portion.denominator)} of the prior total), "
+            f"leaving {_render_number(step.after_value)}."
+        )
     raise RealizerError(
         f"step {step.step_index} has unknown operation_kind "
         f"{step.operation_kind!r}"

@@ -40,6 +40,7 @@ from typing import Final, Literal, Mapping, cast
 
 from generate.math_problem_graph import (
     Comparison,
+    FractionPortion,
     InitialPossession,
     Operation,
     PartitionChunk,
@@ -142,6 +143,11 @@ class CandidateInitial:
 # Title-cased proper noun OR "the <noun>" collective. Same widening as
 # math_parser._INITIAL_HAS_RE's ADR-0123a entity slot.
 _ENTITY: Final[str] = r"(?:[A-Z]\w+|[Tt]he\s+\w+)"
+
+# Gate A2b — actor slot admitting subject pronouns for fraction surfaces.
+_ACTOR_OR_PRONOUN: Final[str] = (
+    r"(?:[A-Z]\w+|[Tt]he\s+\w+|She|He|They|It)"
+)
 
 # Numeric value alternation. Listed longest-form-first so the regex
 # engine doesn't truncate on a shorter prefix:
@@ -936,6 +942,12 @@ def extract_question_candidates(
     if out:
         return out
 
+    # Gate A2b — "How much does <entity> keep on hand?" with partition noun
+    # unit inferred from the enclosing problem text.
+    out.extend(_pattern_d_keep_on_hand_candidates(sentence, problem_text))
+    if out:
+        return out
+
     # ADR-0163.D.4 — Pattern B: comparative quantifier ("how many more")
     out.extend(_pattern_b_comparative_candidates(sentence, problem_text))
     if out:
@@ -945,6 +957,111 @@ def extract_question_candidates(
     out.extend(_pattern_c_pronoun_verb_candidates(sentence, problem_text))
 
     return out
+
+
+_FRACTION_GIVE_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<actor>{_ACTOR_OR_PRONOUN})\s+"
+    r"(?P<verb>give|gives|gave)\s+"
+    rf"(?P<value>{_SLASH_FRACTION})\s+"
+    r"of\s+(?P<referent>that|it|them)\s+"
+    r"(?:to\s+(?:\w+\s+)*\w+)?"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
+)
+
+_HALF_REST_RE: Final[re.Pattern[str]] = re.compile(
+    rf"^(?P<actor>{_ACTOR_OR_PRONOUN})\s+"
+    r"(?:then\s+)?"
+    r"(?P<verb>put|puts|place|places)\s+"
+    r"half\s+of\s+the\s+rest\s+"
+    r"(?:in\s+(?:\w+\s+)*\w+)?"
+    r"\s*\.?$",
+    flags=re.IGNORECASE,
+)
+
+
+def _build_fraction_portion_candidate(
+    *,
+    actor_raw: str,
+    numerator: int,
+    denominator: int,
+    referent: Literal["that", "it", "them", "rest", "the_rest"],
+    matched_verb: str,
+    matched_value_token: str,
+    matched_unit_token: str,
+    source: str,
+) -> CandidateOperation | None:
+    actor = _normalize_entity(actor_raw)
+    try:
+        op = Operation(
+            actor=actor,
+            kind="fraction_portion",
+            operand=FractionPortion(
+                numerator=numerator,
+                denominator=denominator,
+                referent=referent,
+            ),
+        )
+    except Exception:
+        return None
+    return CandidateOperation(
+        op=op,
+        source_span=source,
+        matched_verb=matched_verb,
+        matched_value_token=matched_value_token,
+        matched_unit_token=matched_unit_token,
+        matched_actor_token=actor_raw,
+    )
+
+
+def _fraction_give_candidates(sentence: str) -> list[CandidateOperation]:
+    """Gate A2b — subtract N/M of a prior partition count (not transfer)."""
+    s = sentence.strip()
+    m = _FRACTION_GIVE_RE.match(s)
+    if m is None:
+        return []
+    value_raw = m.group("value")
+    frac = re.fullmatch(r"(\d+)/(\d+)", value_raw)
+    if frac is None:
+        return []
+    numerator = int(frac.group(1))
+    denominator = int(frac.group(2))
+    if denominator == 0:
+        return []
+    referent = m.group("referent").lower()
+    cand = _build_fraction_portion_candidate(
+        actor_raw=m.group("actor"),
+        numerator=numerator,
+        denominator=denominator,
+        referent=cast(
+            Literal["that", "it", "them", "rest", "the_rest"],
+            referent,
+        ),
+        matched_verb=m.group("verb").lower(),
+        matched_value_token=value_raw,
+        matched_unit_token=referent,
+        source=sentence,
+    )
+    return [cand] if cand is not None else []
+
+
+def _half_rest_candidates(sentence: str) -> list[CandidateOperation]:
+    """Gate A2b — subtract half of the actor's remaining partition count."""
+    s = sentence.strip()
+    m = _HALF_REST_RE.match(s)
+    if m is None:
+        return []
+    cand = _build_fraction_portion_candidate(
+        actor_raw=m.group("actor"),
+        numerator=1,
+        denominator=2,
+        referent="rest",
+        matched_verb=m.group("verb").lower(),
+        matched_value_token="half",
+        matched_unit_token="rest",
+        source=sentence,
+    )
+    return [cand] if cand is not None else []
 
 
 def extract_operation_candidates(sentence: str) -> list[CandidateOperation]:
@@ -983,6 +1100,8 @@ def extract_operation_candidates(sentence: str) -> list[CandidateOperation]:
     # consumes a *trailing* "than N times <REF>" tail so it cannot be confused
     # with the bare additive pattern. See ADR-0131.G.2 for precedence
     # rationale.
+    out.extend(_fraction_give_candidates(sentence))
+    out.extend(_half_rest_candidates(sentence))
     out.extend(_compare_nested_candidates(sentence))
     out.extend(_compare_multiplicative_candidates(sentence))
     out.extend(_compare_additive_candidates(sentence))
@@ -2619,6 +2738,29 @@ _PATTERN_C_VERBS: Final[str] = (
 _Q_OF_NP_TAIL: Final[str] = r"(?:\s+of\s+\w+(?:\s+\w+)?)?"
 
 
+_Q_KEEP_ON_HAND_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+much\s+does\s+"
+    rf"(?P<entity>(?:{_ENTITY}|she|he|they|it))\s+"
+    r"keep\s+on\s+hand\??\s*$",
+    flags=re.IGNORECASE,
+)
+
+_INFER_PARTITION_COUNT_UNIT_RE: Final[re.Pattern[str]] = re.compile(
+    r"into\s+\d+\s*-\s*\w+\s+(sections?|pieces?|parts?)",
+    flags=re.IGNORECASE,
+)
+
+
+def _infer_partition_count_unit(problem_text: str | None) -> str | None:
+    """Infer partition result_unit from a prior chunking stmt in the problem."""
+    if problem_text is None:
+        return None
+    m = _INFER_PARTITION_COUNT_UNIT_RE.search(problem_text)
+    if m is None:
+        return None
+    return _canonicalize_unit(m.group(1))
+
+
 _Q_MASS_NOUN_RE: Final[re.Pattern[str]] = re.compile(
     r"^How\s+much\s+"
     rf"(?P<unit>{_MASS_NOUN_PATTERN})"
@@ -2666,7 +2808,7 @@ _FEMALE_NAMES: Final[frozenset[str]] = frozenset({
     "alexa", "alice", "amy", "ann", "anna", "barbara", "betty",
     "carol", "carolyn", "christine", "cindy", "claire", "cynthia",
     "deborah", "diana", "donna", "dorothy", "elizabeth", "ella",
-    "emily", "emma", "erica", "francine", "helen", "jane", "janet",
+    "emily", "emma", "erica", "francine", "helen", "jan", "jane", "janet",
     "jen", "jennifer", "jessica", "joyce", "judith", "julie", "karen",
     "kate", "kathleen", "kelly", "laura", "linda", "lisa", "lilibeth",
     "lori", "mandy", "marie", "martha", "marnie", "mary", "melissa",
@@ -2764,6 +2906,32 @@ def _resolve_question_entity(
             return None
         return _normalize_entity(resolved), raw_entity
     return _normalize_entity(raw_entity), raw_entity
+
+
+def _pattern_d_keep_on_hand_candidates(
+    sentence: str, problem_text: str | None
+) -> list[CandidateUnknown]:
+    """Gate A2b — terminal possession after partition+fraction chain."""
+    s = sentence.strip()
+    m = _Q_KEEP_ON_HAND_RE.match(s)
+    if m is None:
+        return []
+    unit = _infer_partition_count_unit(problem_text)
+    if unit is None:
+        return []
+    raw_entity = m.group("entity")
+    resolved = _resolve_question_entity(raw_entity, problem_text)
+    if resolved is None:
+        return []
+    entity, entity_token = resolved
+    return [
+        CandidateUnknown(
+            unknown=Unknown(entity=entity, unit=unit),
+            source_span=sentence,
+            matched_unit_token=unit,
+            matched_entity_token=entity_token,
+        )
+    ]
 
 
 def _pattern_a_mass_noun_candidates(

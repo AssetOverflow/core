@@ -34,6 +34,7 @@ from typing import Any, Mapping
 
 from generate.math_problem_graph import (
     Comparison,
+    FractionPortion,
     MathProblemGraph,
     Operation,
     PartitionChunk,
@@ -59,6 +60,7 @@ _OPERATION_REQUIRED_LEMMAS: dict[str, str] = {
     "compare_additive": "compare_additive",
     "compare_multiplicative": "compare_multiplicative",
     "unit_partition": "divide",
+    "fraction_portion": "subtract",
 }
 
 
@@ -90,7 +92,7 @@ class SolutionStep:
     operation_kind: str
     pack_lemma_id: str
     actor: str
-    operand: "Quantity | Rate | Comparison | PartitionChunk"
+    operand: "Quantity | Rate | Comparison | PartitionChunk | FractionPortion"
     target: str | None
     before_value: float
     after_value: float
@@ -209,8 +211,11 @@ def solve(graph: MathProblemGraph) -> SolutionTrace:
         state[(p.entity, p.quantity.unit)] = float(p.quantity.value)
 
     steps: list[SolutionStep] = []
+    last_count_unit: dict[str, str] = {}
     for index, op in enumerate(graph.operations):
-        step = _apply(op, index, state, pack_bindings)
+        step = _apply(
+            op, index, state, pack_bindings, last_count_unit=last_count_unit
+        )
         steps.append(step)
 
     answer_value, answer_unit = _resolve_unknown(graph.unknown, state)
@@ -230,6 +235,8 @@ def _apply(
     index: int,
     state: dict[tuple[str, str], float],
     pack_bindings: Mapping[str, str],
+    *,
+    last_count_unit: dict[str, str],
 ) -> SolutionStep:
     # Kind-discriminated early returns for operations carrying non-Quantity
     # operands: apply_rate (ADR-0122) uses Rate; compare_* (ADR-0123) uses
@@ -242,7 +249,13 @@ def _apply(
     if op.kind == "compare_multiplicative":
         return _apply_compare_multiplicative(op, index, state, pack_bindings)
     if op.kind == "unit_partition":
-        return _apply_unit_partition(op, index, state, pack_bindings)
+        return _apply_unit_partition(
+            op, index, state, pack_bindings, last_count_unit=last_count_unit
+        )
+    if op.kind == "fraction_portion":
+        return _apply_fraction_portion(
+            op, index, state, pack_bindings, last_count_unit=last_count_unit
+        )
 
     if not isinstance(op.operand, Quantity):
         raise SolveError(
@@ -428,6 +441,8 @@ def _apply_unit_partition(
     index: int,
     state: dict[tuple[str, str], float],
     pack_bindings: Mapping[str, str],
+    *,
+    last_count_unit: dict[str, str],
 ) -> SolutionStep:
     """Apply a fixed-size unit partition (Gate A2a).
 
@@ -469,12 +484,70 @@ def _apply_unit_partition(
             f"silently redeclare"
         )
     state[result_key] = after
+    last_count_unit[op.actor] = chunk.result_unit
     return SolutionStep(
         step_index=index,
         operation_kind=op.kind,
         pack_lemma_id=pack_bindings[op.kind],
         actor=op.actor,
         operand=chunk,
+        target=None,
+        before_value=before,
+        after_value=after,
+        target_before=None,
+        target_after=None,
+    )
+
+
+def _apply_fraction_portion(
+    op: Operation,
+    index: int,
+    state: dict[tuple[str, str], float],
+    pack_bindings: Mapping[str, str],
+    *,
+    last_count_unit: dict[str, str],
+) -> SolutionStep:
+    """Subtract a fraction of the actor's partition-derived count unit."""
+    if not isinstance(op.operand, FractionPortion):
+        raise SolveError(
+            f"fraction_portion at step {index} requires a "
+            f"FractionPortion operand; got {type(op.operand).__name__}"
+        )
+    portion = op.operand
+    unit = last_count_unit.get(op.actor)
+    if unit is None:
+        raise SolveError(
+            f"fraction_portion at step {index} requires a prior "
+            f"partition-derived count unit for actor {op.actor!r}"
+        )
+    key = (op.actor, unit)
+    if key not in state:
+        raise SolveError(
+            f"fraction_portion at step {index} requires actor {op.actor!r} "
+            f"to hold a quantity in {unit!r}, but no such state exists"
+        )
+    before = state[key]
+    amount = before * float(portion.numerator) / float(portion.denominator)
+    if abs(amount - round(amount)) > 1e-9:
+        raise SolveError(
+            f"fraction_portion at step {index} requires an exact "
+            f"integer portion; got {amount!r} from {before!r} * "
+            f"{portion.numerator}/{portion.denominator}"
+        )
+    after = before - float(int(round(amount)))
+    if after < 0:
+        raise SolveError(
+            f"fraction_portion at step {index} would yield negative "
+            f"quantity {after!r}; refuse rather than emit nonsense"
+        )
+    state[key] = after
+    last_count_unit[op.actor] = unit
+    return SolutionStep(
+        step_index=index,
+        operation_kind=op.kind,
+        pack_lemma_id=pack_bindings[op.kind],
+        actor=op.actor,
+        operand=portion,
         target=None,
         before_value=before,
         after_value=after,

@@ -58,6 +58,7 @@ from generate.math_candidate_parser import (
 )
 from generate.math_problem_graph import (
     MathGraphError,
+    Operation,
     MathProblemGraph,
 )
 from generate.math_completeness import uncovered_quantities
@@ -191,6 +192,48 @@ def _split_sentences(text: str) -> list[str]:
 # choice space: a list of CandidateUnknown.
 SentenceChoice = Union[CandidateInitial, CandidateOperation]
 
+_PARSER_PRONOUN_ACTORS: Final[frozenset[str]] = frozenset({
+    "she", "he", "they", "it", "her", "him",
+})
+
+
+def _bind_parser_pronoun_actor(
+    choice: SentenceChoice,
+    antecedent: str | None,
+    multi_actor_ambiguous: bool,
+) -> SentenceChoice | None:
+    """Bind parser-emitted pronoun actors to a discourse antecedent."""
+    if not isinstance(choice, CandidateOperation):
+        return choice
+    if choice.matched_actor_token.lower() not in _PARSER_PRONOUN_ACTORS:
+        return choice
+    if multi_actor_ambiguous or not antecedent:
+        return None
+    from generate.math_candidate_parser import _normalize_entity
+
+    bound_actor = _normalize_entity(antecedent)
+    if bound_actor == choice.op.actor:
+        return choice
+    try:
+        rebound = Operation(
+            actor=bound_actor,
+            kind=choice.op.kind,
+            operand=choice.op.operand,
+            target=choice.op.target,
+        )
+    except MathGraphError:
+        return None
+    return CandidateOperation(
+        op=rebound,
+        source_span=choice.source_span,
+        matched_verb=choice.matched_verb,
+        matched_value_token=choice.matched_value_token,
+        matched_unit_token=choice.matched_unit_token,
+        matched_actor_token=choice.matched_actor_token,
+        matched_target_token=choice.matched_target_token,
+        matched_reference_actor_token=choice.matched_reference_actor_token,
+    )
+
 
 def _filtered_statement_choices(sentence: str) -> list[SentenceChoice]:
     """Return all admissible (initial | operation) candidates for a
@@ -233,13 +276,13 @@ def _filtered_question_choices(
     """
     out: list[CandidateUnknown] = []
     for qc in extract_question_candidates(sentence, problem_text):
-        if _question_admissible(qc):
+        if _question_admissible(qc, problem_text):
             out.append(qc)
     if not out:
         stripped = _strip_conditional_prefix(sentence)
         if stripped is not None and stripped != sentence:
             for qc in extract_question_candidates(stripped, problem_text):
-                if _question_admissible(qc):
+                if _question_admissible(qc, problem_text):
                     out.append(qc)
     return out[:MAX_CANDIDATES_PER_SENTENCE]
 
@@ -347,12 +390,21 @@ def _composed_initial_admissible(ic: CandidateInitial) -> bool:
     return True
 
 
-def _question_admissible(qc: CandidateUnknown) -> bool:
+def _question_admissible(
+    qc: CandidateUnknown,
+    problem_text: str | None = None,
+) -> bool:
     """Light structural ground-check for question candidates."""
     from generate.math_roundtrip import _tokens, _token_in, _unit_grounds
     haystack = _tokens(qc.source_span)
     if not _unit_grounds(qc.matched_unit_token, qc.source_span, haystack):
-        return False
+        if problem_text is None:
+            return False
+        problem_haystack = _tokens(problem_text)
+        if not _unit_grounds(
+            qc.matched_unit_token, problem_text, problem_haystack
+        ):
+            return False
     if qc.matched_entity_token is not None:
         for tok in qc.matched_entity_token.split():
             if not _token_in(tok, haystack):
@@ -698,6 +750,21 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
         # the in-loop running subject when discourse map has no entry.
         _effective_prior = _discourse_prior_subjects.get(s, _prior_subject) or _prior_subject
         choices = _filtered_statement_choices(s)
+        _distinct_priors_for_bind = {
+            v for v in _discourse_prior_subjects.values() if v is not None
+        }
+        if _prior_subject is not None:
+            _distinct_priors_for_bind.add(_prior_subject)
+        _multi_actor_for_bind = len(_distinct_priors_for_bind) > 1
+        if choices:
+            _bound_choices: list[SentenceChoice] = []
+            for _c in choices:
+                _bc = _bind_parser_pronoun_actor(
+                    _c, _effective_prior, _multi_actor_for_bind
+                )
+                if _bc is not None:
+                    _bound_choices.append(_bc)
+            choices = _bound_choices
         if not choices:
             if _ratified_registry:
                 from generate.recognizer_match import (

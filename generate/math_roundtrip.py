@@ -166,6 +166,11 @@ KIND_TO_VERBS: Final[Mapping[str, frozenset[str]]] = {
     "compare_additive": COMPARE_ADDITIVE_ANCHORS,
     "compare_multiplicative": COMPARE_MULTIPLICATIVE_ANCHORS,
     "unit_partition": DIVIDE_VERBS,
+    "fraction_portion": frozenset({
+        "give", "gives", "gave",
+        "put", "puts", "place", "places",
+        "half",
+    }),
 }
 
 
@@ -477,8 +482,10 @@ def roundtrip_admissible(c: CandidateOperation) -> bool:
         if not _unit_grounds(c.matched_unit_token, c.source_span, haystack):
             return False
     else:
-        if not isinstance(c.op.operand, Comparison):
-            return False  # only comparisons may have empty unit token
+        from generate.math_problem_graph import FractionPortion
+
+        if not isinstance(c.op.operand, (Comparison, FractionPortion)):
+            return False  # comparisons and fraction_portion omit unit slot
 
     # 6. Transfer target must appear.
     if c.matched_target_token is not None:
@@ -509,6 +516,15 @@ def roundtrip_admissible(c: CandidateOperation) -> bool:
         if not isinstance(c.op.operand, PartitionChunk):
             return False
         if not _token_in(c.op.operand.result_unit, haystack):
+            return False
+    elif c.op.kind == "fraction_portion":
+        from generate.math_problem_graph import FractionPortion
+
+        if not isinstance(c.op.operand, FractionPortion):
+            return False
+        if not _token_in(c.op.operand.referent, haystack):
+            return False
+        if c.matched_target_token is not None:
             return False
     else:
         if not isinstance(c.op.operand, Quantity):

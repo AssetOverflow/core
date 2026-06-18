@@ -23,7 +23,9 @@ def test_unit_partition_solver_lower_level_integration():
     state = {("Jan", "feet"): 1000.0}
     pack_bindings = {"unit_partition": "en_arithmetic_v1:divide"}
 
-    step = _apply_unit_partition(op, index=0, state=state, pack_bindings=pack_bindings)
+    step = _apply_unit_partition(
+        op, index=0, state=state, pack_bindings=pack_bindings, last_count_unit={}
+    )
 
     assert step.operation_kind == "unit_partition"
     assert state[("Jan", "sections")] == 40.0
@@ -71,7 +73,9 @@ def test_non_exact_quotient_refuses_at_solver():
     pack_bindings = {"unit_partition": "en_arithmetic_v1:divide"}
 
     with pytest.raises(SolveError):
-        _apply_unit_partition(op, index=0, state=state, pack_bindings=pack_bindings)
+        _apply_unit_partition(
+            op, index=0, state=state, pack_bindings=pack_bindings, last_count_unit={}
+        )
 
 
 def test_unit_mismatch_surface_does_not_solve():
@@ -80,7 +84,7 @@ def test_unit_mismatch_surface_does_not_solve():
     assert res.answer is None
 
 
-def test_full_0002_still_refuses_without_composition():
+def test_full_0002_solves_with_fraction_rest_composition():
     text = (
         "Jan buys 1000 feet of cable. "
         "She splits it up into 25-foot sections. "
@@ -89,8 +93,8 @@ def test_full_0002_still_refuses_without_composition():
         "How much does she keep on hand?"
     )
     res = _run(text)
-    assert res.answer is None
-    assert res.refusal_reason is not None
+    assert res.answer == 15.0
+    assert res.refusal_reason is None
 
 
 def test_duration_confuser_does_not_inject_unit_partition():
