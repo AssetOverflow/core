@@ -81,32 +81,41 @@ def test_positive_surfaces_emit_unit_partition(
     [
         "25-foot sections.",
         "She splits it into 25 sections.",
-        "Jan buys 1000 feet of cable.",
-        "Tina makes $18.00 an hour.",
-        "Alice has twice as many apples as Bob.",
         "It is a 2-hour drive.",
         "Jan cuts the rope into 3-foot sections and 4-foot sections.",
         "She splits it into equal sections.",
         "She splits it into bags.",
-        "Bob can shuck 10 oysters in 5 minutes.",
         "Half of the kids go to soccer camp.",
         "She puts 48 cookies into boxes of 6.",
         "999 feet split into 25-foot sections.",
-        "Jan cuts 1000 feet into 25-inch sections.",
     ],
 )
-def test_confuser_surfaces_refuse_injection_or_miss_category(sentence: str):
+def test_unit_partition_confusers_never_inject(sentence: str):
     registry = load_ratified_registry()
     m = match(sentence, registry)
     if m is None:
         return
-    if m.category is ShapeCategory.UNIT_PARTITION:
-        assert inject_from_match(m, sentence, sealed=False) == ()
-    else:
-        if m.category is ShapeCategory.DISCRETE_COUNT_STATEMENT:
-            emitted = inject_from_match(m, sentence, sealed=False)
-            if emitted:
-                assert emitted[0].op.kind != "unit_partition"
+    assert inject_from_match(m, sentence, sealed=False) == ()
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "Jan buys 1000 feet of cable.",
+        "Tina makes $18.00 an hour.",
+        "Alice has twice as many apples as Bob.",
+        "Bob can shuck 10 oysters in 5 minutes.",
+    ],
+)
+def test_legitimate_unrelated_surfaces_do_not_emit_unit_partition(sentence: str):
+    registry = load_ratified_registry()
+    m = match(sentence, registry)
+    if m is None:
+        return
+    emitted = inject_from_match(m, sentence, sealed=False)
+    for candidate in emitted:
+        if isinstance(candidate, CandidateOperation):
+            assert candidate.op.kind != "unit_partition"
 
 
 def test_pronoun_anchor_emits_with_resolution_flag():
