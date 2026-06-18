@@ -62,6 +62,7 @@ from generate.math_problem_graph import (
     Operation,
     MathProblemGraph,
     PartitionChunk,
+    Quantity,
 )
 from generate.math_completeness import uncovered_quantities
 from generate.derivation.r1_reconstruction import reconstruct_r1_total
@@ -538,6 +539,33 @@ def _build_graph(
                         unit=question_choice.yield_chunk_unit,
                         result_unit=question_choice.yield_quotient_unit,
                     ),
+                )
+            )
+        except MathGraphError:
+            return None
+
+    # Gate A2d — peer-pick multiply: anchor amount × (1 + friend_count).
+    if (
+        question_choice.peer_count is not None
+        and question_choice.peer_reference_entity is not None
+        and question_choice.unknown.entity is None
+    ):
+        ref = question_choice.peer_reference_entity
+        unit = question_choice.unknown.unit
+        matching = [
+            ic
+            for ic in initials_list
+            if ic.entity == ref and ic.quantity.unit == unit
+        ]
+        if len(matching) != 1:
+            return None
+        factor = 1 + question_choice.peer_count
+        try:
+            operations_list.append(
+                Operation(
+                    actor=ref,
+                    kind="multiply",
+                    operand=Quantity(value=factor, unit=unit),
                 )
             )
         except MathGraphError:

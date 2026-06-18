@@ -109,10 +109,11 @@ def test_markdown_render_surfaces_partition_candidate():
 
 
 def test_gate_a2_lifts_are_not_in_refusal_table():
-    """Cases solved by Gate A2b/A2c must not appear among live refusals."""
+    """Cases solved by Gate A2b/A2c/A2d must not appear among live refusals."""
     summary = build_microscope_report(_load_cases())
     refused_ids = {r["case_id"] for r in summary["refusal_table"]}
     assert "gsm8k-train-sample-v1-0002" not in refused_ids
     assert "gsm8k-train-sample-v1-0008" not in refused_ids
-    assert summary["counts"]["correct"] >= 8
+    assert "gsm8k-train-sample-v1-0025" not in refused_ids
+    assert summary["counts"]["correct"] >= 9
     assert summary["closed_injector_buckets"]["unit_partition_no_injection"] == 0
