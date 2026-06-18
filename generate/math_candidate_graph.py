@@ -692,19 +692,25 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_enumerated=0, branches_admissible=0,
         )
 
-    # ── DISABLED (2026-06-04): serving promotion bridges removed ──────────────
-    # The FIRST real sealed measurement (1,319 held-out GSM8K, decrypted by the
-    # operator) showed the product-promotion bridge (ADR-0195) commits 0 correct /
-    # 5 WRONG on held-out — a `wrong=0` breach that was invisible because the
-    # working metric was the 50-case train sample the bridges were tuned to.
-    # Bisection: disabling `resolve_promotable_product` restores sealed 0/0/1319.
-    # `resolve_promotable_goal_residual` (ADR-0207 §5 step 2) is 0/0 on held-out
-    # (inert) — removed too, since its only effect was inflating the train proxy.
-    # Both production modules remain in generate/derivation/; only their serving
-    # promotion is unwired, until a gate is built that is proven `wrong=0` on the
-    # SEALED set (not the train sample). Restoring `wrong=0` is the prime directive
-    # and outranks the train-sample "correct" the bridges produced.
-    # ──────────────────────────────────────────────────────────────────────────
+    # ADR-0195 — product promotion bridge stays DISABLED (2026-06-04 bisection).
+    # The sealed 1,319 held-out showed product_bridge 0 correct / 5 WRONG.
+    # `resolve_promotable_product` must not be re-wired to serving.
+
+    # ADR-0207 §5 step 2 / Gate A2e — goal-residual promotion bridge (R4).
+    # Scout-guided Batch 4 lift: promotes only self-verified goal − Σprogress
+    # readings (goal language + residual question + same-referent progress).
+    # Held-out bisection: 0/0 (inert). product_bridge wrong-risk does not apply.
+    from generate.derivation.goal_residual import resolve_promotable_goal_residual
+
+    goal_resolution = resolve_promotable_goal_residual(text)
+    if goal_resolution is not None:
+        return CandidateGraphResult(
+            answer=goal_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
 
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
