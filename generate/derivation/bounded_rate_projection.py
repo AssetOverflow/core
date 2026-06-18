@@ -274,4 +274,3 @@ def compose_bounded_rate_projection(text: str) -> Resolution | None:
 def resolve_promotable_bounded_rate_projection(text: str) -> Resolution | None:
     """Serving bridge for Gate A2t."""
     return compose_bounded_rate_projection(text)
-

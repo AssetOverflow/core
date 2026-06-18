@@ -266,4 +266,3 @@ def compose_closed_reference_affine_aggregate(text: str) -> Resolution | None:
 def resolve_promotable_closed_reference_affine_aggregate(text: str) -> Resolution | None:
     """Serving bridge for Gate A2u."""
     return compose_closed_reference_affine_aggregate(text)
-
