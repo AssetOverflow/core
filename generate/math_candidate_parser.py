@@ -812,6 +812,9 @@ class CandidateUnknown:
     yield_chunk_value: float | None = None
     yield_chunk_unit: str | None = None
     yield_quotient_unit: str | None = None
+    # Gate A2d — peer-pick partition: friends pick the same amount as anchor.
+    peer_count: int | None = None
+    peer_reference_entity: str | None = None
     consumed_value_tokens: tuple[str, ...] = ()
 
 
@@ -959,6 +962,11 @@ def extract_question_candidates(
 
     # Gate A2c — production yield: "how many <product> will <entity> be able to make"
     out.extend(_pattern_yield_question_candidates(sentence, problem_text))
+    if out:
+        return out
+
+    # Gate A2d — peer-pick total: friends pick the same amount as anchor entity.
+    out.extend(_pattern_peer_pick_question_candidates(sentence, problem_text))
     if out:
         return out
 
@@ -2895,6 +2903,19 @@ _Q_YIELD_RE: Final[re.Pattern[str]] = re.compile(
     flags=re.IGNORECASE,
 )
 
+# Gate A2d — peer-pick conditional + total-across question.
+_PEER_PICK_CONDITIONAL_RE: Final[re.Pattern[str]] = re.compile(
+    rf"(?i)if\s+(?P<count>{_VALUE})\s+of\s+"
+    rf"(?P<entity>{_ENTITY})\s*'s\s+friends\s+pick\s+the\s+same\s+amount\s+as\s+"
+    r"(?:her|him)\b"
+)
+_Q_PEER_PICK_RE: Final[re.Pattern[str]] = re.compile(
+    r"^How\s+many\s+(?P<unit>\w+)\s+do\s+"
+    rf"(?P<entity>{_ENTITY})\s+and\s+"
+    r"(?:her|his)\s+friends\s+pick\s+in\s+all\s*\??\s*$",
+    flags=re.IGNORECASE,
+)
+
 
 def _infer_yield_partition(
     problem_text: str | None, question_product: str
@@ -3062,6 +3083,56 @@ def _resolve_question_entity(
             return None
         return _normalize_entity(resolved), raw_entity
     return _normalize_entity(raw_entity), raw_entity
+
+
+def _infer_peer_pick_partition(
+    problem_text: str | None, question_entity: str
+) -> tuple[int, str, str] | None:
+    """Infer peer friend-count from the conditional clause in ``problem_text``."""
+    if problem_text is None:
+        return None
+    m = _PEER_PICK_CONDITIONAL_RE.search(problem_text)
+    if m is None:
+        return None
+    entity = _normalize_entity(m.group("entity"))
+    if entity != _normalize_entity(question_entity):
+        return None
+    count_token = m.group("count")
+    resolved = _resolve_value(count_token)
+    if resolved is None:
+        return None
+    peer_count = int(resolved.value)
+    if peer_count <= 0:
+        return None
+    return peer_count, count_token, entity
+
+
+def _pattern_peer_pick_question_candidates(
+    sentence: str, problem_text: str | None
+) -> list[CandidateUnknown]:
+    """Gate A2d — total-across after peer friends pick the same amount."""
+    s = sentence.strip()
+    m = _Q_PEER_PICK_RE.match(s)
+    if m is None:
+        return []
+    unit_raw = m.group("unit")
+    unit = _canonicalize_unit(unit_raw)
+    entity = _normalize_entity(m.group("entity"))
+    partition = _infer_peer_pick_partition(problem_text, entity)
+    if partition is None:
+        return []
+    peer_count, count_token, reference_entity = partition
+    return [
+        CandidateUnknown(
+            unknown=Unknown(entity=None, unit=unit),
+            source_span=sentence,
+            matched_unit_token=unit_raw,
+            matched_entity_token=m.group("entity"),
+            peer_count=peer_count,
+            peer_reference_entity=reference_entity,
+            consumed_value_tokens=(count_token,),
+        )
+    ]
 
 
 def _pattern_yield_question_candidates(
