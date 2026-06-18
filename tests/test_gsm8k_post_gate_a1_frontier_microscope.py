@@ -104,7 +104,7 @@ def test_markdown_render_surfaces_partition_candidate():
     summary = build_microscope_report(_load_cases())
     md = render_markdown(summary)
     assert "partition_chunking" in md
-    assert "correct: 26" in md
+    assert "correct: 30" in md
     assert "Gate A2a unit_partition" in md
 
 
