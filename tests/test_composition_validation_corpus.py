@@ -170,6 +170,8 @@ def test_current_baseline_snapshot() -> None:
     Gate A2j giveaway_target_residual admits cv-0021 (0035).
     Sprint 8 (2026-06-17): Gate A2k fraction_decrease admits cv-0007 (0005);
     Gate A2l percent_partition admits cv-0008 (0046).
+    Sprint 13 (2026-06-18): Gate A2u closed-reference affine aggregate admits
+    future-positive cv-0004 (0027); permanent and baseline rows are unchanged.
     """
     solve = refuse = wrong = 0
     for case in _CASES:
@@ -181,7 +183,7 @@ def test_current_baseline_snapshot() -> None:
         else:
             refuse += 1
     assert wrong == 0
-    assert (solve, refuse) == (14, 8), (
+    assert (solve, refuse) == (15, 7), (
         f"snapshot moved to {solve} solve / {refuse} refuse — if a Phase 5b "
         f"slice landed, update this expectation and the affected rows' "
         f"baseline fields in lockstep"

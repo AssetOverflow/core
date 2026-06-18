@@ -930,6 +930,38 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_admissible=1,
         )
 
+    # Gate A2t — bounded affine/percent rate projections (Sprint 13 contract).
+    from generate.derivation.bounded_rate_projection import (
+        resolve_promotable_bounded_rate_projection,
+    )
+
+    bounded_rate_resolution = resolve_promotable_bounded_rate_projection(text)
+    if bounded_rate_resolution is not None:
+        return CandidateGraphResult(
+            answer=bounded_rate_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
+    # Gate A2u — closed explicit-reference affine aggregates (Sprint 13).
+    from generate.derivation.closed_reference_affine_aggregate import (
+        resolve_promotable_closed_reference_affine_aggregate,
+    )
+
+    closed_affine_resolution = resolve_promotable_closed_reference_affine_aggregate(
+        text
+    )
+    if closed_affine_resolution is not None:
+        return CandidateGraphResult(
+            answer=closed_affine_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
     if len(statement_sentences) == 1:
