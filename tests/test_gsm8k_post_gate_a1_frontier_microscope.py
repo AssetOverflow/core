@@ -104,7 +104,7 @@ def test_markdown_render_surfaces_partition_candidate():
     summary = build_microscope_report(_load_cases())
     md = render_markdown(summary)
     assert "partition_chunking" in md
-    assert "correct: 16" in md
+    assert "correct: 18" in md
     assert "Gate A2a unit_partition" in md
 
 
@@ -122,5 +122,7 @@ def test_gate_a2_lifts_are_not_in_refusal_table():
     assert "gsm8k-train-sample-v1-0035" not in refused_ids
     assert "gsm8k-train-sample-v1-0037" not in refused_ids
     assert "gsm8k-train-sample-v1-0045" not in refused_ids
-    assert summary["counts"]["correct"] >= 16
+    assert "gsm8k-train-sample-v1-0005" not in refused_ids
+    assert "gsm8k-train-sample-v1-0046" not in refused_ids
+    assert summary["counts"]["correct"] >= 18
     assert summary["closed_injector_buckets"]["unit_partition_no_injection"] == 0

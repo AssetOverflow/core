@@ -789,6 +789,36 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_admissible=1,
         )
 
+    # Gate A2k — fraction decrease delta (Sprint 8 R6 lift).
+    from generate.derivation.fraction_decrease import (
+        resolve_promotable_fraction_decrease,
+    )
+
+    fraction_decrease_resolution = resolve_promotable_fraction_decrease(text)
+    if fraction_decrease_resolution is not None:
+        return CandidateGraphResult(
+            answer=fraction_decrease_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
+    # Gate A2l — equal half-split percent partition (Sprint 8 R6 lift).
+    from generate.derivation.percent_partition import (
+        resolve_promotable_percent_partition,
+    )
+
+    percent_partition_resolution = resolve_promotable_percent_partition(text)
+    if percent_partition_resolution is not None:
+        return CandidateGraphResult(
+            answer=percent_partition_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
     if len(statement_sentences) == 1:
