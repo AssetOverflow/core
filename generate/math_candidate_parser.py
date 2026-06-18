@@ -3088,7 +3088,13 @@ def _resolve_question_entity(
 def _infer_peer_pick_partition(
     problem_text: str | None, question_entity: str
 ) -> tuple[int, str, str] | None:
-    """Infer peer friend-count from the conditional clause in ``problem_text``."""
+    """Infer peer friend-count from the conditional clause in ``problem_text``.
+
+    Gate A2d's peer count is a count of people, not a general numeric value.
+    The regex shares ``_VALUE`` for local parser consistency, but admission is
+    narrower: only positive integer, unitless counts are allowed. Money,
+    slash-fraction, decimal, and other non-integer numeric surfaces refuse.
+    """
     if problem_text is None:
         return None
     m = _PEER_PICK_CONDITIONAL_RE.search(problem_text)
@@ -3098,12 +3104,15 @@ def _infer_peer_pick_partition(
     if entity != _normalize_entity(question_entity):
         return None
     count_token = m.group("count")
+    if count_token.startswith(("$", "¢", "€", "£", "¥", "₱")) or "/" in count_token:
+        return None
     resolved = _resolve_value(count_token)
     if resolved is None:
         return None
-    peer_count = int(resolved.value)
-    if peer_count <= 0:
+    value = resolved.value
+    if value <= 0 or value != int(value):
         return None
+    peer_count = int(value)
     return peer_count, count_token, entity
 
 

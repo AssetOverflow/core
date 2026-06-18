@@ -104,6 +104,26 @@ def test_confuser_friends_without_count_refuses():
     assert res.answer is None
 
 
+def test_confuser_fractional_friend_count_refuses():
+    text = (
+        "Lilibeth fills 6 baskets where each basket holds 50 strawberries. "
+        "If 3/2 of Lilibeth's friends pick the same amount as her, "
+        "how many strawberries do Lilibeth and her friends pick in all?"
+    )
+    res = _run(text)
+    assert res.answer is None
+
+
+def test_confuser_money_friend_count_refuses():
+    text = (
+        "Lilibeth fills 6 baskets where each basket holds 50 strawberries. "
+        "If $2 of Lilibeth's friends pick the same amount as her, "
+        "how many strawberries do Lilibeth and her friends pick in all?"
+    )
+    res = _run(text)
+    assert res.answer is None
+
+
 def test_comparative_question_still_refuses():
     text = (
         "Francine has five full boxes of crayons and 5 loose crayons, "
