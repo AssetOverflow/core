@@ -111,3 +111,60 @@ def test_confuser_v1_0007_still_refuses():
     res = _run(text)
     assert res.answer is None
     assert res.refusal_reason is not None
+
+
+def test_sibling_bob_rope_one_third_half_rest():
+    """Different actor, total, chunk size, unit, and fraction (1/3)."""
+    text = (
+        "Bob buys 900 feet of rope. "
+        "He splits it into 30-foot sections. "
+        "He gives 1/3 of that to a friend. "
+        "He then puts half of the rest in storage. "
+        "How much does he keep on hand?"
+    )
+    res = _run(text)
+    assert res.answer == 10.0
+    assert res.refusal_reason is None
+
+
+def test_sibling_alice_ribbon_one_fifth_half_rest():
+    """Female actor, inches/pieces, 1/5 fraction — not the 0002 surface."""
+    text = (
+        "Alice buys 480 inches of ribbon. "
+        "She splits it into 12-inch pieces. "
+        "She gives 1/5 of that to a friend. "
+        "She then puts half of the rest in storage. "
+        "How much does she keep on hand?"
+    )
+    res = _run(text)
+    assert res.answer == 16.0
+    assert res.refusal_reason is None
+
+
+def test_refuses_slash_fraction_without_grounded_referent():
+    assert extract_operation_candidates("She gives 1/4 to a friend.") == []
+
+
+def test_refuses_that_fraction_without_partition_chain():
+    text = (
+        "Jan buys 100 feet of cable. "
+        "She gives 1/4 of that to a friend. "
+        "How much does she keep on hand?"
+    )
+    res = _run(text)
+    assert res.answer is None
+    assert res.refusal_reason is not None
+
+
+def test_refuses_multi_actor_pronoun_on_fraction_chain():
+    text = (
+        "Jan buys 1000 feet of cable. "
+        "Bob buys 200 feet of rope. "
+        "She splits it up into 25-foot sections. "
+        "She gives 1/4 of that to a friend. "
+        "She then puts half of the rest in storage. "
+        "How much does she keep on hand?"
+    )
+    res = _run(text)
+    assert res.answer is None
+    assert res.refusal_reason is not None
