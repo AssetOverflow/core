@@ -898,6 +898,38 @@ def parse_and_solve(text: str, *, sealed: bool = False) -> CandidateGraphResult:
             branches_admissible=1,
         )
 
+    # Gate A2r — nested fraction complement remainder total (Sprint 12 singleton).
+    from generate.derivation.nested_fraction_remainder_total import (
+        resolve_promotable_nested_fraction_remainder_total,
+    )
+
+    nested_fraction_resolution = resolve_promotable_nested_fraction_remainder_total(
+        text
+    )
+    if nested_fraction_resolution is not None:
+        return CandidateGraphResult(
+            answer=nested_fraction_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
+    # Gate A2s — loose crayon box capacity (Sprint 12 singleton).
+    from generate.derivation.loose_crayon_box_capacity import (
+        resolve_promotable_loose_crayon_box_capacity,
+    )
+
+    box_capacity_resolution = resolve_promotable_loose_crayon_box_capacity(text)
+    if box_capacity_resolution is not None:
+        return CandidateGraphResult(
+            answer=box_capacity_resolution.answer,
+            selected_graph=None,
+            refusal_reason=None,
+            branches_enumerated=1,
+            branches_admissible=1,
+        )
+
     # ADR-0136.S.1 — Rate/event short-circuit paths (before Cartesian product).
     # Capacity path: single statement with one CandidateCapacity + matching question.
     if len(statement_sentences) == 1:

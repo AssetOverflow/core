@@ -232,8 +232,8 @@ class TestTrainSampleScore:
         report = build_report(_load_cases(_CASES_PATH))
         counts = report["counts"]
         assert counts["wrong"] == 0
-        assert counts["correct"] >= 24
-        assert counts["refused"] <= 26
+        assert counts["correct"] >= 26
+        assert counts["refused"] <= 24
 
     def test_newly_solved_0013(self) -> None:
         from evals.gsm8k_math.train_sample.v1.runner import build_report, _load_cases
