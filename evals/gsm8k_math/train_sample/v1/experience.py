@@ -323,6 +323,27 @@ def _infer_missing_primitive(
     return None
 
 
+def _canonical_candidate_family(
+    *,
+    row_family: str | None,
+    category: str | None,
+    first_missing_primitive: str | None,
+) -> str | None:
+    """Return the shared recognizer-surface family key for lift and wrong-risk rows.
+
+    Sealed-wrong rows often lack ``candidate_lift_family`` because they are not
+    lift rows, but recognized no-injection failures still expose the same
+    category/primitive surface as refused→correct lift rows.  Canonicalizing the
+    surface here lets family summaries block a candidate when matching negative
+    evidence exists.
+    """
+    if row_family:
+        return row_family
+    if category and first_missing_primitive:
+        return f"{first_missing_primitive}:{category}"
+    return None
+
+
 def _hazard_tags(
     *,
     delta_kind: str,
@@ -503,11 +524,16 @@ def scout_row_to_experience_record(
         candidate_family=row.candidate_lift_family,
         failure_family=row.failure_family,
     )
+    candidate_family = _canonical_candidate_family(
+        row_family=row.candidate_lift_family,
+        category=category,
+        first_missing_primitive=missing,
+    )
     promotion = _classify_promotion_status(
         delta_kind=delta_kind,
         served_status=row.served_status,
         sealed_status=row.aggressive_status,
-        candidate_family=row.candidate_lift_family,
+        candidate_family=candidate_family,
         first_missing_primitive=missing,
         hazard_tags=hazards,
         category=category,
@@ -522,13 +548,13 @@ def scout_row_to_experience_record(
         sealed_answer=row.aggressive_answer,
         serving_refusal_family=serving_family,
         sealed_failure_family=row.failure_family,
-        candidate_family=row.candidate_lift_family,
+        candidate_family=candidate_family,
         first_missing_primitive=missing,
         arithmetic_chain_signature=chain_sig,
         positive_evidence_refs=_positive_evidence_refs(
             case_id=row.case_id,
             trace_key=row.trace_key,
-            candidate_family=row.candidate_lift_family,
+            candidate_family=candidate_family,
             delta_kind=delta_kind,
         ),
         negative_evidence_refs=_negative_evidence_refs(
@@ -542,7 +568,7 @@ def scout_row_to_experience_record(
         recommended_action=_recommended_action(
             delta_kind=delta_kind,
             promotion_status=promotion,
-            candidate_family=row.candidate_lift_family,
+            candidate_family=candidate_family,
             first_missing_primitive=missing,
         ),
         promotion_status=promotion,
@@ -632,9 +658,22 @@ def records_from_scout_rows(
     return tuple(sorted(out, key=lambda r: (r.case_id, r.record_id)))
 
 
+def _merge_record_refs(records: list[ExperienceRecord], attr: str) -> tuple[str, ...]:
+    values: set[str] = set()
+    for rec in records:
+        values.update(getattr(rec, attr))
+    return tuple(sorted(values))
+
+
 def compact_records(
     records: tuple[ExperienceRecord, ...],
 ) -> tuple[CompactedExperienceRecord, ...]:
+    """Compact duplicate records while preserving caller-provided run order.
+
+    ``source_run_id`` is a content hash, not chronology.  For records that share
+    a dedupe key, first/last status and transition order follow the order passed
+    by the caller.  Use ``merge_compacted_runs`` for explicit cross-run merges.
+    """
     groups: dict[str, list[ExperienceRecord]] = {}
     for rec in records:
         key = compute_dedupe_key(rec)
@@ -642,7 +681,6 @@ def compact_records(
 
     compacted: list[CompactedExperienceRecord] = []
     for dedupe_key, group in sorted(groups.items()):
-        group = sorted(group, key=lambda r: (r.source_run_id, r.record_id))
         first = group[0]
         last = group[-1]
         transitions: list[str] = []
@@ -664,9 +702,9 @@ def compact_records(
                 candidate_family=last.candidate_family,
                 first_missing_primitive=last.first_missing_primitive,
                 arithmetic_chain_signature=last.arithmetic_chain_signature,
-                positive_evidence_refs=last.positive_evidence_refs,
-                negative_evidence_refs=last.negative_evidence_refs,
-                hazard_tags=last.hazard_tags,
+                positive_evidence_refs=_merge_record_refs(group, "positive_evidence_refs"),
+                negative_evidence_refs=_merge_record_refs(group, "negative_evidence_refs"),
+                hazard_tags=tuple(sorted(set().union(*(r.hazard_tags for r in group)))),
                 recommended_action=last.recommended_action,
                 promotion_status=last.promotion_status,
                 count=len(group),
