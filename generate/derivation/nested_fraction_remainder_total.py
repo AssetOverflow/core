@@ -30,10 +30,10 @@ from generate.derivation.verify import Resolution, SelfVerification
 from generate.math_roundtrip import _token_in, _tokens, _value_grounds
 
 _OUTER_HALF_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?i)\bhalf\s+of\s+the\s+(\w+)\b"
+    r"(?i)\bhalf\s+of\s+the\s+(\w+)\s+are\s+going\s+to\s+(\w+)\s+camp\b"
 )
 _INNER_QUARTER_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?i)\b1/4\s+of\s+the\s+(\w+)\s+going\s+to\s+(\w+)\s+camp\b"
+    r"(?i)\b1/4\s+of\s+the\s+(\w+)\s+going\s+to\s+(\w+)\s+camp\s+are\s+going\s+to\s+\w+\s+camp\b"
 )
 _MORNING_RE: Final[re.Pattern[str]] = re.compile(
     r"(?i)\bgoing\s+to\s+(\w+)\s+camp\s+in\s+the\s+morning\b"
@@ -92,6 +92,7 @@ def _parse_camp_binding(problem_text: str) -> _CampBinding | None:
         return None
 
     population = outer.group(1).lower()
+    outer_camp = outer.group(2).lower()
     inner_pop = inner.group(1).lower()
     inner_camp = inner.group(2).lower()
     morning_camp = morning.group(1).lower()
@@ -101,11 +102,11 @@ def _parse_camp_binding(problem_text: str) -> _CampBinding | None:
 
     if not {population, inner_pop, afternoon_pop} == {population}:
         return None
-    if not {inner_camp, morning_camp, afternoon_camp} == {inner_camp}:
+    if not {outer_camp, inner_camp, morning_camp, afternoon_camp} == {outer_camp}:
         return None
     return _CampBinding(
         population=population,
-        camp=inner_camp,
+        camp=outer_camp,
         afternoon_count=afternoon_count,
         afternoon_token=afternoon.group(1),
     )
