@@ -37,7 +37,7 @@ _PERCENT_OF_GROUP_RE: Final[re.Pattern[str]] = re.compile(
     r"(\d+(?:\.\d+)?)\s*%\s+of\s+the\s+(\w+)",
     re.IGNORECASE,
 )
-_FRACTION_RE: Final[re.Pattern[str]] = re.compile(r"\d+/\d+")
+_FRACTION_RE: Final[re.Pattern[str]] = re.compile(r"\d+\s*/\s*\d+")
 _GOAL_INTENT: Final[frozenset[str]] = frozenset(
     {"want", "wants", "wanted", "need", "needs", "hoping", "hopes", "plans", "aims", "goal"}
 )
@@ -78,6 +78,9 @@ def _percent_clauses(problem_text: str) -> tuple[tuple[float, str, str], tuple[f
 def _total_population(problem_text: str, question_clause: str) -> Quantity | None:
     for clause in segment_clauses(problem_text):
         if clause == question_clause:
+            continue
+        lowered = clause.lower()
+        if "half" in lowered or _PERCENT_OF_GROUP_RE.search(clause):
             continue
         quantities = [q for q in extract_quantities(clause) if q.unit]
         if len(quantities) == 1:
