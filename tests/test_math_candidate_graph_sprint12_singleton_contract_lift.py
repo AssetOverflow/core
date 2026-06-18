@@ -74,10 +74,41 @@ ASKS_SUBGROUP_ONLY_CONFUSER = (
     "How many kids are going to soccer camp?"
 )
 
+OUTER_CAMP_MISMATCH_CONFUSER = (
+    "There are some kids in camp. Half of the kids are going to baseball camp, "
+    "and 1/4 of the kids going to soccer camp are going to soccer camp in the morning. "
+    "750 kids are going to soccer camp in the afternoon. "
+    "How many kids there in camp altogether?"
+)
+
 ASKS_PER_BOX_CONFUSER = (
     "Francine has five full boxes of crayons and 5 loose crayons, and her friend "
     "has 27 loose crayons. They need to put all of their loose crayons in a box. "
     "How many crayons are in each full box if Francine has a total of 85 crayons?"
+)
+
+BOX_ITEM_MISMATCH_CONFUSER = (
+    "Francine has five full boxes of crayons and 5 loose markers, and her friend "
+    "has 27 loose markers. They need to put all of their loose markers in a box. "
+    "How many more boxes do they need if Francine has a total of 85 markers?"
+)
+
+FRIEND_ITEM_MISMATCH_CONFUSER = (
+    "Francine has five full boxes of crayons and 5 loose crayons, and her friend "
+    "has 27 loose markers. They need to put all of their loose crayons in a box. "
+    "How many more boxes do they need if Francine has a total of 85 crayons?"
+)
+
+TOTAL_ACTOR_MISMATCH_CONFUSER = (
+    "Francine has five full boxes of crayons and 5 loose crayons, and her friend "
+    "has 27 loose crayons. They need to put all of their loose crayons in a box. "
+    "How many more boxes do they need if Sam has a total of 85 crayons?"
+)
+
+MISSING_ALL_LOOSE_ITEM_CONFUSER = (
+    "Francine has five full boxes of crayons and 5 loose crayons, and her friend "
+    "has 27 loose crayons. They need to put all of their loose things in a box. "
+    "How many more boxes do they need if Francine has a total of 85 crayons?"
 )
 
 MULTIPLE_FRACTION_CONFUSER = (
@@ -152,7 +183,7 @@ class TestSiblingGeneralization:
     def test_marker_box_sibling(self) -> None:
         resolution = compose_loose_crayon_box_capacity(SIBLING_BOXES)
         assert resolution is not None
-        # (3+21)*4/(67-3) = 96/16 = 6
+        # (3+21)*4/(19-3) = 96/16 = 6
         assert resolution.answer == 6.0
 
 
@@ -166,8 +197,23 @@ class TestNeighborConfuserRefusals:
     def test_asks_subgroup_only_refuses(self) -> None:
         assert compose_nested_fraction_remainder_total(ASKS_SUBGROUP_ONLY_CONFUSER) is None
 
+    def test_outer_camp_mismatch_refuses(self) -> None:
+        assert compose_nested_fraction_remainder_total(OUTER_CAMP_MISMATCH_CONFUSER) is None
+
     def test_asks_per_box_refuses(self) -> None:
         assert compose_loose_crayon_box_capacity(ASKS_PER_BOX_CONFUSER) is None
+
+    def test_box_item_mismatch_refuses(self) -> None:
+        assert compose_loose_crayon_box_capacity(BOX_ITEM_MISMATCH_CONFUSER) is None
+
+    def test_friend_item_mismatch_refuses(self) -> None:
+        assert compose_loose_crayon_box_capacity(FRIEND_ITEM_MISMATCH_CONFUSER) is None
+
+    def test_total_actor_mismatch_refuses(self) -> None:
+        assert compose_loose_crayon_box_capacity(TOTAL_ACTOR_MISMATCH_CONFUSER) is None
+
+    def test_missing_all_loose_item_refuses(self) -> None:
+        assert compose_loose_crayon_box_capacity(MISSING_ALL_LOOSE_ITEM_CONFUSER) is None
 
     def test_multiple_fraction_refuses(self) -> None:
         assert compose_nested_fraction_remainder_total(MULTIPLE_FRACTION_CONFUSER) is None
