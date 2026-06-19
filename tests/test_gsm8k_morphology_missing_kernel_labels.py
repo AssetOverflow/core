@@ -8,6 +8,17 @@ from scripts.gsm8k_substrate_morphology import (
 )
 
 
+_RAW_PROCESS_FRAME_NAMES = {
+    "consumption",
+    "transfer",
+    "transaction",
+    "partition",
+    "container_packing",
+    "labor_rate",
+    "travel",
+}
+
+
 def test_classify_missing_substrate_labels() -> None:
     # 1. missing_scalar_equivalence
     labels = classify_missing_substrate("The remaining amount is .5 of the total.")
@@ -89,13 +100,8 @@ def test_planner_v2_recognizes_substrate_without_solving() -> None:
     assert "consumption" in record["recognized_process_frames"]
     assert record["recognized_hazards"]
     assert isinstance(record["legacy_parser_dependency"], tuple)
-    assert record["recommended_migration_target"] in {
-        "percent_partition",
-        "substrate:scalar_equivalence",
-        "substrate:ambiguity_hazards",
-        "consumption",
-        "substrate:problem_frame_builder",
-    }
+    assert record["recommended_migration_target"] == "percent_partition"
+    assert record["recommended_migration_target"] not in _RAW_PROCESS_FRAME_NAMES
 
 
 def test_planner_v2_recommends_percent_partition_for_half_percent_split() -> None:
@@ -110,3 +116,28 @@ def test_planner_v2_recommends_percent_partition_for_half_percent_split() -> Non
         classify_missing_substrate(text),
     )
     assert target == "percent_partition"
+
+
+def test_planner_fallback_never_returns_raw_process_frame_name() -> None:
+    for raw_frame in sorted(_RAW_PROCESS_FRAME_NAMES):
+        target = recommend_migration_target(
+            "A diagnostic problem with a recognized process frame.",
+            (raw_frame,),
+            (),
+        )
+        assert target not in _RAW_PROCESS_FRAME_NAMES
+        assert target.startswith("substrate:") or target in {
+            "percent_partition",
+            "nested_fraction_remainder_total",
+            "fraction_decrease",
+            "temporal_tariff",
+        }
+
+
+def test_unknown_process_frame_falls_back_to_process_frame_substrate() -> None:
+    target = recommend_migration_target(
+        "A diagnostic problem with a future process frame.",
+        ("future_frame",),
+        (),
+    )
+    assert target == "substrate:process_frames"
