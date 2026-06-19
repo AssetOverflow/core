@@ -812,6 +812,28 @@ from ADR-0119.5 and ADR-0114a Obligation #8:
 The `subtle_in_grammar` family (4 cases, all `correct`) proves the gate
 is not trivially satisfied by refusing everything.
 
+## Kernel substrate / ProblemFrame construction contract
+
+Diagnostics and future organ migrations may construct a `ProblemFrame` from raw
+problem text via `generate/problem_frame_builder.py::build_problem_frame`.
+
+Required properties:
+
+- Deterministic ordering of scalars, units, hazards, and process-frame candidates.
+- Exact `problem_text` source spans where grounding is available.
+- Hazards preserved from `language_packs.ambiguity_hazards` and scalar candidates.
+- Process frames attached as **candidates**, not conclusions.
+- No answer derivation, no case-id behavior, no serving admission from ProblemFrame alone.
+
+No-new-legacy rule: new derivation capabilities must consume ProblemFrame facts where
+the substrate can represent the needed meaning. New raw-prose/local-regex parsing
+inside a derivation organ requires an explicit `LEGACY_EXCEPTION` note and migration
+rationale (`tests/test_kernel_no_new_legacy_derivation_surfaces.py`).
+
+Serving policy (current): ProblemFrame construction is inspection/diagnostic only.
+Changing `train_sample` / holdout scores via ProblemFrame requires a ratified organ
+migration PR with verifier parity evidence.
+
 ### Evidence location
 
 - Lane runner: `evals/gsm8k_math/runner.py`

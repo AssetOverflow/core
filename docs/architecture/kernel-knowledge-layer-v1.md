@@ -75,6 +75,17 @@ To prevent architectural drift and maintain a clean separation of concerns, the 
 2. **Dimension Tables:** Standard conversion coefficients (e.g., $60 \text{ minutes} = 1 \text{ hour}$) must reside in the units pack conversions, not in organ-level multiplication constants.
 3. **Calendar Metrics:** Day-counts and calendar logic must be resolved strictly through the calendar pack.
 
+### No-new-legacy rule (enforced after operationalization PR)
+
+New derivation capabilities must consume `KernelFacts` / `ProblemFrame` facts where the
+substrate can represent the needed meaning. Construction entry point:
+`generate/problem_frame_builder.py::build_problem_frame`.
+
+New raw-prose/local-regex parsing inside a derivation organ requires an explicit
+`LEGACY_EXCEPTION` comment and migration rationale. CI guard:
+`tests/test_kernel_no_new_legacy_derivation_surfaces.py`. Legacy inventory:
+`docs/analysis/kernel-substrate-deprecation-audit-2026-06-18.md`.
+
 ---
 
 ## 8. Kernel Pack Model

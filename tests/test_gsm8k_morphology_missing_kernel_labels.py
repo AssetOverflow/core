@@ -1,7 +1,22 @@
 """Tests for scripts/gsm8k_substrate_morphology.py."""
 from __future__ import annotations
 
-from scripts.gsm8k_substrate_morphology import classify_missing_substrate
+from scripts.gsm8k_substrate_morphology import (
+    classify_missing_substrate,
+    plan_substrate_case,
+    recommend_migration_target,
+)
+
+
+_RAW_PROCESS_FRAME_NAMES = {
+    "consumption",
+    "transfer",
+    "transaction",
+    "partition",
+    "container_packing",
+    "labor_rate",
+    "travel",
+}
 
 
 def test_classify_missing_substrate_labels() -> None:
@@ -70,3 +85,59 @@ def test_deterministic_and_sorted() -> None:
     assert "missing_part_whole_frame" not in labels1
     assert "missing_container_frame" not in labels1
     assert "blocked_provenance_gap" in labels1
+
+
+def test_planner_v2_recognizes_substrate_without_solving() -> None:
+    record = plan_substrate_case(
+        case_id="test-0001",
+        problem_text="Mia spent 50% of her money.",
+        current_verdict="refused",
+    )
+
+    assert record["case_id"] == "test-0001"
+    assert record["current_verdict"] == "refused"
+    assert record["recognized_scalars"]
+    assert "consumption" in record["recognized_process_frames"]
+    assert record["recognized_hazards"]
+    assert isinstance(record["legacy_parser_dependency"], tuple)
+    assert record["recommended_migration_target"] == "percent_partition"
+    assert record["recommended_migration_target"] not in _RAW_PROCESS_FRAME_NAMES
+
+
+def test_planner_v2_recommends_percent_partition_for_half_percent_split() -> None:
+    text = (
+        "There are 100 students. Half are girls and the other half are boys. "
+        "30% of the girls own pets and 20% of the boys own pets. "
+        "How many students own pets?"
+    )
+    target = recommend_migration_target(
+        text,
+        ("partition", "consumption"),
+        classify_missing_substrate(text),
+    )
+    assert target == "percent_partition"
+
+
+def test_planner_fallback_never_returns_raw_process_frame_name() -> None:
+    for raw_frame in sorted(_RAW_PROCESS_FRAME_NAMES):
+        target = recommend_migration_target(
+            "A diagnostic problem with a recognized process frame.",
+            (raw_frame,),
+            (),
+        )
+        assert target not in _RAW_PROCESS_FRAME_NAMES
+        assert target.startswith("substrate:") or target in {
+            "percent_partition",
+            "nested_fraction_remainder_total",
+            "fraction_decrease",
+            "temporal_tariff",
+        }
+
+
+def test_unknown_process_frame_falls_back_to_process_frame_substrate() -> None:
+    target = recommend_migration_target(
+        "A diagnostic problem with a future process frame.",
+        ("future_frame",),
+        (),
+    )
+    assert target == "substrate:process_frames"

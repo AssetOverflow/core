@@ -123,6 +123,20 @@ runtime path.  Vault recall is exact and deterministic.
 - `calibration/*` — bounded replay-based calibration.
 - `docs/runtime_contracts.md` — response, telemetry, memory, identity, and testing contracts.
 
+### Kernel substrate / ProblemFrame (operational path after PR #829)
+
+New derivation capabilities must consume `KernelFacts` / `ProblemFrame` facts where the
+substrate can represent the needed meaning (`generate/problem_frame_builder.py`).
+
+```text
+raw problem text → KernelFacts → ProblemFrame → contract-backed derivation organs
+```
+
+New raw-prose/local-regex parsing inside a derivation organ requires an explicit
+`LEGACY_EXCEPTION` note and a migration rationale. Guard:
+`tests/test_kernel_no_new_legacy_derivation_surfaces.py`. Migration map:
+`docs/analysis/kernel-substrate-deprecation-audit-2026-06-18.md`.
+
 ### GSM8K math comprehension substrate (sealed; serving `7/43/0`, wrong=0 — moves only via ratified PRs)
 
 - `core/reliability_gate/` — calibrated-learning ledger + gate (ADR-0175): `ClassTally` counts, `conservative_floor` (one-sided Wilson, N_MIN=10), θ ceilings.
