@@ -14,8 +14,10 @@ from generate.problem_frame_builder import (
     recognized_process_frame_names,
     recognized_scalar_surfaces,
     recognized_unit_surfaces,
+    surface_in_text,
 )
-from generate.process_frames import lookup_frame
+from generate.problem_frame_contracts import assess_contracts, recommended_migration_target as contract_target
+from generate.process_frames import frame_by_name, lookup_frame
 from language_packs.loader import lookup_container
 from language_packs.scalar_equivalence import list_unsupported_surfaces
 from language_packs.unit_dimensions import classify_dimension
@@ -50,16 +52,14 @@ _STOPWORDS = {
 
 
 def _surface_in_text(surface: str, text_lower: str) -> bool:
-    padded = f" {text_lower} "
-    token = surface.lower()
-    return f" {token} " in padded or text_lower.startswith(f"{token} ") or text_lower.endswith(f" {token}") or text_lower == token
+    return surface_in_text(surface, text_lower)
 
 
 def _registered_frame_present(text_lower: str, expected: set[str]) -> bool:
     for frame_name in expected:
-        for frame in lookup_frame(frame_name):
-            if any(_surface_in_text(trigger, text_lower) for trigger in frame.trigger_surfaces):
-                return True
+        frame = frame_by_name(frame_name)
+        if frame is not None and any(_surface_in_text(trigger, text_lower) for trigger in frame.trigger_surfaces):
+            return True
     for trigger in text_lower.split():
         if any(frame.name in expected for frame in lookup_frame(trigger)):
             return True
@@ -131,10 +131,9 @@ def _target_for_process_frames(process_frames: tuple[str, ...]) -> str | None:
 
 def recommend_migration_target(problem_text: str, process_frames: tuple[str, ...], missing_labels: tuple[str, ...]) -> str:
     lowered = problem_text.lower()
-    if "%" in problem_text and ("half" in lowered or "partition" in process_frames or "consumption" in process_frames):
-        return "percent_partition"
-    if "other half" in lowered and "%" in problem_text:
-        return "percent_partition"
+    assessments = assess_contracts(build_problem_frame(problem_text))
+    if assessments:
+        return contract_target(assessments)
     if "missing_scalar_equivalence" in missing_labels:
         return "substrate:scalar_equivalence"
     if "missing_unit_dimension" in missing_labels:
@@ -159,6 +158,7 @@ def plan_substrate_case(*, case_id: str, problem_text: str, current_verdict: str
     frame = build_problem_frame(problem_text)
     missing_labels = classify_missing_substrate(problem_text)
     process_frames = recognized_process_frame_names(frame)
+    assessments = assess_contracts(frame)
     return {
         "case_id": case_id,
         "current_verdict": current_verdict,
@@ -166,9 +166,17 @@ def plan_substrate_case(*, case_id: str, problem_text: str, current_verdict: str
         "recognized_units": recognized_unit_surfaces(frame),
         "recognized_process_frames": process_frames,
         "recognized_hazards": recognized_hazard_ids(frame),
+        "entity_mention_count": sum(m.kind in {"entity", "actor", "object"} for m in frame.mentions),
+        "quantity_binding_count": sum(b.binding_type == "quantity_entity" for b in frame.bindings),
+        "bound_process_relation_count": len(frame.bound_relations),
+        "bound_question_target_present": bool(frame.bound_question_target and frame.bound_question_target.grounded),
+        "candidate_organ_contracts": tuple(a.candidate_organ for a in assessments),
+        "runnable_contracts": tuple(a.candidate_organ for a in assessments if a.runnable),
+        "missing_bindings": tuple(sorted({gap for a in assessments for gap in a.missing_bindings})),
+        "unresolved_contract_hazards": tuple(sorted({gap for a in assessments for gap in a.unresolved_hazards})),
         "missing_substrate_labels": missing_labels,
         "legacy_parser_dependency": _legacy_parser_dependency(problem_text, process_frames, missing_labels),
-        "recommended_migration_target": recommend_migration_target(problem_text, process_frames, missing_labels),
+        "recommended_migration_target": contract_target(assessments) if assessments else recommend_migration_target(problem_text, process_frames, missing_labels),
     }
 
 

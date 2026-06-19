@@ -13,11 +13,15 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from generate.kernel_facts import (
+        BoundRelation,
         GroundedScalar,
+        GroundedMention,
         GroundedUnit,
+        MentionBinding,
         CandidateRelation,
         KernelHazard,
         KernelProvenance,
+        SourceSpan,
     )
     from language_packs.scalar_equivalence import ScalarCandidate
     from generate.process_frames import ProcessFrame
@@ -40,6 +44,21 @@ class QuestionTarget:
 
 
 @dataclass(frozen=True, slots=True)
+class BoundQuestionTarget:
+    """Question target grounded to a mention, or explicitly unresolved."""
+
+    target_type: str
+    requested_surface: str
+    target_mention_id: str | None
+    unknown_slot: str
+    evidence_spans: tuple[SourceSpan, ...]
+
+    @property
+    def grounded(self) -> bool:
+        return self.target_mention_id is not None
+
+
+@dataclass(frozen=True, slots=True)
 class ProblemFrame:
     """Immutable target representation of a mathematical word problem.
 
@@ -56,6 +75,10 @@ class ProblemFrame:
     question_target: QuestionTarget | None
     hazards: tuple[KernelHazard, ...]
     provenance: tuple[KernelProvenance, ...]
+    mentions: tuple[GroundedMention, ...] = ()
+    bindings: tuple[MentionBinding, ...] = ()
+    bound_relations: tuple[BoundRelation, ...] = ()
+    bound_question_target: BoundQuestionTarget | None = None
 
 
 class ProblemFrameBuilder:
@@ -72,6 +95,10 @@ class ProblemFrameBuilder:
         self._question_target: QuestionTarget | None = None
         self._hazards: list[KernelHazard] = []
         self._provenance: list[KernelProvenance] = []
+        self._mentions: list[GroundedMention] = []
+        self._bindings: list[MentionBinding] = []
+        self._bound_relations: list[BoundRelation] = []
+        self._bound_question_target: BoundQuestionTarget | None = None
 
     def add_quantity(self, scalar: GroundedScalar) -> None:
         """Add a GroundedScalar to the frame, collecting hazards and provenance."""
@@ -123,6 +150,18 @@ class ProblemFrameBuilder:
         """Add a provenance record directly to the frame."""
         self._provenance.append(provenance)
 
+    def add_mention(self, mention: GroundedMention) -> None:
+        self._mentions.append(mention)
+
+    def add_binding(self, binding: MentionBinding) -> None:
+        self._bindings.append(binding)
+
+    def add_bound_relation(self, relation: BoundRelation) -> None:
+        self._bound_relations.append(relation)
+
+    def set_bound_question_target(self, target: BoundQuestionTarget) -> None:
+        self._bound_question_target = target
+
     def build(self) -> ProblemFrame:
         """Produce the immutable ProblemFrame."""
         return ProblemFrame(
@@ -136,4 +175,8 @@ class ProblemFrameBuilder:
             question_target=self._question_target,
             hazards=tuple(self._hazards),
             provenance=tuple(self._provenance),
+            mentions=tuple(self._mentions),
+            bindings=tuple(self._bindings),
+            bound_relations=tuple(self._bound_relations),
+            bound_question_target=self._bound_question_target,
         )

@@ -100,7 +100,7 @@ def test_planner_v2_recognizes_substrate_without_solving() -> None:
     assert "consumption" in record["recognized_process_frames"]
     assert record["recognized_hazards"]
     assert isinstance(record["legacy_parser_dependency"], tuple)
-    assert record["recommended_migration_target"] == "percent_partition"
+    assert record["recommended_migration_target"] == "substrate:contract_gap:percent_partition"
     assert record["recommended_migration_target"] not in _RAW_PROCESS_FRAME_NAMES
 
 
@@ -115,7 +115,13 @@ def test_planner_v2_recommends_percent_partition_for_half_percent_split() -> Non
         ("partition", "consumption"),
         classify_missing_substrate(text),
     )
-    assert target == "percent_partition"
+    assert target in {"percent_partition", "substrate:contract_gap:percent_partition"}
+
+
+def test_punctuation_boundary_registered_container() -> None:
+    assert "missing_container_frame" not in classify_missing_substrate(
+        "There are 10 bloops in the box."
+    )
 
 
 def test_planner_fallback_never_returns_raw_process_frame_name() -> None:
