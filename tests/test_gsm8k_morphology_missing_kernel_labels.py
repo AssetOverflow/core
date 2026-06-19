@@ -1,8 +1,6 @@
 """Tests for scripts/gsm8k_substrate_morphology.py."""
 from __future__ import annotations
 
-import pytest
-
 from scripts.gsm8k_substrate_morphology import classify_missing_substrate
 
 
@@ -20,27 +18,27 @@ def test_classify_missing_substrate_labels() -> None:
 
     labels = classify_missing_substrate("There are 10 bloops in the box.")
     assert "missing_unit_dimension" in labels
-    assert "missing_container_frame" in labels  # "box" trigger
+    assert "missing_container_frame" not in labels  # "box" resolves to container_packing
 
-    # 3. missing_process_frame
+    # 3. registered process frame must not be labeled missing
     labels = classify_missing_substrate("John decides to give away his cards.")
-    assert "missing_process_frame" in labels
+    assert "missing_process_frame" not in labels
 
-    # 4. missing_part_whole_frame
+    # 4. registered partition frame must not be labeled missing
     labels = classify_missing_substrate("Mary wants to split the money.")
-    assert "missing_part_whole_frame" in labels
+    assert "missing_part_whole_frame" not in labels
 
-    # 5. missing_container_frame
+    # 5. registered container frame must not be labeled missing
     labels = classify_missing_substrate("Pack 10 apples into a bag.")
-    assert "missing_container_frame" in labels
+    assert "missing_container_frame" not in labels
 
-    # 6. missing_temporal_frame
+    # 6. missing_temporal_frame for uncovered time surfaces
     labels = classify_missing_substrate("John worked for 5 hours to earn money.")
     assert "missing_temporal_frame" in labels
 
-    # 7. missing_route_frame
+    # 7. registered travel frame must not be labeled missing
     labels = classify_missing_substrate("They will drive a distance of 50 miles.")
-    assert "missing_route_frame" in labels
+    assert "missing_route_frame" not in labels
 
     # 8. missing_question_target
     labels = classify_missing_substrate("Calculate the total amount.")
@@ -55,6 +53,12 @@ def test_classify_missing_substrate_labels() -> None:
     assert "blocked_provenance_gap" in labels
 
 
+def test_registered_frames_suppress_missing_labels() -> None:
+    labels = classify_missing_substrate("John gives 3 apples from the box.")
+    assert "missing_process_frame" not in labels
+    assert "missing_container_frame" not in labels
+
+
 def test_deterministic_and_sorted() -> None:
     problem = "John decides to split 5 bloops into boxes during a leap year."
     labels1 = classify_missing_substrate(problem)
@@ -62,8 +66,7 @@ def test_deterministic_and_sorted() -> None:
 
     assert labels1 == labels2
     assert list(labels1) == sorted(labels1)
-    # Check that multiple labels are correctly triggered
-    assert "missing_unit_dimension" in labels1      # "bloops"
-    assert "missing_part_whole_frame" in labels1    # "split"
-    assert "missing_container_frame" in labels1     # "boxes"
-    assert "blocked_provenance_gap" in labels1      # "leap year"
+    assert "missing_unit_dimension" in labels1
+    assert "missing_part_whole_frame" not in labels1
+    assert "missing_container_frame" not in labels1
+    assert "blocked_provenance_gap" in labels1

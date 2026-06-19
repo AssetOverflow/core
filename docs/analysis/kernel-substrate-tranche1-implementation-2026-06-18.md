@@ -28,7 +28,28 @@ Seven new Python modules have been introduced to establish the substrate layer:
 
 ## 4. Scalar Equivalence Coverage
 
-Exposed via `language_packs/scalar_equivalence.py`:
+### Canonicalize vs grounded extraction
+
+`language_packs/scalar_equivalence.py` exposes two complementary APIs:
+
+- **`canonicalize_scalar(surface)`** — pack-level helper for detached surface strings.
+  Returns a `ScalarCandidate` with canonical `Fraction`, source kind, entry id, and
+  hazards.  Provenance and span fields remain `None` (no problem-text grounding).
+- **`extract_scalar_candidates(text)`** — text-level extraction for ProblemFrame
+  substrate facts.  Every emitted candidate carries:
+  - `source_surface` — exact substring from the original text
+  - `source_span` — `(start, end)` character offsets (Python slice semantics)
+  - `provenance_kind = "problem_text"`
+  - `canonical` — exact `Fraction`
+  - `source` — scalar resolution kind (`fraction_word`, `decimal`, etc.)
+  - `hazards` — ambiguity hazard IDs
+
+Pack/world/derived values (`classify_dimension`, detached `canonicalize_scalar`)
+do not masquerade as `problem_text`.  Multiple scalars are emitted in deterministic
+left-to-right span order.  Unsupported forms (`.5`, `1 / 2`) are omitted from
+extraction and flagged separately by the morphology atlas.
+
+Exposed scalar surfaces via the facade:
 - **Word forms:** `half`, `one half`, `one-half`, `third`, `one third`, `two thirds`, `quarter`, `one quarter`, `three quarters`.
 - **Symbols:** Unicode symbols (`½`, `¼`, `¾`, `⅓`, `⅔`).
 - **Mixed numbers / slash forms:** `1/2`, `3/4`, `1 1/2`.
@@ -97,6 +118,28 @@ Exposed via `scripts/gsm8k_substrate_morphology.py`:
   `missing_scalar_equivalence`, `missing_unit_dimension`, `missing_process_frame`, `missing_part_whole_frame`, `missing_container_frame`, `missing_temporal_frame`, `missing_route_frame`, `missing_question_target`, `blocked_ambiguity_hazard`, `blocked_provenance_gap`.
 - Exposes a deterministic function `classify_missing_substrate` and a CLI interface to batch-process cases.
 
+### Corrected label semantics (post-patch)
+
+`missing_*` labels now mean **substrate lookup failure**, not mere trigger-surface
+presence.  For frame-backed categories, the classifier checks
+`generate/process_frames.lookup_frame` before emitting a label:
+
+- Text containing **give** does **not** receive `missing_process_frame` when the
+  `transfer` frame is registered.
+- Text containing **box** does **not** receive `missing_container_frame` when
+  `container_packing` is registered.
+- Similarly for **split** / `partition`, **drive** / `travel`, and other
+  registered frame triggers.
+
+Labels that remain trigger-based (not frame lookup):
+
+- `missing_scalar_equivalence` — unsupported numeric surfaces (`.5`, `1 / 2`, etc.)
+- `missing_unit_dimension` — unknown unit-like nouns after digits
+- `missing_temporal_frame` — time surfaces with no registered process frame
+- `missing_question_target`, `blocked_ambiguity_hazard`, `blocked_provenance_gap`
+
+All labels are deterministic and sorted.
+
 ---
 
 ## 11. Serving Integration Status
@@ -116,7 +159,28 @@ Documented and explicitly refused surfaces in the scalar facade:
 
 ## 13. Validation
 
-Verification has been completed across multiple lanes:
+### Post-patch verification (2026-06-18)
+
+After grounding scalar spans and tightening morphology label semantics:
+
+1. **`git diff --check origin/main...HEAD`** — no whitespace errors.
+2. **Kernel substrate unit tests** — all pass:
+   - `tests/test_kernel_facts.py`
+   - `tests/test_language_packs_scalar_equivalence.py` (includes span/provenance extraction)
+   - `tests/test_language_packs_unit_dimensions.py`
+   - `tests/test_ambiguity_hazards.py`
+   - `tests/test_process_frames.py`
+   - `tests/test_problem_frame_skeleton.py`
+   - `tests/test_gsm8k_morphology_missing_kernel_labels.py`
+3. **Capability safety** — ADR-0128 numeric format and math candidate graph sprint tests pass.
+4. **Evaluation scores (unchanged):**
+   - `train_sample`: 30 correct / 20 refused / 0 wrong — `wrong_ids: []`
+   - `holdout_dev`: 5 correct / 495 refused / 0 wrong — `wrong_ids: []`
+5. **Smoke suite:** `core test --suite smoke -q` green.
+
+### Initial tranche verification
+
+Verification from the initial implementation:
 1. **Unit tests:** 7 new test files containing 33 unit test cases verify all primitives, facade mappings, hazard lookups, and schemas. All 33 pass.
 2. **Capability safety:** 227 existing tests pass, confirming zero regression.
 3. **Evaluation scores:**

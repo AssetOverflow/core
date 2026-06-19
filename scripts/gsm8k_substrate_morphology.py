@@ -2,6 +2,10 @@
 """Classify GSM8K problems by missing substrate category.
 
 Tranche 1 — broad base-layer foundations.
+
+Labels are semantically honest: ``missing_*`` categories fire only when a
+needed substrate lookup actually fails, not merely because a trigger
+surface appears in the text.
 """
 from __future__ import annotations
 
@@ -14,7 +18,60 @@ from typing import Sequence
 from language_packs.scalar_equivalence import list_unsupported_surfaces
 from language_packs.unit_dimensions import classify_dimension
 from language_packs.loader import lookup_container
-from generate.process_frames import all_frames
+from generate.process_frames import all_frames, lookup_frame
+
+
+_PROCESS_FRAME_NAMES: frozenset[str] = frozenset({"transfer", "consumption", "transaction"})
+_CONTAINER_FRAME_NAMES: frozenset[str] = frozenset({"container_packing"})
+_PARTITION_FRAME_NAMES: frozenset[str] = frozenset({"partition"})
+_TRAVEL_FRAME_NAMES: frozenset[str] = frozenset({"travel"})
+
+_TEMPORAL_SURFACE_TRIGGERS: tuple[str, ...] = (
+    "hour", "hours", "minute", "minutes", "second", "seconds",
+    "day", "days", "week", "weeks", "month", "months", "year", "years",
+)
+
+_AMBIGUITY_HAZARD_SURFACES: tuple[str, ...] = (
+    "half", "quarter", "third", "percent", "percentage points", "times",
+    "more than", "less than", "of", "per", "each", "some", "remaining",
+    "left", "total", "altogether",
+)
+
+
+def _surface_in_text(surface: str, text_lower: str) -> bool:
+    """Return True when *surface* appears as a token/phrase in *text_lower*."""
+    token = surface.lower()
+    padded = f" {text_lower} "
+    return (
+        f" {token} " in padded
+        or text_lower.startswith(f"{token} ")
+        or text_lower.endswith(f" {token}")
+        or text_lower == token
+    )
+
+
+def _frame_triggers(frame_names: frozenset[str]) -> tuple[str, ...]:
+    triggers: list[str] = []
+    for frame in all_frames():
+        if frame.name in frame_names:
+            triggers.extend(frame.trigger_surfaces)
+    return tuple(triggers)
+
+
+def _missing_frame_for_triggers(
+    text_lower: str,
+    triggers: Sequence[str],
+    frame_names: frozenset[str],
+) -> bool:
+    """True when text contains category triggers but none resolve to a frame."""
+    saw_trigger = False
+    for trigger in triggers:
+        if not _surface_in_text(trigger, text_lower):
+            continue
+        saw_trigger = True
+        if any(frame.name in frame_names for frame in lookup_frame(trigger)):
+            return False
+    return saw_trigger
 
 
 def classify_missing_substrate(problem_text: str) -> tuple[str, ...]:
@@ -22,21 +79,18 @@ def classify_missing_substrate(problem_text: str) -> tuple[str, ...]:
 
     Inspects problem text using substrate facades to identify gaps.
     """
-    labels = set()
+    labels: set[str] = set()
     text_lower = problem_text.lower()
 
     # 1. missing_scalar_equivalence
-    # If the text has unsupported surfaces like ".5" or "1 / 2"
     for unsup in list_unsupported_surfaces():
-        if unsup in text_lower:
+        if unsup in problem_text or unsup in text_lower:
             labels.add("missing_scalar_equivalence")
 
-    # Look for digit-slash-digit with spaces
     if re.search(r"\b\d+\s+/\s+\d+\b", problem_text) or re.search(r"\b\.\d+\b", problem_text):
         labels.add("missing_scalar_equivalence")
 
     # 2. missing_unit_dimension
-    # Extract words following digits (e.g. "5 widgets")
     matches = re.findall(r"\b\d+(?:\.\d+)?\s+([a-zA-Z]+)\b", problem_text)
     for word in matches:
         word_lower = word.lower()
@@ -48,31 +102,42 @@ def classify_missing_substrate(problem_text: str) -> tuple[str, ...]:
         if classify_dimension(word_lower) is None and lookup_container(word_lower) is None:
             labels.add("missing_unit_dimension")
 
-    # 3. missing_process_frame
-    has_triggers = False
-    for frame in all_frames():
-        for trigger in frame.trigger_surfaces:
-            if f" {trigger} " in f" {text_lower} " or text_lower.startswith(trigger) or text_lower.endswith(trigger):
-                has_triggers = True
-                break
-    if has_triggers:
-        if "give" in text_lower or "gave" in text_lower or "gives" in text_lower:
-            labels.add("missing_process_frame")
+    # 3. missing_process_frame — only when process triggers fail lookup
+    if _missing_frame_for_triggers(
+        text_lower,
+        _frame_triggers(_PROCESS_FRAME_NAMES),
+        _PROCESS_FRAME_NAMES,
+    ):
+        labels.add("missing_process_frame")
 
-    # 4. missing_part_whole_frame
-    if any(w in text_lower for w in ["split", "divide", "share", "partition", "rest of", "portion"]):
+    # 4. missing_part_whole_frame — partition triggers must fail lookup
+    if _missing_frame_for_triggers(
+        text_lower,
+        _frame_triggers(_PARTITION_FRAME_NAMES),
+        _PARTITION_FRAME_NAMES,
+    ):
         labels.add("missing_part_whole_frame")
 
-    # 5. missing_container_frame
-    if any(w in text_lower for w in ["box", "pack", "bag", "fill", "contain", "crate", "carton"]):
+    # 5. missing_container_frame — container triggers must fail lookup
+    if _missing_frame_for_triggers(
+        text_lower,
+        _frame_triggers(_CONTAINER_FRAME_NAMES),
+        _CONTAINER_FRAME_NAMES,
+    ):
         labels.add("missing_container_frame")
 
-    # 6. missing_temporal_frame
-    if any(w in text_lower for w in ["hour", "minute", "day", "week", "month", "year", "work", "earn", "salary", "wage"]):
-        labels.add("missing_temporal_frame")
+    # 6. missing_temporal_frame — temporal surfaces with no registered frame
+    for trigger in _TEMPORAL_SURFACE_TRIGGERS:
+        if _surface_in_text(trigger, text_lower) and not lookup_frame(trigger):
+            labels.add("missing_temporal_frame")
+            break
 
-    # 7. missing_route_frame
-    if any(w in text_lower for w in ["drive", "walk", "run", "travel", "miles per hour", "mph", "trip", "journey"]):
+    # 7. missing_route_frame — travel triggers must fail lookup
+    if _missing_frame_for_triggers(
+        text_lower,
+        _frame_triggers(_TRAVEL_FRAME_NAMES),
+        _TRAVEL_FRAME_NAMES,
+    ):
         labels.add("missing_route_frame")
 
     # 8. missing_question_target
@@ -80,13 +145,10 @@ def classify_missing_substrate(problem_text: str) -> tuple[str, ...]:
         labels.add("missing_question_target")
 
     # 9. blocked_ambiguity_hazard
-    for hazard_surf in [
-        "half", "quarter", "third", "percent", "percentage points", "times",
-        "more than", "less than", "of", "per", "each", "some", "remaining",
-        "left", "total", "altogether"
-    ]:
-        if f" {hazard_surf} " in f" {text_lower} " or text_lower.startswith(hazard_surf) or text_lower.endswith(hazard_surf):
+    for hazard_surf in _AMBIGUITY_HAZARD_SURFACES:
+        if _surface_in_text(hazard_surf, text_lower):
             labels.add("blocked_ambiguity_hazard")
+            break
 
     # 10. blocked_provenance_gap
     if "leap year" in text_lower or "calendar" in text_lower or "world fact" in text_lower:
