@@ -25,7 +25,7 @@ from generate.kernel_facts import (
     SourceSpan,
 )
 from generate.problem_frame import ProblemFrame, ProblemFrameBuilder, QuestionTarget
-from generate.process_frames import ProcessFrame, all_frames, lookup_frame
+from generate.process_frames import ProcessFrame, all_frames
 from language_packs.ambiguity_hazards import (
     AmbiguityHazard,
     all_registered_surfaces,
@@ -34,7 +34,6 @@ from language_packs.ambiguity_hazards import (
 from language_packs.scalar_equivalence import (
     ScalarCandidate,
     extract_scalar_candidates,
-    list_unsupported_surfaces,
 )
 from language_packs.unit_dimensions import classify_dimension
 
@@ -269,13 +268,6 @@ def _detect_question_target(text: str) -> QuestionTarget | None:
     return None
 
 
-def _has_unsupported_scalar_surface(text: str) -> bool:
-    for surface in list_unsupported_surfaces():
-        if surface in text:
-            return True
-    return False
-
-
 def build_problem_frame(problem_text: str) -> ProblemFrame:
     """Build a substrate-backed ProblemFrame from raw problem text.
 
@@ -309,10 +301,6 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
     question_target = _detect_question_target(problem_text)
     if question_target is not None:
         builder.set_question_target(question_target)
-
-    # Unsupported scalar tokenisations remain absent from scalars; callers can
-    # consult list_unsupported_surfaces() — we do not broaden ADR-0128 here.
-    _ = _has_unsupported_scalar_surface(problem_text)
 
     return builder.build()
 
