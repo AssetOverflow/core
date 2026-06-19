@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import Union
+from typing import Literal, Union
 
 # ---------------------------------------------------------------------------
 # Provenance kinds — closed set per Tranche 1 brief.
@@ -205,6 +205,55 @@ class CandidateRelation:
     roles: tuple[RelationRole, ...] = ()
     provenance: KernelProvenance | None = None
     hazards: tuple[KernelHazard, ...] = ()
+
+
+# ---------------------------------------------------------------------------
+# Span-grounded mention and binding primitives.
+# ---------------------------------------------------------------------------
+MentionKind = Literal["entity", "actor", "object", "quantity", "unit"]
+BindingKind = Literal["quantity_entity", "quantity_unit"]
+
+
+@dataclass(frozen=True, slots=True)
+class GroundedMention:
+    """A deterministic, source-grounded mention; never a derived answer."""
+
+    mention_id: str
+    kind: MentionKind
+    surface: str
+    span: SourceSpan
+    fact_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class MentionBinding:
+    """A typed edge between two grounded mentions."""
+
+    binding_id: str
+    binding_type: BindingKind
+    source_mention_id: str
+    target_mention_id: str
+    evidence_spans: tuple[SourceSpan, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class BoundRole:
+    """A declared relation role bound to a mention or substrate fact."""
+
+    role: str
+    target_id: str
+    target_kind: str
+    evidence_spans: tuple[SourceSpan, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class BoundRelation:
+    """A candidate relation whose roles have explicit grounded referents."""
+
+    relation_id: str
+    relation_type: str
+    roles: tuple[BoundRole, ...]
+    evidence_spans: tuple[SourceSpan, ...]
 
 
 # ---------------------------------------------------------------------------

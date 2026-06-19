@@ -103,3 +103,32 @@ def test_deterministic_ordering_across_repeated_runs() -> None:
     assert frame_a.process_frames == frame_b.process_frames
     assert frame_a.hazards == frame_b.hazards
     assert frame_a.candidate_relations == frame_b.candidate_relations
+    assert frame_a.mentions == frame_b.mentions
+    assert frame_a.bindings == frame_b.bindings
+    assert frame_a.bound_relations == frame_b.bound_relations
+
+
+def test_mentions_bind_quantities_and_units_with_exact_spans() -> None:
+    text = "A runner traveled 5 miles in 2 hours. How many miles?"
+    frame = build_problem_frame(text)
+
+    assert any(binding.binding_type == "quantity_entity" for binding in frame.bindings)
+    assert any(binding.binding_type == "quantity_unit" for binding in frame.bindings)
+    for mention in frame.mentions:
+        assert text[mention.span.start:mention.span.end] == mention.span.text
+
+
+def test_transfer_roles_and_question_target_are_bound() -> None:
+    frame = build_problem_frame(
+        "Tom gave Ana 3 marbles. How many marbles does Ana have?"
+    )
+    relation = next(item for item in frame.bound_relations if item.relation_type == "transfer")
+    assert {role.role for role in relation.roles} == {"agent", "patient", "quantity", "object"}
+    assert frame.bound_question_target is not None
+    assert frame.bound_question_target.grounded
+
+
+def test_question_target_is_explicitly_unbound_when_not_groundable() -> None:
+    frame = build_problem_frame("What is the answer?")
+    assert frame.bound_question_target is not None
+    assert not frame.bound_question_target.grounded
