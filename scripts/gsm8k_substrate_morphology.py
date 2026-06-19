@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Classify GSM8K problems by missing substrate category.
+"""Classify GSM8K problems by missing substrate category and plan migrations.
 
 Tranche 1 — broad base-layer foundations.
+Planner v2 — operationalization pass: recognize substrate facts and recommend
+legacy-parser migration targets without answer mining or pack mutation.
 
 Labels are semantically honest: ``missing_*`` categories fire only when a
 needed substrate lookup actually fails, not merely because a trigger
@@ -13,8 +15,15 @@ import argparse
 import json
 import re
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
+from generate.problem_frame_builder import (
+    build_problem_frame,
+    recognized_hazard_ids,
+    recognized_process_frame_names,
+    recognized_scalar_surfaces,
+    recognized_unit_surfaces,
+)
 from language_packs.scalar_equivalence import list_unsupported_surfaces
 from language_packs.unit_dimensions import classify_dimension
 from language_packs.loader import lookup_container
@@ -157,11 +166,141 @@ def classify_missing_substrate(problem_text: str) -> tuple[str, ...]:
     return tuple(sorted(labels))
 
 
+_FIRST_MIGRATION_ORGANS: tuple[str, ...] = (
+    "percent_partition",
+    "nested_fraction_remainder_total",
+    "fraction_decrease",
+    "temporal_tariff",
+)
+
+_ORGAN_MODULE_PATHS: dict[str, str] = {
+    "percent_partition": "generate/derivation/percent_partition.py",
+    "nested_fraction_remainder_total": "generate/derivation/nested_fraction_remainder_total.py",
+    "fraction_decrease": "generate/derivation/fraction_decrease.py",
+    "temporal_tariff": "generate/derivation/temporal_tariff.py",
+    "extract_shared": "generate/derivation/extract.py",
+    "math_candidate_parser": "generate/math_candidate_parser.py",
+}
+
+
+def _legacy_parser_dependency(
+    problem_text: str,
+    process_frames: tuple[str, ...],
+    missing_labels: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Map problem surfaces to currently-serving legacy parser modules."""
+    deps: set[str] = set()
+    lowered = problem_text.lower()
+
+    if "%" in problem_text or "percent" in lowered:
+        deps.add(_ORGAN_MODULE_PATHS["percent_partition"])
+    if "other half" in lowered:
+        deps.add(_ORGAN_MODULE_PATHS["percent_partition"])
+    if "remaining" in lowered and ("half" in lowered or "quarter" in lowered):
+        deps.add(_ORGAN_MODULE_PATHS["nested_fraction_remainder_total"])
+    if any(word in lowered for word in ("decrease", "decreased", "decreases")):
+        deps.add(_ORGAN_MODULE_PATHS["fraction_decrease"])
+    if any(
+        token in lowered
+        for token in ("hour", "hours", "per hour", "overtime", "threshold")
+    ):
+        deps.add(_ORGAN_MODULE_PATHS["temporal_tariff"])
+    if "labor_rate" in process_frames:
+        deps.add(_ORGAN_MODULE_PATHS["temporal_tariff"])
+
+    if re.search(r"\d", problem_text):
+        deps.add(_ORGAN_MODULE_PATHS["extract_shared"])
+    if "missing_scalar_equivalence" in missing_labels:
+        deps.add(_ORGAN_MODULE_PATHS["math_candidate_parser"])
+
+    return tuple(sorted(deps))
+
+
+def recommend_migration_target(
+    problem_text: str,
+    process_frames: tuple[str, ...],
+    missing_labels: tuple[str, ...],
+) -> str:
+    """Recommend the next organ or substrate extension for this problem."""
+    lowered = problem_text.lower()
+
+    if "%" in problem_text and ("half" in lowered or "partition" in process_frames):
+        return "percent_partition"
+    if "other half" in lowered and "%" in problem_text:
+        return "percent_partition"
+
+    if "missing_scalar_equivalence" in missing_labels:
+        return "substrate:scalar_equivalence"
+    if "missing_unit_dimension" in missing_labels:
+        return "substrate:unit_dimensions"
+    if "blocked_provenance_gap" in missing_labels:
+        return "substrate:kernel_calendar"
+    if "remaining" in lowered and ("half" in lowered or "quarter" in lowered):
+        return "nested_fraction_remainder_total"
+    if any(word in lowered for word in ("decrease", "decreased")):
+        return "fraction_decrease"
+    if "labor_rate" in process_frames or any(
+        token in lowered for token in ("per hour", "hourly", "overtime")
+    ):
+        return "temporal_tariff"
+    if "blocked_ambiguity_hazard" in missing_labels:
+        return "substrate:ambiguity_hazards"
+
+    if process_frames:
+        return process_frames[0]
+
+    return "substrate:problem_frame_builder"
+
+
+def plan_substrate_case(
+    *,
+    case_id: str,
+    problem_text: str,
+    current_verdict: str | None = None,
+) -> dict[str, Any]:
+    """Planner v2 record for one problem — diagnostics only, no solving."""
+    frame = build_problem_frame(problem_text)
+    missing_labels = classify_missing_substrate(problem_text)
+    process_frames = recognized_process_frame_names(frame)
+
+    return {
+        "case_id": case_id,
+        "current_verdict": current_verdict,
+        "recognized_scalars": recognized_scalar_surfaces(frame),
+        "recognized_units": recognized_unit_surfaces(frame),
+        "recognized_process_frames": process_frames,
+        "recognized_hazards": recognized_hazard_ids(frame),
+        "missing_substrate_labels": missing_labels,
+        "legacy_parser_dependency": _legacy_parser_dependency(
+            problem_text,
+            process_frames,
+            missing_labels,
+        ),
+        "recommended_migration_target": recommend_migration_target(
+            problem_text,
+            process_frames,
+            missing_labels,
+        ),
+    }
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Classify GSM8K problems by missing substrate.")
+    parser = argparse.ArgumentParser(
+        description="Classify GSM8K problems by missing substrate and plan migrations.",
+    )
     parser.add_argument("--cases", type=str, help="Path to JSONL cases file")
     parser.add_argument("--out", type=str, help="Path to write classified output JSONL")
     parser.add_argument("--limit", type=int, help="Limit number of cases to process")
+    parser.add_argument(
+        "--planner",
+        action="store_true",
+        help="Emit morphology planner v2 records (recognized substrate + migration targets)",
+    )
+    parser.add_argument(
+        "--verdicts",
+        type=str,
+        help="Optional JSON report with per_case verdicts keyed by case_id",
+    )
 
     args = parser.parse_args()
 
@@ -174,7 +313,18 @@ def main() -> None:
         print(f"Cases file not found at {args.cases}")
         return
 
-    out_lines = []
+    verdicts: dict[str, str] = {}
+    if args.verdicts:
+        report_path = Path(args.verdicts)
+        if report_path.exists():
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            for row in report.get("per_case", []):
+                cid = row.get("case_id")
+                verdict = row.get("verdict")
+                if cid and verdict:
+                    verdicts[cid] = verdict
+
+    out_lines: list[dict[str, Any]] = []
     count = 0
     with cases_path.open("r", encoding="utf-8") as f:
         for line in f:
@@ -185,13 +335,21 @@ def main() -> None:
             if not problem_text:
                 continue
 
-            labels = classify_missing_substrate(problem_text)
             case_id = case.get("case_id") or f"case_{count}"
-            out_lines.append({
-                "case_id": case_id,
-                "problem_text": problem_text,
-                "missing_substrate_labels": labels
-            })
+            if args.planner:
+                record = plan_substrate_case(
+                    case_id=case_id,
+                    problem_text=problem_text,
+                    current_verdict=verdicts.get(case_id),
+                )
+            else:
+                labels = classify_missing_substrate(problem_text)
+                record = {
+                    "case_id": case_id,
+                    "problem_text": problem_text,
+                    "missing_substrate_labels": labels,
+                }
+            out_lines.append(record)
 
             count += 1
             if args.limit and count >= args.limit:

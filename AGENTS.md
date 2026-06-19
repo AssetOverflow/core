@@ -323,6 +323,25 @@ If it touches user input, files, dynamic imports, or logs, what trust boundary w
 Prefer small, load-bearing PRs.  Do not mix baseline fixes, feature work, and
 large reorganization unless the coupling is unavoidable.
 
+## Kernel Substrate / No-New-Legacy Rule
+
+After PR #829, the preferred math comprehension construction path is:
+
+```text
+raw problem text → KernelFacts → ProblemFrame → contract-backed derivation organs
+```
+
+- Use `generate/problem_frame_builder.py::build_problem_frame` for substrate-backed
+  fact extraction (scalars, units, hazards, process-frame candidates).
+- New derivation capabilities must consume ProblemFrame facts where the substrate can
+  represent the needed meaning.
+- New raw-prose/local-regex parsing inside a derivation organ requires an explicit
+  `LEGACY_EXCEPTION` comment and migration rationale.
+- Guard test: `tests/test_kernel_no_new_legacy_derivation_surfaces.py`.
+- Audit map: `docs/analysis/kernel-substrate-deprecation-audit-2026-06-18.md`.
+
+Do not add another isolated benchmark organ with a local prose parser.
+
 ## Architecture in One Sentence
 
 Raw input becomes a closed versor field once; thought evolves through exact

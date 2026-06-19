@@ -1,7 +1,11 @@
 """Tests for scripts/gsm8k_substrate_morphology.py."""
 from __future__ import annotations
 
-from scripts.gsm8k_substrate_morphology import classify_missing_substrate
+from scripts.gsm8k_substrate_morphology import (
+    classify_missing_substrate,
+    plan_substrate_case,
+    recommend_migration_target,
+)
 
 
 def test_classify_missing_substrate_labels() -> None:
@@ -70,3 +74,39 @@ def test_deterministic_and_sorted() -> None:
     assert "missing_part_whole_frame" not in labels1
     assert "missing_container_frame" not in labels1
     assert "blocked_provenance_gap" in labels1
+
+
+def test_planner_v2_recognizes_substrate_without_solving() -> None:
+    record = plan_substrate_case(
+        case_id="test-0001",
+        problem_text="Mia spent 50% of her money.",
+        current_verdict="refused",
+    )
+
+    assert record["case_id"] == "test-0001"
+    assert record["current_verdict"] == "refused"
+    assert record["recognized_scalars"]
+    assert "consumption" in record["recognized_process_frames"]
+    assert record["recognized_hazards"]
+    assert isinstance(record["legacy_parser_dependency"], tuple)
+    assert record["recommended_migration_target"] in {
+        "percent_partition",
+        "substrate:scalar_equivalence",
+        "substrate:ambiguity_hazards",
+        "consumption",
+        "substrate:problem_frame_builder",
+    }
+
+
+def test_planner_v2_recommends_percent_partition_for_half_percent_split() -> None:
+    text = (
+        "There are 100 students. Half are girls and the other half are boys. "
+        "30% of the girls own pets and 20% of the boys own pets. "
+        "How many students own pets?"
+    )
+    target = recommend_migration_target(
+        text,
+        ("partition", "consumption"),
+        classify_missing_substrate(text),
+    )
+    assert target == "percent_partition"

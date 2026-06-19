@@ -284,6 +284,24 @@ This is not optional. It is the only continuity mechanism across your stateless 
 
 ---
 
+## Kernel Substrate / ProblemFrame Doctrine
+
+New derivation capabilities must consume `KernelFacts` / `ProblemFrame` facts where the
+substrate can represent the needed meaning (`generate/problem_frame_builder.py`).
+
+```text
+raw problem text → KernelFacts → ProblemFrame → contract-backed derivation organs
+```
+
+New raw-prose/local-regex parsing inside a derivation organ requires an explicit
+`LEGACY_EXCEPTION` note and a migration rationale. Guard:
+`tests/test_kernel_no_new_legacy_derivation_surfaces.py`.
+
+Do not add isolated benchmark organs with local prose parsers. Do not treat #829
+substrate modules as optional helpers.
+
+---
+
 ## Architecture Summary
 
 Raw input becomes a closed versor field once; thought evolves through exact versor transitions and CGA recall; cognition is structured as intent, proposition graph, articulation target, deterministic realization, reviewed memory, eval/calibration replay, and traceable evidence.
