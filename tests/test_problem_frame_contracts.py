@@ -107,3 +107,96 @@ def test_unequal_partition_confuser_is_not_runnable() -> None:
     assessment = assess_percent_partition(build_problem_frame(UNEQUAL_PARTITION_CONFUSER))
     assert not assessment.runnable
     assert "partition_subgroups_not_distinct" in assessment.missing_bindings or "percent_subgroup_links_incomplete" in assessment.missing_bindings
+
+
+def test_fraction_decrease_rejects_scale_zero() -> None:
+    case = (
+        "In one hour, Addison mountain's temperature will decrease to 0/4 of its temperature. "
+        "If the current temperature of the mountain is 84 degrees, what will the temperature "
+        "decrease by?"
+    )
+    assessment = assess_fraction_decrease(build_problem_frame(case))
+    assert not assessment.runnable
+    assert "scale_out_of_range" in assessment.missing_bindings
+
+
+def test_fraction_decrease_rejects_scale_one() -> None:
+    case = (
+        "In one hour, Addison mountain's temperature will decrease to 4/4 of its temperature. "
+        "If the current temperature of the mountain is 84 degrees, what will the temperature "
+        "decrease by?"
+    )
+    assessment = assess_fraction_decrease(build_problem_frame(case))
+    assert not assessment.runnable
+    assert "scale_out_of_range" in assessment.missing_bindings
+
+
+def test_fraction_decrease_rejects_scale_greater_than_one() -> None:
+    case = (
+        "In one hour, Addison mountain's temperature will decrease to 5/4 of its temperature. "
+        "If the current temperature of the mountain is 84 degrees, what will the temperature "
+        "decrease by?"
+    )
+    assessment = assess_fraction_decrease(build_problem_frame(case))
+    assert not assessment.runnable
+    assert "scale_out_of_range" in assessment.missing_bindings
+
+
+def test_multi_base_candidate_is_refused() -> None:
+    import dataclasses
+    case = (
+        "In one hour, Addison mountain's temperature will decrease to 3/4 of its temperature. "
+        "If the current temperature of the mountain is 84 degrees, what will the temperature "
+        "decrease by?"
+    )
+    frame = build_problem_frame(case)
+    relation = [r for r in frame.bound_relations if r.relation_type == "decrease_to_fraction"][0]
+    frame = dataclasses.replace(frame, bound_relations=(relation, relation))
+    assessment = assess_fraction_decrease(frame)
+    assert not assessment.runnable
+    assert "decrease_relation_ambiguous" in assessment.missing_bindings
+
+
+def test_state_entity_continuity_unproven_blocks_runnable() -> None:
+    import dataclasses
+    case = (
+        "In one hour, Addison mountain's temperature will decrease to 3/4 of its temperature. "
+        "If the current temperature of the mountain is 84 degrees, what will the temperature "
+        "decrease by?"
+    )
+    frame = build_problem_frame(case)
+    # Target "mention-0004" is "degrees" which does not match "temperature" (state_entity)
+    new_target = dataclasses.replace(frame.bound_question_target, target_mention_id="mention-0004")
+    frame = dataclasses.replace(frame, bound_question_target=new_target)
+    assessment = assess_fraction_decrease(frame)
+    assert not assessment.runnable
+    assert "state_entity_continuity_unproven" in assessment.missing_bindings
+
+
+def test_unit_continuity_unproven_blocks_runnable() -> None:
+    import dataclasses
+    case = (
+        "In one hour, Addison mountain's temperature will decrease to 3/4 of its temperature. "
+        "If the current temperature of the mountain is 84 degrees, what will the temperature "
+        "decrease by?"
+    )
+    frame = build_problem_frame(case)
+    relation = [r for r in frame.bound_relations if r.relation_type == "decrease_to_fraction"][0]
+    new_roles = []
+    for role in relation.roles:
+        if role.role == "unit":
+            new_roles.append(dataclasses.replace(role, target_id="mention-9999"))
+        else:
+            new_roles.append(role)
+    new_relation = dataclasses.replace(relation, roles=tuple(new_roles))
+    frame = dataclasses.replace(frame, bound_relations=(new_relation,))
+    assessment = assess_fraction_decrease(frame)
+    assert not assessment.runnable
+    assert "unit_continuity_unproven" in assessment.missing_bindings
+
+
+def test_unequal_partition_confuser_produces_specific_blocker() -> None:
+    assessment = assess_percent_partition(build_problem_frame(UNEQUAL_PARTITION_CONFUSER))
+    assert not assessment.runnable
+    assert "partition_subgroups_not_distinct" in assessment.missing_bindings
+    assert "percent_subgroup_links_incomplete" in assessment.missing_bindings
