@@ -1,10 +1,55 @@
-"""Diagnostic organ-contract readiness derived only from ProblemFrame evidence."""
+"""Diagnostic organ-contract readiness derived only from ProblemFrame evidence.
+
+Contract dispatch is deliberately narrow:
+- ``assess_contracts()`` routes to two diagnostic assessment functions.
+- The ``_CONTRACT_REGISTRY`` provides catalog metadata for introspection and
+  proposal-trace generation; it does not replace the structural logic inside
+  each assessment function.
+- All registered contracts have ``serving_allowed=False``; this module must
+  never be imported from serving dispatch paths.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+from generate.construction_affordances import (
+    ConstructionContract,
+    _DECREASE_TO_FRACTION_FAMILY,
+    _PERCENT_PARTITION_FAMILY,
+    make_proposal,
+)
 from generate.kernel_facts import BoundRelation, SourceSpan
 from generate.problem_frame import ProblemFrame
+
+
+# ---------------------------------------------------------------------------
+# Contract registry
+#
+# Maps candidate_organ -> ConstructionContract.  This registry provides
+# metadata for proposal-trace generation and external introspection.  It does
+# not replace the per-assessment dispatch logic in assess_contracts(); the
+# structural proof obligations for each family live inside the dedicated
+# assess_* functions below.
+#
+# Why not route dispatch through the registry?
+# assess_fraction_decrease and assess_percent_partition each contain
+# construction-specific structural logic (role iteration, topology proofs,
+# hazard escalation) that cannot be generalised behind a single callable
+# without introducing a forced abstraction boundary.  The registry expresses
+# *what* a construction is; the assessment functions express *how* its
+# obligations are checked.  Both layers are needed and should remain separate.
+# ---------------------------------------------------------------------------
+
+_CONTRACT_REGISTRY: dict[str, ConstructionContract] = {
+    "fraction_decrease": ConstructionContract(
+        family=_DECREASE_TO_FRACTION_FAMILY,
+        assess_fn_name="assess_fraction_decrease",
+    ),
+    "percent_partition": ConstructionContract(
+        family=_PERCENT_PARTITION_FAMILY,
+        assess_fn_name="assess_percent_partition",
+    ),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -241,13 +286,35 @@ def assess_percent_partition(frame: ProblemFrame) -> ContractAssessment:
 
 
 def assess_contracts(frame: ProblemFrame) -> tuple[ContractAssessment, ...]:
-    """Return deterministic diagnostic assessments; never admits serving."""
+    """Return deterministic diagnostic assessments; never admits serving.
+
+    Dispatch order:
+    1. ``decrease_to_fraction`` — triggered by relation type presence in
+       ``frame.bound_relations``.  Routes to ``assess_fraction_decrease``.
+       Registry key: ``_CONTRACT_REGISTRY["fraction_decrease"]``.
+    2. ``percent_partition`` — triggered by process-frame names ``partition``
+       or ``consumption``.  Routes to ``assess_percent_partition``.
+       Registry key: ``_CONTRACT_REGISTRY["percent_partition"]``.
+    3. ``container_packing`` / ``labor_rate`` — inline skeleton assessments;
+       not yet in the catalog registry (added to registry when obligations are
+       fully specified).
+
+    The registry provides catalog metadata for proposal traces; it does not
+    replace the structural logic inside each assess_* function.  See module
+    docstring for rationale.
+    """
     frame_names = {candidate.name for candidate in frame.process_frames}
     results: list[ContractAssessment] = []
+
+    # Registry-backed diagnostic families
     if any(relation.relation_type == "decrease_to_fraction" for relation in frame.bound_relations):
+        # Catalog: _CONTRACT_REGISTRY["fraction_decrease"]
         results.append(assess_fraction_decrease(frame))
     if frame_names & {"partition", "consumption"}:
+        # Catalog: _CONTRACT_REGISTRY["percent_partition"]
         results.append(assess_percent_partition(frame))
+
+    # Skeleton families not yet in the catalog registry
     if "container_packing" in frame_names and frame.bound_question_target is not None:
         roles = _roles(frame, "container_packing")
         missing = tuple(name for name in ("container", "content", "count_per") if name not in roles)

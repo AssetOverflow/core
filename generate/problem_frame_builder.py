@@ -600,6 +600,24 @@ def _bound_relations(
 
 
 def _bound_question_target(text: str, mentions: tuple[GroundedMention, ...]) -> BoundQuestionTarget | None:
+    """Extract and bind the question target from the problem text.
+
+    Priority Cascade Order:
+    1. Specific regex-based triggers:
+       - Proportional decrease delta: checked first using ``_DECREASE_DELTA_QUESTION_RE``.
+         If matched, returns a difference/delta/decrease target.
+    2. General question clause extraction:
+       - Triggers on ``_QUESTION_ENTITY_RE``.
+       - If no match, but "?" is present in the text, returns an "unknown" target.
+    3. Target classification of the question clause:
+       - "more" -> difference / delta / unknown direction.
+       - Initial state indicators ("were in", "was in", "started with", "originally") -> count / initial / inverse.
+       - Remaining indicators ("remaining", "left" in context) -> count / final / remaining.
+       - Aggregate indicators ("total", "altogether", "own") -> count / aggregate / forward.
+       - Portion percentage ("percent", "percentage") -> portion / final / forward.
+       - Portion fraction ("ratio", "fraction") -> portion / final / forward.
+       - Fallback -> count / final / forward.
+    """
     decrease_delta = _DECREASE_DELTA_QUESTION_RE.search(text)
     if decrease_delta is not None:
         entity_surface = decrease_delta.group("entity")
