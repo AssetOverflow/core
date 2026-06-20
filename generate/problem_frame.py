@@ -52,6 +52,41 @@ class BoundQuestionTarget:
     target_mention_id: str | None
     unknown_slot: str
     evidence_spans: tuple[SourceSpan, ...]
+    target_operator: str = "unknown"
+    target_state: str = "unknown"
+    target_direction: str = "unknown"
+
+    def __post_init__(self) -> None:
+        valid_types = {"count", "difference", "remaining", "total", "unknown"}
+        valid_operators = {"count", "difference", "comparison", "unknown"}
+        valid_states = {"aggregate", "current", "delta", "final", "initial", "unknown"}
+        valid_directions = {"decrease", "forward", "inverse", "remaining", "unknown"}
+        if self.target_type not in valid_types:
+            raise ValueError(
+                f"BoundQuestionTarget.target_type must be one of {sorted(valid_types)}, "
+                f"got {self.target_type!r}"
+            )
+        if self.target_operator not in valid_operators:
+            raise ValueError(
+                "BoundQuestionTarget.target_operator must be one of "
+                f"{sorted(valid_operators)}, got {self.target_operator!r}"
+            )
+        if self.target_state not in valid_states:
+            raise ValueError(
+                "BoundQuestionTarget.target_state must be one of "
+                f"{sorted(valid_states)}, got {self.target_state!r}"
+            )
+        if self.target_direction not in valid_directions:
+            raise ValueError(
+                "BoundQuestionTarget.target_direction must be one of "
+                f"{sorted(valid_directions)}, got {self.target_direction!r}"
+            )
+        if self.target_operator == "difference" and self.target_state != "delta":
+            raise ValueError("difference targets must bind a delta target_state")
+        if self.target_state == "delta" and self.target_operator != "difference":
+            raise ValueError("delta targets must use the difference operator")
+        if self.target_direction == "decrease" and self.target_operator != "difference":
+            raise ValueError("decrease-directed targets must use the difference operator")
 
     @property
     def grounded(self) -> bool:

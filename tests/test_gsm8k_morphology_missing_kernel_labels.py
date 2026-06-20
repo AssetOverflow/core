@@ -147,3 +147,15 @@ def test_unknown_process_frame_falls_back_to_process_frame_substrate() -> None:
         (),
     )
     assert target == "substrate:process_frames"
+
+
+def test_morphology_recommends_relation_gap_not_serving_migration() -> None:
+    target = recommend_migration_target(
+        (
+            "The reactor will decrease to 3/4 of its temperature. "
+            "If the current temperature is 80 degrees, what will the temperature be?"
+        ),
+        (),
+        (),
+    )
+    assert target == "substrate:contract_gap:fraction_decrease"

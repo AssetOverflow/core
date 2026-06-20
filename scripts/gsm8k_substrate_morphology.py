@@ -143,7 +143,7 @@ def recommend_migration_target(problem_text: str, process_frames: tuple[str, ...
     if "remaining" in lowered and ("half" in lowered or "quarter" in lowered):
         return "nested_fraction_remainder_total"
     if "decrease" in lowered or "decreased" in lowered:
-        return "fraction_decrease"
+        return "substrate:relation_gap:decrease_to_fraction"
     if "labor_rate" in process_frames or any(t in lowered for t in ("per hour", "hourly", "overtime")):
         return "temporal_tariff"
     target = _target_for_process_frames(process_frames)
@@ -174,6 +174,11 @@ def plan_substrate_case(*, case_id: str, problem_text: str, current_verdict: str
         "runnable_contracts": tuple(a.candidate_organ for a in assessments if a.runnable),
         "missing_bindings": tuple(sorted({gap for a in assessments for gap in a.missing_bindings})),
         "unresolved_contract_hazards": tuple(sorted({gap for a in assessments for gap in a.unresolved_hazards})),
+        "blockers_by_organ": {
+            a.candidate_organ: tuple(sorted({*a.missing_bindings, *a.unresolved_hazards}))
+            for a in assessments
+            if not a.runnable
+        },
         "missing_substrate_labels": missing_labels,
         "legacy_parser_dependency": _legacy_parser_dependency(problem_text, process_frames, missing_labels),
         "recommended_migration_target": contract_target(assessments) if assessments else recommend_migration_target(problem_text, process_frames, missing_labels),
