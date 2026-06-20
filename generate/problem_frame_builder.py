@@ -748,7 +748,28 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
     if bound_target is not None:
         builder.set_bound_question_target(bound_target)
 
-    return builder.build()
+    initial_frame = builder.build()
+
+    from generate.problem_frame_contracts import assess_contracts, get_contract_family_id
+    from generate.construction_affordances import make_proposal
+
+    assessments = assess_contracts(initial_frame)
+    proposals = []
+    for assessment in assessments:
+        family_id = get_contract_family_id(assessment.candidate_organ)
+        if family_id is not None:
+            proposal = make_proposal(
+                family_id=family_id,
+                evidence_spans=assessment.evidence_spans,
+                assessment_runnable=assessment.runnable,
+                missing_roles=assessment.missing_bindings,
+                active_hazards=assessment.unresolved_hazards,
+            )
+            proposals.append(proposal)
+
+    import dataclasses
+    return dataclasses.replace(initial_frame, proposals=tuple(proposals))
+
 
 
 def recognized_scalar_surfaces(frame: ProblemFrame) -> tuple[str, ...]:
