@@ -136,6 +136,7 @@ class ProblemFrameBuilder:
         self._bindings: list[MentionBinding] = []
         self._bound_relations: list[BoundRelation] = []
         self._bound_question_target: BoundQuestionTarget | None = None
+        self._proposals: list[ConstructionProposal] = []
 
     def add_quantity(self, scalar: GroundedScalar) -> None:
         """Add a GroundedScalar to the frame, collecting hazards and provenance."""
@@ -199,6 +200,9 @@ class ProblemFrameBuilder:
     def set_bound_question_target(self, target: BoundQuestionTarget) -> None:
         self._bound_question_target = target
 
+    def add_proposal(self, proposal: ConstructionProposal) -> None:
+        self._proposals.append(proposal)
+
     def build(self) -> ProblemFrame:
         """Produce the immutable ProblemFrame."""
         return ProblemFrame(
@@ -216,4 +220,5 @@ class ProblemFrameBuilder:
             bindings=tuple(self._bindings),
             bound_relations=tuple(self._bound_relations),
             bound_question_target=self._bound_question_target,
+            proposals=tuple(self._proposals),
         )

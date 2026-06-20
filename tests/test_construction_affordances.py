@@ -5,8 +5,8 @@ from generate.construction_affordances import (
     lookup_by_organ,
     lookup_by_relation_type,
     make_proposal,
+    propose_construction,
     ConstructionProposal,
-    _CATALOG,
 )
 from generate.kernel_facts import SourceSpan
 
@@ -113,6 +113,27 @@ def test_make_proposal_validation_and_status() -> None:
             missing_roles=(),
             active_hazards=(),
         )
+
+
+def test_propose_construction_is_preassessment_and_carries_catalog_obligations() -> None:
+    span = SourceSpan("decrease to 3/4 of", 0, 18)
+
+    proposal = propose_construction(
+        "proportional_change.decrease_to_fraction",
+        (span,),
+    )
+
+    assert proposal.status == "proposed"
+    assert proposal.missing_roles == ()
+    assert proposal.active_hazards == ()
+    assert proposal.diagnostic_only is True
+    assert proposal.serving_allowed is False
+    assert {role.role for role in proposal.role_obligations if role.required} == {
+        "base_quantity",
+        "scale",
+        "state_entity",
+        "transition",
+    }
 
 
 def test_construction_proposal_status_validation() -> None:
