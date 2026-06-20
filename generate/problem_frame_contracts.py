@@ -52,6 +52,13 @@ _CONTRACT_REGISTRY: dict[str, ConstructionContract] = {
 }
 
 
+def get_contract_family_id(candidate_organ: str) -> str | None:
+    """Return the catalog family ID for a candidate organ, if registered."""
+    contract = _CONTRACT_REGISTRY.get(candidate_organ)
+    return contract.family.family_id if contract else None
+
+
+
 @dataclass(frozen=True, slots=True)
 class ContractAssessment:
     candidate_organ: str

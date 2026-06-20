@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     )
     from language_packs.scalar_equivalence import ScalarCandidate
     from generate.process_frames import ProcessFrame
+    from generate.construction_affordances import ConstructionProposal
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,6 +115,7 @@ class ProblemFrame:
     bindings: tuple[MentionBinding, ...] = ()
     bound_relations: tuple[BoundRelation, ...] = ()
     bound_question_target: BoundQuestionTarget | None = None
+    proposals: tuple[ConstructionProposal, ...] = ()
 
 
 class ProblemFrameBuilder:
