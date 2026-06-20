@@ -321,6 +321,10 @@ _DECREASE_TO_FRACTION_RE = re.compile(
     r"(?P<transition>decrease\s+to)\s+(?P<fraction>\d+\s*/\s*\d+)\s+of",
     re.IGNORECASE,
 )
+_PERCENT_OF_PROPOSAL_RE = re.compile(
+    r"\b\d+(?:\.\d+)?\s*%\s+of\b",
+    re.IGNORECASE,
+)
 _DECREASE_STATE_RE = re.compile(
     r"(?P<state>[A-Za-z][A-Za-z'-]*)\s+will\s+decrease\s+to",
     re.IGNORECASE,
@@ -355,6 +359,30 @@ def _proportional_decrease_proposals(text: str) -> tuple[ConstructionProposal, .
         propose_construction(
             "proportional_change.decrease_to_fraction",
             (evidence,),
+        ),
+    )
+
+
+def _percent_partition_proposals(
+    text: str,
+    frames: tuple[ProcessFrame, ...],
+) -> tuple[ConstructionProposal, ...]:
+    """Propose percent partition from a process cue plus explicit percent-of."""
+    frame_names = {frame.name for frame in frames}
+    if not frame_names & {"partition", "consumption"}:
+        return ()
+
+    evidence_spans = tuple(
+        SourceSpan(text[match.start():match.end()], match.start(), match.end())
+        for match in _PERCENT_OF_PROPOSAL_RE.finditer(text)
+    )
+    if not evidence_spans:
+        return ()
+
+    return (
+        propose_construction(
+            "partition.percent_partition",
+            evidence_spans,
         ),
     )
 
@@ -753,10 +781,12 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
     if question_target is not None:
         builder.set_question_target(question_target)
 
-    # ADR-0223/0224 proving slice: the surface chunk proposes the catalog
-    # construction before role binding and ContractAssessment.  Only
-    # proportional decrease is authorized for this controlled migration.
+    # ADR-0223/0224: surface/process evidence proposes catalog constructions
+    # before role binding and ContractAssessment.  Proposals remain diagnostic
+    # hypotheses; bound relations ground and organ contracts determine.
     for proposal in _proportional_decrease_proposals(problem_text):
+        builder.add_proposal(proposal)
+    for proposal in _percent_partition_proposals(problem_text, frames):
         builder.add_proposal(proposal)
 
     mentions = _extract_mentions(problem_text, tuple(grounded_quantities), units)
