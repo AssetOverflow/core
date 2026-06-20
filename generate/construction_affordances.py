@@ -385,6 +385,11 @@ _BY_RELATION_TYPE: dict[str, ConstructionFamily] = {
     for family in _CATALOG.values()
 }
 
+_PROPOSAL_FIRST_FAMILIES: frozenset[str] = frozenset({
+    "proportional_change.decrease_to_fraction",
+    "partition.percent_partition",
+})
+
 
 # ---------------------------------------------------------------------------
 # Public accessors
@@ -456,10 +461,9 @@ def make_proposal(
 ) -> ConstructionProposal:
     """Map assessment evidence onto a proposal for legacy catalog paths.
 
-    Proportional decrease no longer uses this assessment-backed adapter; it
-    enters through :func:`propose_construction`.  The adapter remains for
-    catalog families that have not yet received an authorized proposal-first
-    migration.
+    Migrated proposal-first families must enter through
+    :func:`propose_construction`.  This adapter remains only for explicitly
+    unmigrated catalog paths that still synthesize proposals from assessments.
 
     Args:
         family_id:           Catalog family identifier.
@@ -478,7 +482,12 @@ def make_proposal(
 
     Raises:
         KeyError: If *family_id* is not registered in the catalog.
+        ValueError: If *family_id* has already migrated to the proposal-first seam.
     """
+    if family_id in _PROPOSAL_FIRST_FAMILIES:
+        raise ValueError(
+            f"{family_id} is proposal-first; use propose_construction before assessment"
+        )
     proposal = propose_construction(family_id, evidence_spans)
 
     if assessment_runnable:
