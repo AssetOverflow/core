@@ -21,7 +21,7 @@ Semantic neighborhood:
 Construction signatures:
 ```text
 Signature: quantity_entity_binding
-Organ: quantity_entity_adapter
+Future adapter: quantity_entity_adapter
 Relation Type: quantity_entity
 ```
 

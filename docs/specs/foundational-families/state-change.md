@@ -22,7 +22,7 @@ Semantic neighborhood:
 Construction signatures:
 ```text
 Signature: state_change
-Organ: state_change_adapter
+Future adapter: state_change_adapter
 Relation Type: state_change
 ```
 

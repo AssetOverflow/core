@@ -11,7 +11,7 @@ This directory contains the controlled foundational family specifications for th
    All future family design and implementation must strictly adhere to the canonical rule defined in **ADR-0223**:
    > Closeness proposes; bindings ground; contracts determine.
 
-   - **Semantic closeness proposes:** Lexical/CGA neighborhood scans identify candidate affordances.
+   - **Semantic closeness proposes:** Lexical cues and, where implemented, exact substrate/CGA neighborhood retrieval may identify candidate affordances.
    - **Exact bindings ground:** Span-grounded bindings map values to roles.
    - **Organ-specific contracts determine:** Contract assessments verify completeness, topology, and absence of hazards before admitting a candidate.
 
