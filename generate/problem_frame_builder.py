@@ -176,6 +176,25 @@ def _trigger_span(text: str, trigger: str) -> SourceSpan | None:
     return SourceSpan(text[match.start():match.end()], match.start(), match.end())
 
 
+def _sentence_contains_current_or_now(text: str, index: int) -> bool:
+    start = max(
+        text.rfind(".", 0, index),
+        text.rfind("?", 0, index),
+        text.rfind("!", 0, index),
+    )
+    end_candidates = [
+        pos for pos in (
+            text.find(".", index),
+            text.find("?", index),
+            text.find("!", index),
+        )
+        if pos != -1
+    ]
+    end = min(end_candidates) if end_candidates else len(text)
+    sentence = text[start + 1:end].lower()
+    return "current" in sentence or "now" in sentence
+
+
 def _extract_process_frame_candidates(text: str) -> tuple[ProcessFrame, ...]:
     text_lower = text.lower()
     matched: dict[str, ProcessFrame] = {}
@@ -291,6 +310,23 @@ _QUESTION_ENTITY_RE = re.compile(
     r"\bhow\s+(?:many|much)\s+(?:more\s+)?(?P<entity>[A-Za-z][A-Za-z'-]*)",
     re.IGNORECASE,
 )
+_COPULAR_PARTITION_RE = re.compile(
+    r"\b(?P<quantity>half|third|quarter)\b\s+of\s+(?:the\s+)?"
+    r"(?P<whole>[A-Za-z][A-Za-z'-]*)\s+(?:are|is)\s+(?P<part>[A-Za-z][A-Za-z'-]*)",
+    re.IGNORECASE,
+)
+_DECREASE_TO_FRACTION_RE = re.compile(
+    r"(?P<transition>decrease\s+to)\s+(?P<fraction>\d+\s*/\s*\d+)\s+of",
+    re.IGNORECASE,
+)
+_DECREASE_STATE_RE = re.compile(
+    r"(?P<state>[A-Za-z][A-Za-z'-]*)\s+will\s+decrease\s+to",
+    re.IGNORECASE,
+)
+_DECREASE_DELTA_QUESTION_RE = re.compile(
+    r"\bwhat\s+will\s+the\s+(?P<entity>[A-Za-z][A-Za-z'-]*)\s+decrease\s+by\??",
+    re.IGNORECASE,
+)
 _ACTOR_VERB_RE = re.compile(
     r"\b(?P<actor>[A-Z][A-Za-z'-]*)\s+"
     r"(?:gave|gives|give|received|receives|spent|spends|ate|eats|bought|buys|sold|sells)\b"
@@ -327,6 +363,11 @@ def _extract_mentions(
     for pattern in (_ENTITY_AFTER_QUANTITY_RE, _FRACTION_ENTITY_RE, _QUESTION_ENTITY_RE):
         for match in pattern.finditer(text):
             add("object", match.start("entity"), match.end("entity"))
+    for match in _COPULAR_PARTITION_RE.finditer(text):
+        add("object", match.start("whole"), match.end("whole"))
+        add("object", match.start("part"), match.end("part"))
+    for match in _DECREASE_STATE_RE.finditer(text):
+        add("object", match.start("state"), match.end("state"))
     for match in _ACTOR_VERB_RE.finditer(text):
         add("actor", match.start("actor"), match.end("actor"))
     for match in _TRANSFER_RE.finditer(text):
@@ -415,10 +456,19 @@ def _bound_relations(
     for binding in quantity_entity:
         quantity = by_id[binding.source_mention_id]
         part = by_id[binding.target_mention_id]
+        canonical_part = min(
+            (
+                mention
+                for mention in mentions
+                if mention.kind == part.kind and mention.surface.lower() == part.surface.lower()
+            ),
+            key=lambda mention: mention.span.start,
+            default=part,
+        )
         if "%" not in quantity.surface and quantity.surface.lower() not in {"half", "third", "quarter"}:
             continue
         roles = [
-            BoundRole("part", part.mention_id, part.kind, (part.span,)),
+            BoundRole("part", canonical_part.mention_id, canonical_part.kind, (canonical_part.span,)),
             BoundRole("scale", quantity.mention_id, quantity.kind, (quantity.span,)),
         ]
         if whole is not None:
@@ -429,6 +479,94 @@ def _bound_relations(
             relation_id="", relation_type=relation_type, roles=tuple(roles),
             evidence_spans=tuple(span for role in roles for span in role.evidence_spans),
         ))
+
+    for match in _COPULAR_PARTITION_RE.finditer(text):
+        quantity = next((m for m in mentions if m.kind == "quantity" and m.span.start == match.start("quantity")), None)
+        whole = next((m for m in mentions if m.kind == "object" and m.span.start == match.start("whole")), None)
+        part = next((m for m in mentions if m.kind == "object" and m.span.start == match.start("part")), None)
+        if quantity is None or whole is None or part is None:
+            continue
+        canonical_whole = min(
+            (
+                mention
+                for mention in mentions
+                if mention.kind == "object" and mention.surface.lower() == whole.surface.lower()
+            ),
+            key=lambda mention: mention.span.start,
+            default=whole,
+        )
+        roles = (
+            BoundRole("whole", canonical_whole.mention_id, canonical_whole.kind, (canonical_whole.span,)),
+            BoundRole("part", part.mention_id, part.kind, (part.span,)),
+            BoundRole("scale", quantity.mention_id, quantity.kind, (quantity.span,)),
+        )
+        relations.append(BoundRelation(
+            relation_id="",
+            relation_type="subgroup_partition",
+            roles=roles,
+            evidence_spans=(quantity.span, canonical_whole.span, part.span),
+        ))
+
+    decrease_matches = list(_DECREASE_TO_FRACTION_RE.finditer(text))
+    if len(decrease_matches) == 1:
+        match = decrease_matches[0]
+        scale = next((m for m in mentions if m.kind == "quantity" and m.span.start == match.start("fraction")), None)
+        state_match = next(
+            (
+                item
+                for item in _DECREASE_STATE_RE.finditer(text)
+                if item.start("state") < match.start("transition")
+            ),
+            None,
+        )
+        state = (
+            next(
+                (
+                    m for m in mentions
+                    if m.kind == "object" and state_match is not None and m.span.start == state_match.start("state")
+                ),
+                None,
+            )
+            if state_match is not None
+            else None
+        )
+        unit_binding_by_quantity = {
+            binding.source_mention_id: binding
+            for binding in bindings
+            if binding.binding_type == "quantity_unit"
+        }
+        base_candidates = [
+            mention
+            for mention in mentions
+            if mention.kind == "quantity"
+            and mention.mention_id != (scale.mention_id if scale else None)
+            and mention.mention_id in unit_binding_by_quantity
+            and _sentence_contains_current_or_now(text, mention.span.start)
+        ]
+        if len(base_candidates) == 1 and scale is not None and state is not None:
+            base = base_candidates[0]
+            base_unit_binding = unit_binding_by_quantity.get(base.mention_id)
+            roles = [
+                BoundRole("base_quantity", base.mention_id, base.kind, (base.span,)),
+                BoundRole("scale", scale.mention_id, scale.kind, (scale.span,)),
+                BoundRole("state_entity", state.mention_id, state.kind, (state.span,)),
+                BoundRole(
+                    "transition",
+                    f"span:{match.start('transition')}:{match.end('transition')}",
+                    "span",
+                    (SourceSpan(text[match.start("transition"):match.end("transition")], match.start("transition"), match.end("transition")),),
+                ),
+            ]
+            if base_unit_binding is not None:
+                unit = by_id.get(base_unit_binding.target_mention_id)
+                if unit is not None:
+                    roles.append(BoundRole("unit", unit.mention_id, unit.kind, (unit.span,)))
+            relations.append(BoundRelation(
+                relation_id="",
+                relation_type="decrease_to_fraction",
+                roles=tuple(roles),
+                evidence_spans=tuple(span for role in roles for span in role.evidence_spans),
+            ))
 
     for match in _TRANSFER_RE.finditer(text):
         def at(group: str, kind: str) -> GroundedMention | None:
@@ -462,6 +600,27 @@ def _bound_relations(
 
 
 def _bound_question_target(text: str, mentions: tuple[GroundedMention, ...]) -> BoundQuestionTarget | None:
+    decrease_delta = _DECREASE_DELTA_QUESTION_RE.search(text)
+    if decrease_delta is not None:
+        entity_surface = decrease_delta.group("entity")
+        entity = next(
+            (
+                m for m in mentions
+                if m.kind == "object" and m.surface.lower() == entity_surface.lower()
+            ),
+            None,
+        )
+        span = SourceSpan(text[decrease_delta.start():decrease_delta.end()], decrease_delta.start(), decrease_delta.end())
+        return BoundQuestionTarget(
+            "difference",
+            entity_surface,
+            entity.mention_id if entity else None,
+            "delta_quantity",
+            (span,),
+            target_operator="difference",
+            target_state="delta",
+            target_direction="decrease",
+        )
     question = _QUESTION_ENTITY_RE.search(text)
     if question is None:
         if "?" not in text:
@@ -470,14 +629,51 @@ def _bound_question_target(text: str, mentions: tuple[GroundedMention, ...]) -> 
         return BoundQuestionTarget(
             "unknown", "?", None, "unresolved",
             (SourceSpan("?", qmark, qmark + 1),),
+            target_operator="unknown",
+            target_state="unknown",
+            target_direction="unknown",
         )
     entity = next((m for m in mentions if m.kind == "object" and m.span.start == question.start("entity")), None)
-    prefix = text[max(0, question.start() - 24):question.end()].lower()
-    target_type = "difference" if "more" in question.group(0).lower() else "remaining" if any(x in prefix for x in ("remaining", "left")) else "total" if any(x in prefix for x in ("total", "altogether")) else "count"
+    question_clause = text[question.start():]
+    prefix = text[max(0, question.start() - 32):question.end()].lower()
+    question_lower = question_clause.lower()
+    if "more" in question.group(0).lower():
+        target_type = "difference"
+        target_operator = "difference"
+        target_state = "delta"
+        target_direction = "unknown"
+        unknown_slot = "difference"
+    elif any(x in question_lower for x in ("were in", "was in", "started with", "originally")):
+        target_type = "count"
+        target_operator = "count"
+        target_state = "initial"
+        target_direction = "inverse"
+        unknown_slot = "initial"
+    elif any(x in prefix for x in ("remaining", "left")):
+        target_type = "remaining"
+        target_operator = "count"
+        target_state = "final"
+        target_direction = "remaining"
+        unknown_slot = "remaining"
+    elif any(x in question_lower for x in ("total", "altogether", "own")):
+        target_type = "count"
+        target_operator = "count"
+        target_state = "aggregate"
+        target_direction = "forward"
+        unknown_slot = "count"
+    else:
+        target_type = "count"
+        target_operator = "count"
+        target_state = "current"
+        target_direction = "unknown"
+        unknown_slot = "count"
     span = SourceSpan(text[question.start():question.end()], question.start(), question.end())
     return BoundQuestionTarget(
         target_type, question.group("entity"),
-        entity.mention_id if entity else None, target_type, (span,),
+        entity.mention_id if entity else None, unknown_slot, (span,),
+        target_operator=target_operator,
+        target_state=target_state,
+        target_direction=target_direction,
     )
 
 

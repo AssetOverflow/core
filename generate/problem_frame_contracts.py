@@ -39,51 +39,194 @@ def _evidence(frame: ProblemFrame, relation_type: str) -> tuple[SourceSpan, ...]
     return tuple(spans[key] for key in sorted(spans))
 
 
+def _role_target(relation: BoundRelation, role_name: str) -> str | None:
+    return next((role.target_id for role in relation.roles if role.role == role_name), None)
+
+
+def _mention_map(frame: ProblemFrame) -> dict[str, object]:
+    return {mention.mention_id: mention for mention in frame.mentions}
+
+
+def _quantity_value_by_mention_id(frame: ProblemFrame) -> dict[str, object]:
+    quantities = {quantity.fact_id: quantity for quantity in frame.quantities}
+    return {
+        mention.mention_id: quantities[mention.fact_id]
+        for mention in frame.mentions
+        if mention.fact_id is not None and mention.fact_id in quantities
+    }
+
+
+def _quantity_entity_bindings(frame: ProblemFrame) -> tuple[tuple[str, str], ...]:
+    return tuple(
+        (binding.source_mention_id, binding.target_mention_id)
+        for binding in frame.bindings
+        if binding.binding_type == "quantity_entity"
+    )
+
+
+def _quantity_unit_bindings(frame: ProblemFrame) -> dict[str, str]:
+    return {
+        binding.source_mention_id: binding.target_mention_id
+        for binding in frame.bindings
+        if binding.binding_type == "quantity_unit"
+    }
+
+
+def assess_fraction_decrease(frame: ProblemFrame) -> ContractAssessment:
+    mentions = _mention_map(frame)
+    quantities = _quantity_value_by_mention_id(frame)
+    quantity_units = _quantity_unit_bindings(frame)
+    relations = [relation for relation in frame.bound_relations if relation.relation_type == "decrease_to_fraction"]
+    question_target = frame.bound_question_target
+
+    missing: list[str] = []
+    unresolved: set[str] = set()
+    if len(relations) != 1:
+        missing.append("decrease_relation_ambiguous")
+    relation = relations[0] if len(relations) == 1 else None
+
+    base_id = _role_target(relation, "base_quantity") if relation is not None else None
+    scale_id = _role_target(relation, "scale") if relation is not None else None
+    state_id = _role_target(relation, "state_entity") if relation is not None else None
+    unit_id = _role_target(relation, "unit") if relation is not None else None
+
+    if base_id is None:
+        missing.append("base_quantity_unbound")
+    if scale_id is None:
+        missing.append("scale_unbound")
+    if state_id is None:
+        missing.append("state_entity_unbound")
+    if base_id is not None and base_id not in quantities:
+        missing.append("base_quantity_provenance_missing")
+    if scale_id is not None and scale_id not in quantities:
+        missing.append("scale_provenance_missing")
+    if unit_id is not None and base_id is not None and quantity_units.get(base_id) != unit_id:
+        missing.append("unit_continuity_unproven")
+
+    if question_target is None or not question_target.grounded:
+        missing.append("delta_decrease_target_unbound")
+    else:
+        if not (
+            question_target.target_operator == "difference"
+            and question_target.target_state == "delta"
+            and question_target.target_direction == "decrease"
+        ):
+            missing.append("delta_decrease_target_required")
+        if state_id is not None and state_id in mentions and question_target.target_mention_id in mentions:
+            relation_state = mentions[state_id]
+            target_state = mentions[question_target.target_mention_id]
+            if relation_state.surface.lower() != target_state.surface.lower():
+                missing.append("state_entity_continuity_unproven")
+
+    scale = quantities.get(scale_id) if scale_id is not None else None
+    if scale is not None and not (0 < scale.value < 1):
+        missing.append("scale_out_of_range")
+
+    categories = {hazard.category for hazard in frame.hazards}
+    if any(item.startswith("base_quantity") for item in missing) and "unbound_base_quantity" in categories:
+        unresolved.add("unbound_base_quantity")
+
+    evidence_spans = (
+        _evidence(frame, "decrease_to_fraction")
+        if relation is None
+        else tuple(
+            sorted(
+                {
+                    (span.start, span.end, span.text): span
+                    for span in (*relation.evidence_spans, *(question_target.evidence_spans if question_target else ()))
+                }.values(),
+                key=lambda span: (span.start, span.end, span.text),
+            )
+        )
+    )
+    runnable = not missing and not unresolved
+    return ContractAssessment(
+        candidate_organ="fraction_decrease",
+        missing_bindings=tuple(dict.fromkeys(missing)),
+        unresolved_hazards=tuple(sorted(unresolved)),
+        runnable=runnable,
+        explanation=(
+            "all fraction-decrease roles and delta target obligations are grounded"
+            if runnable else "diagnostic candidate is not runnable: " + ", ".join((*dict.fromkeys(missing), *sorted(unresolved)))
+        ),
+        evidence_spans=evidence_spans,
+    )
+
+
 def assess_percent_partition(frame: ProblemFrame) -> ContractAssessment:
     mentions = {mention.mention_id: mention for mention in frame.mentions}
+    quantities = _quantity_value_by_mention_id(frame)
+    quantity_entity = _quantity_entity_bindings(frame)
     subgroups = [relation for relation in frame.bound_relations if relation.relation_type == "subgroup_partition"]
     percentages = [relation for relation in frame.bound_relations if relation.relation_type == "percent_of"]
+    linked_pairs: list[tuple[BoundRelation, BoundRelation]] = []
+    subgroup_part_ids: set[str] = set()
+    shared_whole_ids: set[str] = set()
+    original_whole_quantities: set[str] = set()
 
-    def role_target(relation: BoundRelation, role_name: str) -> str | None:
-        return next((role.target_id for role in relation.roles if role.role == role_name), None)
-
-    linked_pairs = []
     for subgroup in subgroups:
-        subgroup_part = role_target(subgroup, "part")
-        if subgroup_part is None or subgroup_part not in mentions:
+        subgroup_part = _role_target(subgroup, "part")
+        subgroup_whole = _role_target(subgroup, "whole")
+        if subgroup_part is None or subgroup_whole is None:
             continue
-        subgroup_surface = mentions[subgroup_part].surface.lower()
+        subgroup_part_ids.add(subgroup_part)
+        shared_whole_ids.add(subgroup_whole)
+        relation_start = min(span.start for span in subgroup.evidence_spans)
+        original_whole_quantities.update(
+            quantity_id
+            for quantity_id, entity_id in quantity_entity
+            if entity_id == subgroup_whole
+            and quantity_id in mentions
+            and quantity_id in quantities
+            and mentions[quantity_id].span.start < relation_start
+        )
         for percent in percentages:
-            percent_part = role_target(percent, "part")
-            if percent_part is not None and percent_part in mentions and mentions[percent_part].surface.lower() == subgroup_surface:
+            percent_part = _role_target(percent, "part")
+            percent_whole = _role_target(percent, "whole")
+            if percent_part == subgroup_part and percent_whole == subgroup_whole:
                 linked_pairs.append((subgroup, percent))
 
     missing: list[str] = []
-    if not any(role_target(relation, "whole") for relation in subgroups):
-        missing.append("grounded_whole_entity")
     if not subgroups:
         missing.append("grounded_partition_subgroup")
-    if not linked_pairs:
-        missing.append("percent_or_fraction_linked_to_subgroup")
+    if not shared_whole_ids:
+        missing.append("grounded_whole_entity")
+    if not original_whole_quantities:
+        missing.append("original_whole_unbound")
+    elif len(original_whole_quantities) != 1:
+        missing.append("multiple_original_whole_candidates")
+    if len(subgroup_part_ids) < 2:
+        missing.append("partition_subgroups_not_distinct")
+    if len(linked_pairs) < 2:
+        missing.append("percent_subgroup_links_incomplete")
     question_target = frame.bound_question_target
     if question_target is None or not question_target.grounded:
         missing.append("grounded_question_target")
+    elif not (
+        question_target.target_operator == "count"
+        and question_target.target_state == "aggregate"
+        and question_target.target_direction == "forward"
+    ):
+        if question_target.target_state == "initial" and question_target.target_direction == "inverse":
+            missing.extend(("inverse_topology_unlicensed", "forward_aggregate_target_required"))
+        else:
+            missing.append("forward_aggregate_target_required")
 
     unresolved: set[str] = set()
     categories = {hazard.category for hazard in frame.hazards}
-    if "grounded_whole_entity" in missing and "unbound_base_quantity" in categories:
+    if any(item in missing for item in ("grounded_whole_entity", "original_whole_unbound")) and "unbound_base_quantity" in categories:
         unresolved.add("unbound_base_quantity")
-    if "grounded_partition_subgroup" in missing and "percent_change_vs_percent_of" in categories:
+    if any(item in missing for item in ("grounded_partition_subgroup", "percent_subgroup_links_incomplete")) and "percent_change_vs_percent_of" in categories:
         unresolved.add("percent_change_vs_percent_of")
     runnable = not missing and not unresolved
     return ContractAssessment(
         candidate_organ="percent_partition",
-        missing_bindings=tuple(missing),
+        missing_bindings=tuple(dict.fromkeys(missing)),
         unresolved_hazards=tuple(sorted(unresolved)),
         runnable=runnable,
         explanation=(
             "all percent-partition roles and the question target are grounded"
-            if runnable else "diagnostic candidate is not runnable: " + ", ".join((*missing, *sorted(unresolved)))
+            if runnable else "diagnostic candidate is not runnable: " + ", ".join((*dict.fromkeys(missing), *sorted(unresolved)))
         ),
         evidence_spans=tuple(sorted(
             {
@@ -101,6 +244,8 @@ def assess_contracts(frame: ProblemFrame) -> tuple[ContractAssessment, ...]:
     """Return deterministic diagnostic assessments; never admits serving."""
     frame_names = {candidate.name for candidate in frame.process_frames}
     results: list[ContractAssessment] = []
+    if any(relation.relation_type == "decrease_to_fraction" for relation in frame.bound_relations):
+        results.append(assess_fraction_decrease(frame))
     if frame_names & {"partition", "consumption"}:
         results.append(assess_percent_partition(frame))
     if "container_packing" in frame_names and frame.bound_question_target is not None:

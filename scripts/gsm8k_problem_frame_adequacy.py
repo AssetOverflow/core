@@ -17,6 +17,11 @@ def assess_case(case: Mapping[str, Any], *, current_verdict: str | None = None) 
     case_id = str(case.get("case_id") or case.get("id") or "unknown")
     frame = build_problem_frame(text)
     contracts = assess_contracts(frame)
+    blockers_by_organ = {
+        item.candidate_organ: sorted({*item.missing_bindings, *item.unresolved_hazards})
+        for item in contracts
+        if not item.runnable
+    }
     return {
         "case_id": case_id,
         "current_verdict": current_verdict,
@@ -31,6 +36,11 @@ def assess_case(case: Mapping[str, Any], *, current_verdict: str | None = None) 
         "runnable_contracts": [item.candidate_organ for item in contracts if item.runnable],
         "missing_binding_taxonomy": sorted({gap for item in contracts for gap in item.missing_bindings}),
         "unresolved_hazards": sorted({gap for item in contracts for gap in item.unresolved_hazards}),
+        "blockers_by_organ": blockers_by_organ,
+        "blocker_combinations_by_organ": {
+            organ: "+".join(blockers) if blockers else "__runnable__"
+            for organ, blockers in blockers_by_organ.items()
+        },
         "recommended_next_migration_target": recommended_migration_target(contracts),
     }
 
@@ -41,6 +51,16 @@ def build_report(cases: Iterable[Mapping[str, Any]], *, verdicts: Mapping[str, s
         assess_case(case, current_verdict=verdicts.get(str(case.get("case_id") or case.get("id") or "unknown")))
         for case in cases
     ]
+    blockers_by_organ: dict[str, dict[str, int]] = {}
+    blocker_combinations_by_organ: dict[str, dict[str, int]] = {}
+    for row in per_case:
+        for organ, blockers in row["blockers_by_organ"].items():
+            organ_counts = blockers_by_organ.setdefault(organ, {})
+            for blocker in blockers:
+                organ_counts[blocker] = organ_counts.get(blocker, 0) + 1
+            combo = row["blocker_combinations_by_organ"][organ]
+            combo_counts = blocker_combinations_by_organ.setdefault(organ, {})
+            combo_counts[combo] = combo_counts.get(combo, 0) + 1
     return {
         "schema_version": 1,
         "case_count": len(per_case),
@@ -55,6 +75,8 @@ def build_report(cases: Iterable[Mapping[str, Any]], *, verdicts: Mapping[str, s
             "contract_candidate_count": sum(len(row["candidate_organ_contracts"]) for row in per_case),
             "contract_runnable_count": sum(len(row["runnable_contracts"]) for row in per_case),
         },
+        "blockers_by_organ": blockers_by_organ,
+        "blocker_combinations_by_organ": blocker_combinations_by_organ,
         "per_case": per_case,
     }
 

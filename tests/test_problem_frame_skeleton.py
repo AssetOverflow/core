@@ -4,7 +4,7 @@ from __future__ import annotations
 from fractions import Fraction
 import pytest
 
-from generate.problem_frame import ProblemFrame, ProblemFrameBuilder, QuestionTarget
+from generate.problem_frame import BoundQuestionTarget, ProblemFrame, ProblemFrameBuilder, QuestionTarget
 from generate.kernel_facts import (
     SourceSpan,
     KernelProvenance,
@@ -28,6 +28,22 @@ def test_question_target_validation() -> None:
     # Invalid type
     with pytest.raises(ValueError, match="must be one of"):
         QuestionTarget("target", "invalid_type")
+
+
+def test_bound_question_target_rejects_illegal_delta_combinations() -> None:
+    span = SourceSpan("what will the temperature decrease by?", 0, 37)
+
+    with pytest.raises(ValueError, match="difference targets must bind a delta target_state"):
+        BoundQuestionTarget(
+            "difference",
+            "temperature",
+            "mention-0001",
+            "delta_quantity",
+            (span,),
+            target_operator="difference",
+            target_state="final",
+            target_direction="decrease",
+        )
 
 
 def test_empty_problem_frame() -> None:

@@ -132,3 +132,45 @@ def test_question_target_is_explicitly_unbound_when_not_groundable() -> None:
     frame = build_problem_frame("What is the answer?")
     assert frame.bound_question_target is not None
     assert not frame.bound_question_target.grounded
+
+
+def test_decrease_to_fraction_binds_state_base_scale_and_delta_target() -> None:
+    text = (
+        "In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature. "
+        "If the current temperature of the mountain is 84 degrees, what will the temperature "
+        "decrease by?"
+    )
+    frame = build_problem_frame(text)
+
+    relation = next(item for item in frame.bound_relations if item.relation_type == "decrease_to_fraction")
+    assert {role.role for role in relation.roles} == {
+        "base_quantity",
+        "scale",
+        "state_entity",
+        "transition",
+        "unit",
+    }
+    assert frame.bound_question_target is not None
+    assert frame.bound_question_target.grounded
+    assert frame.bound_question_target.target_type == "difference"
+    assert frame.bound_question_target.target_operator == "difference"
+    assert frame.bound_question_target.target_state == "delta"
+    assert frame.bound_question_target.target_direction == "decrease"
+
+
+def test_decrease_relation_preserves_exact_source_spans() -> None:
+    text = (
+        "In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature. "
+        "If the current temperature of the mountain is 84 degrees, what will the temperature "
+        "decrease by?"
+    )
+    frame = build_problem_frame(text)
+    relation = next(item for item in frame.bound_relations if item.relation_type == "decrease_to_fraction")
+
+    for span in relation.evidence_spans:
+        assert text[span.start:span.end] == span.text
+
+    assert any(span.text == "decrease to" for span in relation.evidence_spans)
+    assert any(span.text == "3/4" for span in relation.evidence_spans)
+    assert any(span.text == "84" for span in relation.evidence_spans)
+    assert any(span.text == "temperature" for span in relation.evidence_spans)
