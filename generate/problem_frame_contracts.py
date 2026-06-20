@@ -299,8 +299,9 @@ def assess_contracts(frame: ProblemFrame) -> tuple[ContractAssessment, ...]:
        family in ``frame.proposals``.  Routes to ``assess_fraction_decrease``,
        which still determines closure from bound frame evidence.
        Registry key: ``_CONTRACT_REGISTRY["fraction_decrease"]``.
-    2. ``percent_partition`` — triggered by process-frame names ``partition``
-       or ``consumption``.  Routes to ``assess_percent_partition``.
+    2. ``percent_partition`` — triggered by its proposal-first catalog family
+       in ``frame.proposals``.  Routes to ``assess_percent_partition``, which
+       still determines closure from bound frame evidence.
        Registry key: ``_CONTRACT_REGISTRY["percent_partition"]``.
     3. ``container_packing`` / ``labor_rate`` — inline skeleton assessments;
        not yet in the catalog registry (added to registry when obligations are
@@ -318,7 +319,7 @@ def assess_contracts(frame: ProblemFrame) -> tuple[ContractAssessment, ...]:
     if _DECREASE_TO_FRACTION_FAMILY.family_id in proposed_family_ids:
         # Catalog: _CONTRACT_REGISTRY["fraction_decrease"]
         results.append(assess_fraction_decrease(frame))
-    if frame_names & {"partition", "consumption"}:
+    if _PERCENT_PARTITION_FAMILY.family_id in proposed_family_ids:
         # Catalog: _CONTRACT_REGISTRY["percent_partition"]
         results.append(assess_percent_partition(frame))
 
