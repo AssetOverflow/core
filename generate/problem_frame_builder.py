@@ -12,9 +12,11 @@ Non-goals:
 """
 from __future__ import annotations
 
+import dataclasses
 import re
 from fractions import Fraction
 
+from generate.construction_affordances import ConstructionProposal, propose_construction
 from generate.kernel_facts import (
     BoundRelation,
     BoundRole,
@@ -336,6 +338,25 @@ _TRANSFER_RE = re.compile(
     r"(?P<patient>[A-Z][A-Za-z'-]*)\s+"
     r"(?P<quantity>\d+(?:\.\d+)?)\s+(?P<object>[A-Za-z][A-Za-z'-]*)",
 )
+
+
+def _proportional_decrease_proposals(text: str) -> tuple[ConstructionProposal, ...]:
+    """Propose the one authorized proposal-first construction from its chunk."""
+    matches = tuple(_DECREASE_TO_FRACTION_RE.finditer(text))
+    if len(matches) != 1:
+        return ()
+    match = matches[0]
+    evidence = SourceSpan(
+        text[match.start():match.end()],
+        match.start(),
+        match.end(),
+    )
+    return (
+        propose_construction(
+            "proportional_change.decrease_to_fraction",
+            (evidence,),
+        ),
+    )
 
 
 def _extract_mentions(
@@ -732,6 +753,12 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
     if question_target is not None:
         builder.set_question_target(question_target)
 
+    # ADR-0223/0224 proving slice: the surface chunk proposes the catalog
+    # construction before role binding and ContractAssessment.  Only
+    # proportional decrease is authorized for this controlled migration.
+    for proposal in _proportional_decrease_proposals(problem_text):
+        builder.add_proposal(proposal)
+
     mentions = _extract_mentions(problem_text, tuple(grounded_quantities), units)
     bindings = _extract_bindings(problem_text, mentions)
     for mention in mentions:
@@ -754,10 +781,11 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
     from generate.construction_affordances import make_proposal
 
     assessments = assess_contracts(initial_frame)
-    proposals = []
+    proposals = list(initial_frame.proposals)
+    proposed_family_ids = {proposal.family_id for proposal in proposals}
     for assessment in assessments:
         family_id = get_contract_family_id(assessment.candidate_organ)
-        if family_id is not None:
+        if family_id is not None and family_id not in proposed_family_ids:
             proposal = make_proposal(
                 family_id=family_id,
                 evidence_spans=assessment.evidence_spans,
@@ -766,8 +794,8 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
                 active_hazards=assessment.unresolved_hazards,
             )
             proposals.append(proposal)
+            proposed_family_ids.add(family_id)
 
-    import dataclasses
     return dataclasses.replace(initial_frame, proposals=tuple(proposals))
 
 
