@@ -1,69 +1,69 @@
 {
   "adr": "0126",
   "counts": {
-    "correct": 6,
-    "refused": 44,
+    "correct": 30,
+    "refused": 20,
     "wrong": 0
   },
   "exit_criterion": {
     "correct_min": 10,
-    "passed": false,
+    "passed": true,
     "wrong_max": 0
   },
   "per_case": [
     {
       "case_id": "gsm8k-train-sample-v1-0001",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Tina makes $18.00 an hour.' (category=rate_with_currency)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0002",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She splits it up into 25-foot sections.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0003",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The local bookstore donated 48 boxes of erasers.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0004",
-      "reason": "candidate_graph: no admissible candidate for statement: 'Half of the kids are going to soccer camp, and 1/4 of the kids going to soccer camp are going to soccer camp in the morning.'",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0005",
-      "reason": "candidate_graph: no admissible candidate for statement: \"In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature.\"",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0006",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Mandy started reading books with only 8 pages when she was 6 years old.' (category=multiplicative_aggregation)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0007",
-      "reason": "candidate_graph: no admissible candidate for question: 'How many more boxes do they need if Francine has a total of 85 crayons?'",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0008",
-      "reason": "candidate_graph: no admissible candidate for question: 'If 50 beads are used to make one bracelet, how many bracelets will Marnie be able to make out of the beads she bought?'",
-      "verdict": "refused"
+      "reason": "",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0009",
-      "reason": "candidate_graph: no admissible candidate for question: 'If Jen has 150 ducks, how many total birds does she have?'",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0010",
-      "reason": "candidate_graph: no admissible candidate for statement: 'Marion has 1/4 more than what Yun currently has, plus 7.'",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0011",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup.' (category=rate_with_currency)",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "verdict": "refused"
     },
     {
@@ -73,8 +73,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0013",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel.' (category=multiplicative_aggregation)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0014",
@@ -83,18 +83,18 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0015",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0016",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs.\" (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0017",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He\u2019s charging $50.00 per day or $500.00 for 14 days.' (category=temporal_aggregation)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0018",
@@ -113,12 +113,12 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0021",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He bench presses 15 pounds for 10 reps and does 3 sets.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0022",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish.' (category=rate_with_currency)",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She goes out fishing today and catches twice as many fish as she caught in total in the past four months.' (category=discrete_count_statement)",
       "verdict": "refused"
     },
     {
@@ -133,8 +133,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0025",
-      "reason": "candidate_graph: no admissible candidate for question: \"If three of Lilibeth's friends pick the same amount as her, how many strawberries do Lilibeth and her friends pick in all?\"",
-      "verdict": "refused"
+      "reason": "",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0026",
@@ -143,8 +143,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0027",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The number of followers he has on Twitter is half the number of followers he has on Instagram and Facebook combined.' (category=descriptive_setup_no_quantity)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0028",
@@ -158,8 +158,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0030",
-      "reason": "candidate_graph: no admissible candidate for statement: 'It is a 2-hour drive each way.'",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0031",
@@ -178,13 +178,13 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0034",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He can run 40 yards within 5 seconds.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0035",
-      "reason": "candidate_graph: no admissible candidate for question: 'How many more apples would Martha need to give away to be left with only 4 of them?'",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0036",
@@ -193,8 +193,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0037",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Michael wants to lose 10 pounds by June.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0038",
@@ -203,8 +203,8 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0039",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Orlando gained 5 pounds.' (category=discrete_count_statement)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0040",
@@ -223,7 +223,7 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0043",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Her mother gave her an additional $4, and her father twice as much as her mother.' (category=currency_amount)",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She saved $10 for this purpose.' (category=currency_amount)",
       "verdict": "refused"
     },
     {
@@ -233,13 +233,13 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0045",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Each survey has 10 questions.' (category=multiplicative_aggregation)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0046",
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Half of the students are girls, the other half are boys.' (category=descriptive_setup_no_quantity)",
-      "verdict": "refused"
+      "reason": "fast-path",
+      "verdict": "correct"
     },
     {
       "case_id": "gsm8k-train-sample-v1-0047",

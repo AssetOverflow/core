@@ -112,7 +112,14 @@ Learning is reviewed mutation:
 
 ## Validation
 
-Use CLI suites:
+Before starting any task, run the startup guard to ensure a fresh base:
+
+```bash
+source scripts/agent_startup.sh
+# For PR-resume tasks: CODEX_ALLOW_NON_MAIN_BASE=1 source scripts/agent_startup.sh
+```
+
+Then use CLI suites to validate your work:
 
 ```bash
 core test --suite smoke -q
