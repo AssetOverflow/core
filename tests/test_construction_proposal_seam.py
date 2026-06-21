@@ -36,6 +36,7 @@ PERCENT_PARTITION_CASE = (
 )
 
 QUANTITY_ENTITY_CASE = "A school has 100 students."
+UNARY_DELTA_CASE = "Ana gained 3 marbles."
 
 MIGRATED_CASES = (
     (
@@ -52,6 +53,11 @@ MIGRATED_CASES = (
         PERCENT_PARTITION_CASE,
         "partition.percent_partition",
         "percent_partition",
+    ),
+    (
+        UNARY_DELTA_CASE,
+        "state_change.unary_delta",
+        "unary_delta",
     ),
 )
 
@@ -201,6 +207,11 @@ def test_migrated_families_bypass_legacy_make_proposal(
             PERCENT_PARTITION_CASE,
             "partition.percent_partition",
             ("20% of", "10% of"),
+        ),
+        (
+            UNARY_DELTA_CASE,
+            "state_change.unary_delta",
+            ("gained",),
         ),
     ),
 )
