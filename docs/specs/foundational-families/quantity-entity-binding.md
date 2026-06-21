@@ -125,4 +125,10 @@ Serving status: Not implemented / not serving.
 Current state relies on ad-hoc regex heuristic extraction within local parsers. Assessment-backed proposal traces for selected math constructions exist in diagnostics, but general CGA/substrate retrieval does not yet support this family.
 
 Implementation authorization:
-**NOT AUTHORIZED.** This is a constitutional specification file only. Implementation requires a separate, evidence-backed implementation plan and PR.
+**AUTHORIZED ONLY AS A BOUNDED FUTURE DIAGNOSTIC SLICE.** The controlling
+authorization is
+[`docs/sessions/quantity-entity-foundational-slice-authorization-2026-06-20.md`](../../sessions/quantity-entity-foundational-slice-authorization-2026-06-20.md).
+It becomes effective only after that authorization PR merges. It permits the
+proposal-first `binding.quantity_entity` slice described there and nothing
+broader: no serving, state-change semantics, general entity extraction, broad
+parsing, or answer production.
