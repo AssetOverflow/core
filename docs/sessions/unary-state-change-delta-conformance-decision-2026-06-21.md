@@ -1,20 +1,19 @@
 # Post-#856 Unary-Delta Conformance Decision
 
-**Status:** Proposed decision / review required
+**Status:** Accepted decision — Option B authorized
 **Date:** 2026-06-21
 **Scope:** `state_change.unary_delta`
-**Depends on:** PR #855, PR #856
-**Decision type:** post-merge conformance lookback
+**Depends on:** PR #855, PR #856, PR #857
+**Decision type:** post-merge conformance decision and implementation authorization
+**Accepted option:** Option B — authorize narrow correction PR
 
 ## 1. Purpose
 
 This document records a precise post-merge conformance lookback following the implementation of the diagnostic `state_change.unary_delta` seam in PR #855 and its subsequent isolation hardening in PR #856. The purpose of this lookback is to identify and document divergences between the merged codebase and the controlling specification, authorization, and preflight documents.
 
-This record enables the project to make an explicit choice between:
-1. Ratifying the merged implementation shape as the new controlling decision, or
-2. Authorizing a narrow future correction PR to restore the original spec/preflight shape.
+PR #857 introduced this lookback as a proposed decision. This revision records the accepted decision: **Option B — authorize a narrow future correction PR to restore the original spec/preflight shape.**
 
-Recording this decision prevents residual taxonomy, SearchGate, ComputeBudgetPolicy, Workbench trace, or search work from building on top of unresolved architecture drift.
+Recording this accepted decision prevents residual taxonomy, SearchGate, ComputeBudgetPolicy, Workbench trace, or search work from building on top of unresolved architecture drift.
 
 ## 2. Current merged state
 
@@ -91,6 +90,8 @@ The project explicitly accepts the merged representation:
 
 ### Option B — Authorize narrow correction PR
 
+**Decision:** Accepted.
+
 **Meaning:**
 The project holds the original spec, authorization, and preflight documents as controlling. It authorizes a narrow, future implementation correction PR to align the code with the spec:
 - Rename `candidate_organ` to `"unary_delta_transition"`.
@@ -112,31 +113,30 @@ The project holds the original spec, authorization, and preflight documents as c
 **Meaning:**
 The project explicitly records the unresolved drift and suspends all downstream work (e.g., residual taxonomy, SearchGate, ComputeBudgetPolicy, or Workbench traces) until a formal decision between Option A and Option B is ratified.
 
-**Consequences:**
-- Safest posture from a governance perspective.
-- Temporarily slows down the development roadmap.
-- Prevents building new architecture on top of an ambiguous contract.
+**Disposition:** Superseded by acceptance of Option B. The downstream freeze remains active until the Option B correction PR lands.
 
-## 8. Recommendation
+## 8. Accepted decision
 
-We recommend **Option B** (Authorize narrow correction PR) or **Option C** (Defer decision).
+Accepted: **Option B — Authorize narrow correction PR.**
 
 **Reasoning:**
 The controlling specification and preflight documents were explicit, and downstream structures like `ContractResidual` will lock these labels and types into a long-term contract. Reconciling the implementation to match the spec before establishing the contract is safer than ratifying the drift. Widening the `QuantityKindDisposition` trigger also represents unresolved boundary drift from the #853 isolation posture and should be resolved before residual contracts depend on it.
 
-## 9. Required follow-up depending on decision
+This document now serves as the implementation authorization for exactly one narrow conformance correction PR. That PR may correct the four divergences named above and must preserve the #855/#856 safety baseline.
 
-- **If Option A is selected:**
-  - Amend `docs/specs/foundational-families/unary-state-change-delta.md` and `docs/sessions/unary-state-change-delta-preflight-2026-06-21.md` to reflect the current implementation.
-- **If Option B is selected:**
-  - Open a ticket authorizing a narrow correction PR.
-  - Implement the correction under a fresh branch, keeping all isolation tests intact.
-- **If Option C is selected:**
-  - Retain this document in a pending state and do not merge downstream integrations.
+## 9. Required follow-up
+
+Because Option B is accepted:
+
+1. Open a narrow correction PR titled `fix(kernel): align unary-delta implementation with conformance decision`.
+2. Restore the authorized candidate organ, typed cue, quantity-kind boundary, and closed lexical recognizer.
+3. Preserve every #856 isolation test and authority-boundary guarantee.
+4. Do not widen behavior beyond the original spec/preflight.
+5. Do not proceed to residual taxonomy or downstream search/Workbench work until the correction PR lands.
 
 ## 10. Residual/SearchGate/Workbench freeze
 
-Until this conformance decision is resolved and explicitly ratified:
+Until the Option B conformance correction PR merges:
 - Do not implement `ContractResidual`.
 - Do not implement SearchGate.
 - Do not implement ComputeBudgetPolicy.
@@ -149,10 +149,10 @@ This is a sequencing guard to ensure architectural consistency.
 
 ## 11. Non-goals
 
-This lookback PR does not include or permit:
-- Modifying any source code files under `generate/` or elsewhere.
-- Modifying or adding unit tests under `tests/`.
-- Correcting any implementation drift within this PR.
+This accepted decision does not include or permit:
+- Modifying any source code files under `generate/` or elsewhere in this docs PR.
+- Modifying or adding unit tests under `tests/` in this docs PR.
+- Correcting any implementation drift within this docs PR.
 - Implementing `ContractResidual` or defining residual taxonomy.
 - Implementing SearchGate, ComputeBudgetPolicy, or GeometricSearchRun.
 - Modifying or touching the Workbench UI or server logic.
@@ -167,7 +167,7 @@ Validation of this docs-only PR consists of verifying workspace integrity:
   ```bash
   git diff --name-only origin/main...HEAD
   ```
-- Ensure HEAD matches origin/main except for this new document.
+- Ensure HEAD matches origin/main except for this document.
 - Verify the git workspace contains no uncommitted files:
   ```bash
   git status --short
