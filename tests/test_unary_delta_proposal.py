@@ -154,6 +154,20 @@ def test_confusers_do_not_dispatch_unary_delta(problem_text: str) -> None:
     }
 
 
+def test_missing_object_literal_surface_stays_unbound_and_non_runnable() -> None:
+    frame = build_problem_frame("Tom gained 3.")
+
+    assert FAMILY_ID not in {proposal.family_id for proposal in frame.proposals}
+    assert not any(
+        relation.relation_type == "unary_delta"
+        for relation in frame.bound_relations
+    )
+    assert CANDIDATE_ORGAN not in {
+        assessment.candidate_organ
+        for assessment in assess_contracts(frame)
+    }
+
+
 def test_missing_quantity_blocks_runnable_unary_delta() -> None:
     frame = build_problem_frame("Tom gained 3 apples.")
     relation = _relation(frame)
@@ -247,4 +261,3 @@ def test_unary_delta_path_does_not_import_legacy_semantic_state() -> None:
             if isinstance(node, ast.ImportFrom) and node.module is not None
         }
         assert "generate.derivation.state" not in imported
-
