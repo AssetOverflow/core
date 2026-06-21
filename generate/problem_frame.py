@@ -9,7 +9,7 @@ arithmetic solvers.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from generate.kernel_facts import (
@@ -94,6 +94,38 @@ class BoundQuestionTarget:
         return self.target_mention_id is not None
 
 
+QuantityKind = Literal["count", "measurement"]
+
+
+@dataclass(frozen=True, slots=True)
+class QuantityKindDisposition:
+    """Closed local count/measurement disposition for one quantity binding.
+
+    This is family-local grounding evidence, not a general entity ontology.
+    Count dispositions explicitly carry no unit; measurement dispositions
+    require the exact grounded unit mention that licenses them.
+    """
+
+    quantity_mention_id: str
+    entity_mention_id: str
+    quantity_kind: QuantityKind
+    unit_mention_id: str | None
+    evidence_spans: tuple[SourceSpan, ...]
+
+    def __post_init__(self) -> None:
+        if self.quantity_kind not in {"count", "measurement"}:
+            raise ValueError(
+                "quantity_kind must be 'count' or 'measurement', "
+                f"got {self.quantity_kind!r}"
+            )
+        if self.quantity_kind == "count" and self.unit_mention_id is not None:
+            raise ValueError("count quantity dispositions must not carry a unit")
+        if self.quantity_kind == "measurement" and self.unit_mention_id is None:
+            raise ValueError("measurement quantity dispositions require a unit")
+        if not self.evidence_spans:
+            raise ValueError("quantity kind dispositions require exact evidence spans")
+
+
 @dataclass(frozen=True, slots=True)
 class ProblemFrame:
     """Immutable target representation of a mathematical word problem.
@@ -116,6 +148,8 @@ class ProblemFrame:
     bound_relations: tuple[BoundRelation, ...] = ()
     bound_question_target: BoundQuestionTarget | None = None
     proposals: tuple[ConstructionProposal, ...] = ()
+    quantity_kind_dispositions: tuple[QuantityKindDisposition, ...] = ()
+    problem_text: str = ""
 
 
 class ProblemFrameBuilder:
@@ -137,6 +171,11 @@ class ProblemFrameBuilder:
         self._bound_relations: list[BoundRelation] = []
         self._bound_question_target: BoundQuestionTarget | None = None
         self._proposals: list[ConstructionProposal] = []
+        self._quantity_kind_dispositions: list[QuantityKindDisposition] = []
+        self._problem_text = ""
+
+    def set_problem_text(self, problem_text: str) -> None:
+        self._problem_text = problem_text
 
     def add_quantity(self, scalar: GroundedScalar) -> None:
         """Add a GroundedScalar to the frame, collecting hazards and provenance."""
@@ -203,6 +242,12 @@ class ProblemFrameBuilder:
     def add_proposal(self, proposal: ConstructionProposal) -> None:
         self._proposals.append(proposal)
 
+    def add_quantity_kind_disposition(
+        self,
+        disposition: QuantityKindDisposition,
+    ) -> None:
+        self._quantity_kind_dispositions.append(disposition)
+
     def build(self) -> ProblemFrame:
         """Produce the immutable ProblemFrame."""
         return ProblemFrame(
@@ -221,4 +266,6 @@ class ProblemFrameBuilder:
             bound_relations=tuple(self._bound_relations),
             bound_question_target=self._bound_question_target,
             proposals=tuple(self._proposals),
+            quantity_kind_dispositions=tuple(self._quantity_kind_dispositions),
+            problem_text=self._problem_text,
         )

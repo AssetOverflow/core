@@ -34,6 +34,7 @@ from generate.problem_frame import (
     BoundQuestionTarget,
     ProblemFrame,
     ProblemFrameBuilder,
+    QuantityKindDisposition,
     QuestionTarget,
 )
 from generate.process_frames import ProcessFrame, all_frames
@@ -343,6 +344,23 @@ _TRANSFER_RE = re.compile(
     r"(?P<quantity>\d+(?:\.\d+)?)\s+(?P<object>[A-Za-z][A-Za-z'-]*)",
 )
 
+_QUANTITY_ENTITY_PRONOUNS: frozenset[str] = frozenset({
+    "he", "her", "hers", "him", "his", "it", "its", "one", "ones",
+    "she", "their", "theirs", "them", "these", "they", "this", "those",
+})
+
+_QUANTITY_ENTITY_CONFUSER_SURFACES: tuple[str, ...] = (
+    "each",
+    "fewer than",
+    "greater than",
+    "less than",
+    "more than",
+    "per",
+    "percent",
+    "percentage",
+    "ratio",
+)
+
 
 def _proportional_decrease_proposals(text: str) -> tuple[ConstructionProposal, ...]:
     """Propose the one authorized proposal-first construction from its chunk."""
@@ -385,6 +403,63 @@ def _percent_partition_proposals(
             evidence_spans,
         ),
     )
+
+
+def _has_list_or_enumeration_suffix(text: str, end: int) -> bool:
+    sentence_ends = tuple(
+        index
+        for marker in ".!?"
+        if (index := text.find(marker, end)) != -1
+    )
+    sentence_end = min(sentence_ends, default=len(text))
+    tail = text[end:sentence_end].lstrip().lower()
+    return tail.startswith((",", ";", "and ", "or "))
+
+
+def _quantity_entity_proposals(
+    text: str,
+    quantities: tuple[GroundedScalar, ...],
+    frames: tuple[ProcessFrame, ...],
+) -> tuple[ConstructionProposal, ...]:
+    """Propose one narrow local quantity/entity cue from existing extraction.
+
+    The family is intentionally unavailable when another process frame or a
+    rate/comparison/percent surface is active.  Such text needs a different
+    family to interpret it; this seam never selects the nearest noun.
+    """
+
+    if len(quantities) != 1 or frames:
+        return ()
+    if any(
+        surface_in_text(surface, text)
+        for surface in _QUANTITY_ENTITY_CONFUSER_SURFACES
+    ):
+        return ()
+
+    matches = tuple(_ENTITY_AFTER_QUANTITY_RE.finditer(text))
+    if len(matches) != 1:
+        return ()
+    match = matches[0]
+    if "%" in match.group("quantity"):
+        return ()
+    if match.group("entity").lower() in _QUANTITY_ENTITY_PRONOUNS:
+        return ()
+    if _has_list_or_enumeration_suffix(text, match.end("entity")):
+        return ()
+
+    quantity_span = quantities[0].provenance.source_spans[0]
+    if (
+        quantity_span.start != match.start("quantity")
+        or quantity_span.end != match.end("quantity")
+    ):
+        return ()
+
+    evidence = SourceSpan(
+        text[match.start():match.end()],
+        match.start(),
+        match.end(),
+    )
+    return (propose_construction("binding.quantity_entity", (evidence,)),)
 
 
 def _extract_mentions(
@@ -482,6 +557,59 @@ def _extract_bindings(
         source_mention_id=b.source_mention_id, target_mention_id=b.target_mention_id,
         evidence_spans=b.evidence_spans,
     ) for index, b in enumerate(ordered))
+
+
+def _quantity_kind_dispositions(
+    mentions: tuple[GroundedMention, ...],
+    bindings: tuple[MentionBinding, ...],
+) -> tuple[QuantityKindDisposition, ...]:
+    """Close count/measurement kind only from existing local bindings."""
+
+    mentions_by_id = {mention.mention_id: mention for mention in mentions}
+    unit_bindings: dict[str, list[MentionBinding]] = {}
+    for binding in bindings:
+        if binding.binding_type == "quantity_unit":
+            unit_bindings.setdefault(binding.source_mention_id, []).append(binding)
+
+    dispositions: list[QuantityKindDisposition] = []
+    for binding in bindings:
+        if binding.binding_type != "quantity_entity":
+            continue
+        quantity = mentions_by_id.get(binding.source_mention_id)
+        entity = mentions_by_id.get(binding.target_mention_id)
+        if quantity is None or entity is None or quantity.fact_id is None:
+            continue
+
+        bound_units = unit_bindings.get(quantity.mention_id, [])
+        if not bound_units:
+            dispositions.append(QuantityKindDisposition(
+                quantity_mention_id=quantity.mention_id,
+                entity_mention_id=entity.mention_id,
+                quantity_kind="count",
+                unit_mention_id=None,
+                evidence_spans=binding.evidence_spans,
+            ))
+            continue
+        if len(bound_units) != 1:
+            continue
+
+        unit_binding = bound_units[0]
+        unit = mentions_by_id.get(unit_binding.target_mention_id)
+        if unit is None or unit.span == entity.span:
+            continue
+        evidence = {
+            (span.start, span.end, span.text): span
+            for span in (*binding.evidence_spans, *unit_binding.evidence_spans)
+        }
+        dispositions.append(QuantityKindDisposition(
+            quantity_mention_id=quantity.mention_id,
+            entity_mention_id=entity.mention_id,
+            quantity_kind="measurement",
+            unit_mention_id=unit.mention_id,
+            evidence_spans=tuple(evidence[key] for key in sorted(evidence)),
+        ))
+
+    return tuple(dispositions)
 
 
 def _bound_relations(
@@ -751,6 +879,7 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
     answers or bind case-specific behavior.
     """
     builder = ProblemFrameBuilder()
+    builder.set_problem_text(problem_text)
 
     scalars = _filter_scalar_candidates(problem_text, extract_scalar_candidates(problem_text))
     for scalar in scalars:
@@ -788,6 +917,12 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
         builder.add_proposal(proposal)
     for proposal in _percent_partition_proposals(problem_text, frames):
         builder.add_proposal(proposal)
+    for proposal in _quantity_entity_proposals(
+        problem_text,
+        tuple(grounded_quantities),
+        frames,
+    ):
+        builder.add_proposal(proposal)
 
     mentions = _extract_mentions(problem_text, tuple(grounded_quantities), units)
     bindings = _extract_bindings(problem_text, mentions)
@@ -799,6 +934,8 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
             builder.add_object(mention.surface)
     for binding in bindings:
         builder.add_binding(binding)
+    for disposition in _quantity_kind_dispositions(mentions, bindings):
+        builder.add_quantity_kind_disposition(disposition)
     for relation in _bound_relations(problem_text, mentions, bindings):
         builder.add_bound_relation(relation)
     bound_target = _bound_question_target(problem_text, mentions)
