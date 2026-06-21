@@ -35,7 +35,14 @@ PERCENT_PARTITION_CASE = (
     "How many students own dogs?"
 )
 
+QUANTITY_ENTITY_CASE = "A school has 100 students."
+
 MIGRATED_CASES = (
+    (
+        QUANTITY_ENTITY_CASE,
+        "binding.quantity_entity",
+        "quantity_entity_binding",
+    ),
     (
         FRACTION_DECREASE_CASE,
         "proportional_change.decrease_to_fraction",
@@ -180,6 +187,11 @@ def test_migrated_families_bypass_legacy_make_proposal(
 @pytest.mark.parametrize(
     ("problem_text", "family_id", "expected_evidence"),
     (
+        (
+            QUANTITY_ENTITY_CASE,
+            "binding.quantity_entity",
+            ("100 students",),
+        ),
         (
             TANK_EVIDENCE_CASE,
             "proportional_change.decrease_to_fraction",

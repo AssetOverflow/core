@@ -1,9 +1,9 @@
-"""Construction-affordance catalog skeleton.
+"""Diagnostic construction-affordance catalog.
 
 Formalizes the constructional-affordance pattern proved by PR #835 so future
 diagnostic families do not become scattered local parser patches.
 
-This module is a catalog/registry skeleton only.  It does NOT:
+This module contains declarations and proposal factories only.  It does NOT:
 - claim CGA/substrate geometric retrieval (no manifold calls here);
 - label local regex matching as substrate cognition;
 - add any acquisition/transaction or transfer/loss/rate/comparison families;
@@ -128,7 +128,7 @@ class ConstructionFamily:
             raise ValueError(
                 f"ConstructionFamily {self.family_id!r}: "
                 "diagnostic_only must be True — "
-                "this PR registers catalog skeleton entries only."
+                "catalog constructions do not authorize serving."
             )
 
 
@@ -369,10 +369,95 @@ _PERCENT_PARTITION_FAMILY = ConstructionFamily(
     serving_allowed=False,
 )
 
+_QUANTITY_ENTITY_FAMILY = ConstructionFamily(
+    family_id="binding.quantity_entity",
+    display_name="Local quantity-entity binding",
+    signature=ConstructionSignature(
+        relation_type="quantity_entity",
+        candidate_organ="quantity_entity_binding",
+        required_roles=(
+            RoleObligation(
+                "quantity",
+                required=True,
+                description="Exactly one source-grounded scalar mention.",
+            ),
+            RoleObligation(
+                "entity",
+                required=True,
+                description="Exactly one local source-grounded entity mention.",
+            ),
+            RoleObligation(
+                "quantity_kind",
+                required=True,
+                description="A positively grounded count or measurement disposition.",
+            ),
+            RoleObligation(
+                "provenance_span",
+                required=True,
+                description="Exact non-synthetic quantity, entity, and optional unit spans.",
+            ),
+            RoleObligation(
+                "local_binding_relation",
+                required=True,
+                description="The unique local quantity_entity MentionBinding edge.",
+            ),
+        ),
+        optional_roles=(
+            RoleObligation(
+                "unit",
+                required=False,
+                description=(
+                    "An exact grounded unit bound to the same quantity when the "
+                    "quantity kind is measurement."
+                ),
+            ),
+        ),
+    ),
+    hazards=(
+        ConstructionHazard(
+            hazard_category="quantity_entity_ambiguous",
+            blocking=True,
+            description="More than one local scalar, entity, or binding remains plausible.",
+        ),
+        ConstructionHazard(
+            hazard_category="quantity_kind_unresolved",
+            blocking=True,
+            description="Count or measurement kind is not positively grounded.",
+        ),
+        ConstructionHazard(
+            hazard_category="quantity_entity_nonlocal",
+            blocking=True,
+            description="The binding requires pronoun repair or a cross-sentence leap.",
+        ),
+    ),
+    target_semantics=(
+        "locality:single_sentence",
+        "authority:diagnostic_only",
+    ),
+    contract_labels=(
+        "quantity_entity_proposal_required",
+        "quantity_unbound",
+        "entity_unbound",
+        "quantity_ambiguous",
+        "entity_ambiguous",
+        "local_binding_relation_unbound",
+        "local_binding_relation_ambiguous",
+        "quantity_kind_unresolved",
+        "unit_kind_conflict",
+        "provenance_span_inexact",
+        "quantity_entity_nonlocal",
+        "competing_family_context",
+        "percent_change_vs_percent_of",
+    ),
+    diagnostic_only=True,
+    serving_allowed=False,
+)
+
 # The catalog.  Keys are family_id strings.  Sorted for deterministic iteration.
 _CATALOG: dict[str, ConstructionFamily] = {
     _DECREASE_TO_FRACTION_FAMILY.family_id: _DECREASE_TO_FRACTION_FAMILY,
     _PERCENT_PARTITION_FAMILY.family_id: _PERCENT_PARTITION_FAMILY,
+    _QUANTITY_ENTITY_FAMILY.family_id: _QUANTITY_ENTITY_FAMILY,
 }
 
 # Secondary indices for O(1) lookup by organ or relation type.
@@ -386,6 +471,7 @@ _BY_RELATION_TYPE: dict[str, ConstructionFamily] = {
 }
 
 _PROPOSAL_FIRST_FAMILIES: frozenset[str] = frozenset({
+    "binding.quantity_entity",
     "proportional_change.decrease_to_fraction",
     "partition.percent_partition",
 })

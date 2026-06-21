@@ -2,8 +2,9 @@
 
 This module manually mirrors the constitutional family specifications approved
 under ADR-0224.  It is descriptive metadata only: it does not read specification
-documents, recognize constructions, assess ``ProblemFrame`` contracts, route
-proposals, or authorize implementation or serving.
+documents, recognize constructions, assess ``ProblemFrame`` contracts, or route
+proposals.  Authorization fields mirror reviewed implementation boundaries;
+they never authorize serving.
 
 The current registry deliberately contains only the two specifications approved
 by the initial family-spec gate.  General substrate/CGA retrieval for these
@@ -62,7 +63,7 @@ class FoundationalFamilySpec:
 _QUANTITY_ENTITY_BINDING = FoundationalFamilySpec(
     family_id="binding.quantity_entity",
     display_name="Quantity-Entity Binding",
-    status="Proposed (gating specification)",
+    status="Implemented (diagnostic-only; non-serving)",
     related_adrs=("ADR-0223", "ADR-0224"),
     domains=(
         "arithmetic_quantitative",
@@ -133,16 +134,16 @@ _QUANTITY_ENTITY_BINDING = FoundationalFamilySpec(
         ),
     ),
     current_state=(
-        "Not implemented as a general family. Local parser heuristics and selected "
-        "math diagnostic proposal traces exist; general substrate/CGA retrieval does not."
+        "Implemented only as a bounded diagnostic proposal-first local binding; "
+        "general entity extraction and substrate/CGA retrieval do not exist."
     ),
     target_state=(
         "Proposal-first quantity-entity binding with span grounding, contract assessment, "
         "independent verification, and cross-domain evidence."
     ),
-    serving_status="Not implemented / not serving.",
+    serving_status="Diagnostic-only implementation / not serving.",
     serving_allowed=False,
-    implementation_authorized=False,
+    implementation_authorized=True,
     primary_relation_type="quantity_entity",
     future_adapter="quantity_entity_adapter",
 )

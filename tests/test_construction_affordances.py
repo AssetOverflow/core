@@ -16,7 +16,7 @@ from generate.kernel_facts import SourceSpan
 
 def test_catalog_entries_are_diagnostic_only_and_serving_forbidden() -> None:
     families = all_diagnostic_families()
-    assert len(families) == 2
+    assert len(families) == 3
     for family in families:
         assert family.diagnostic_only is True
         assert family.serving_allowed is False
@@ -27,12 +27,18 @@ def test_catalog_ordering_is_deterministic() -> None:
     ids = [f.family_id for f in families]
     assert ids == sorted(ids)
     assert ids == [
+        "binding.quantity_entity",
         "partition.percent_partition",
         "proportional_change.decrease_to_fraction",
     ]
 
 
 def test_lookups_correctness() -> None:
+    quantity_entity = lookup_family("binding.quantity_entity")
+    assert quantity_entity is not None
+    assert lookup_by_organ("quantity_entity_binding") is quantity_entity
+    assert lookup_by_relation_type("quantity_entity") is quantity_entity
+
     fraction_family = lookup_family("proportional_change.decrease_to_fraction")
     assert fraction_family is not None
     assert lookup_by_organ("fraction_decrease") is fraction_family
@@ -51,6 +57,18 @@ def test_lookups_correctness() -> None:
 @pytest.mark.parametrize(
     ("family_id", "relation_type", "candidate_organ", "required_roles"),
     (
+        (
+            "binding.quantity_entity",
+            "quantity_entity",
+            "quantity_entity_binding",
+            {
+                "quantity",
+                "entity",
+                "quantity_kind",
+                "provenance_span",
+                "local_binding_relation",
+            },
+        ),
         (
             "proportional_change.decrease_to_fraction",
             "decrease_to_fraction",
@@ -90,6 +108,7 @@ def test_propose_construction_is_preassessment_and_catalog_backed(
 @pytest.mark.parametrize(
     "family_id",
     (
+        "binding.quantity_entity",
         "proportional_change.decrease_to_fraction",
         "partition.percent_partition",
     ),
