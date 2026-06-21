@@ -1,0 +1,42 @@
+{
+  "failure_family": "missing_total_count",
+  "mounted": false,
+  "observed_attempts": [
+    {
+      "answer": null,
+      "family": "input_shape",
+      "organ": "r1_quantitative",
+      "outcome": "setup_refused",
+      "refusal_reason": "no_quantity_template",
+      "setup_signature": null
+    },
+    {
+      "answer": null,
+      "family": "missing_total_count",
+      "organ": "r2_constraints",
+      "outcome": "setup_refused",
+      "refusal_reason": "missing_total_count",
+      "setup_signature": null
+    },
+    {
+      "answer": null,
+      "family": "input_shape",
+      "organ": "r3_rate",
+      "outcome": "setup_refused",
+      "refusal_reason": "not_rate_shaped",
+      "setup_signature": null
+    },
+    {
+      "answer": null,
+      "family": "input_shape",
+      "organ": "r4_combined_rate",
+      "outcome": "setup_refused",
+      "refusal_reason": "not_combined_rate_shaped",
+      "setup_signature": null
+    }
+  ],
+  "problem_text_sha256": "6b6fba986355b30be9e548687f44ed69e987c94c1c97527197c1988ef984e1a0",
+  "requires_review": true,
+  "status": "proposal_only",
+  "suggested_next_fixture": null
+}
