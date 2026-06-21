@@ -15,13 +15,18 @@ generic chatbot, not an infrastructure playground.
 1. **Read this file in full.**
 2. **Read `AGENTS.md` in full.**
 3. **Read `docs/runtime_contracts.md` in full.**
-4. **Run the smoke suite:**
+4. **Run the startup guard** — enforces fresh-base and clean-tree invariants:
+   ```bash
+   source scripts/agent_startup.sh
+   ```
+   For a PR-resume task: `CODEX_ALLOW_NON_MAIN_BASE=1 source scripts/agent_startup.sh`
+5. **Run the smoke suite:**
    ```bash
    core test --suite smoke -q
    ```
-5. **Check for a handoff doc** — read the most recent `HANDOFF-*.md` if one
+6. **Check for a handoff doc** — read the most recent `HANDOFF-*.md` if one
    exists dated within the last 3 days.
-6. **State your task scope** — before editing, name the module(s) and the
+7. **State your task scope** — before editing, name the module(s) and the
    invariant you will prove was not violated.
 
 ---
