@@ -104,7 +104,16 @@ Never use `git reset --hard`, broad `git checkout .`, broad `git restore .`, `gi
 
 ### 2. Establish a clean, current baseline
 
-After the tree is clean or unknown work is safely stashed:
+**Run the startup guard first** — it automates steps 2–4 and will hard-stop if the worktree is stale:
+
+```bash
+source scripts/agent_startup.sh
+```
+
+For a new task (default, no env vars) the script requires `HEAD == origin/main` and a clean tree.
+For a PR-resume task, set `CODEX_ALLOW_NON_MAIN_BASE=1`; the script then verifies `origin/main` is a strict ancestor of `HEAD`.
+
+If you cannot source the script, perform the equivalent steps manually:
 
 ```bash
 git fetch origin --prune
@@ -114,6 +123,7 @@ git status --short --branch
 ```
 
 If `main` cannot fast-forward, stop and report the exact state. Do not merge, rebase, or resolve conflicts unless explicitly instructed.
+
 
 ### 3. Prefer a new worktree for non-trivial implementation
 
