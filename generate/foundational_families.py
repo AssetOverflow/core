@@ -6,9 +6,9 @@ documents, recognize constructions, assess ``ProblemFrame`` contracts, or route
 proposals.  Authorization fields mirror reviewed implementation boundaries;
 they never authorize serving.
 
-The current registry deliberately contains only the two specifications approved
-by the initial family-spec gate.  General substrate/CGA retrieval for these
-families is not live.
+The current registry deliberately contains only the reviewed foundational
+families approved by the family-spec gate.  General substrate/CGA retrieval for
+these families is not live.
 """
 from __future__ import annotations
 
@@ -249,7 +249,97 @@ _STATE_CHANGE = FoundationalFamilySpec(
 )
 
 
-_FAMILIES = (_QUANTITY_ENTITY_BINDING, _STATE_CHANGE)
+_UNARY_DELTA = FoundationalFamilySpec(
+    family_id="state_change.unary_delta",
+    display_name="Unary Delta State Change",
+    status="Implemented (diagnostic-only; non-serving)",
+    related_adrs=("ADR-0223", "ADR-0224"),
+    domains=(
+        "arithmetic_quantitative",
+        "physical_science",
+        "life_science",
+        "reading_comprehension",
+    ),
+    summary=(
+        "Represents one exact local gained/lost event as a unary quantity "
+        "delta over a changed object, without asserting owner, before-state, "
+        "after-state, or arithmetic closure."
+    ),
+    surface_chunk_patterns=(
+        "<subject> gained <number> <object>",
+        "<subject> lost <number> <object>",
+    ),
+    semantic_neighborhood=(
+        "inventory_change",
+        "resource_delta",
+        "count_change",
+        "local_event_delta",
+    ),
+    construction_signatures=("unary_delta",),
+    required_roles=("action_cue", "delta_quantity", "changed_object", "direction"),
+    optional_roles=("subject_surface",),
+    hazards_confusers=(
+        "PF-EN-002 quantity_entity_unbound",
+        "PF-EN-005 role_alias_collision",
+        "PF-HZ-003 hazard_ignored_by_contract",
+        "PF-TG-004 target_direction_unknown",
+    ),
+    frame_representation=(
+        "ConstructionProposal(status='proposed', family_id='state_change.unary_delta')",
+        "BoundRelation(relation_type='unary_delta') with action_cue, delta_quantity, changed_object, and direction roles",
+        "Exact SourceSpan evidence for cue, quantity, and object",
+        "ContractAssessment(candidate_organ='unary_delta') as the sole runnable/refused authority",
+    ),
+    contract_readiness_criteria=(
+        "Exactly one local gained/lost cue is grounded from the original text.",
+        "Exactly one grounded scalar quantity and one grounded changed object are bound.",
+        "Quantity/object grounding composes with exact local quantity_entity evidence.",
+        "Direction is increase for gained and decrease for lost.",
+        "No transfer, containment, comparison, rate, percent, passive, modal, negated, or cross-sentence reasoning is required.",
+    ),
+    verification_style=(
+        "Cue substitution between gained and lost must flip direction without widening other roles.",
+        "Synthetic or widened cue/quantity/object spans must refuse rather than normalize.",
+    ),
+    refusal_conditions=(
+        "Cue, quantity, or changed object is missing or ambiguous.",
+        "Object grounding would require pronoun repair, cross-sentence binding, or legacy semantic-state logic.",
+    ),
+    cross_domain_evidence=(
+        FoundationalDomainEvidence(
+            domain="physical_science",
+            example="The jar lost 2 cookies.",
+            expected_roles=("action_cue", "delta_quantity", "changed_object", "direction"),
+        ),
+        FoundationalDomainEvidence(
+            domain="life_science",
+            example="The sapling gained 3 leaves.",
+            expected_roles=("action_cue", "delta_quantity", "changed_object", "direction"),
+        ),
+        FoundationalDomainEvidence(
+            domain="reading_comprehension",
+            example="Ana gained 3 marbles.",
+            expected_roles=("action_cue", "delta_quantity", "changed_object", "direction"),
+        ),
+    ),
+    current_state=(
+        "Implemented only as a bounded diagnostic proposal-first gained/lost "
+        "relation. No transfer semantics, owner assertion, state ledger, or "
+        "serving adapter is authorized."
+    ),
+    target_state=(
+        "Proposal-first unary-delta relation with exact cue/quantity/object grounding, "
+        "typed refusal, and cross-domain evidence."
+    ),
+    serving_status="Diagnostic-only implementation / not serving.",
+    serving_allowed=False,
+    implementation_authorized=True,
+    primary_relation_type="unary_delta",
+    future_adapter="unary_delta_adapter",
+)
+
+
+_FAMILIES = (_QUANTITY_ENTITY_BINDING, _STATE_CHANGE, _UNARY_DELTA)
 _BY_ID = MappingProxyType({family.family_id: family for family in _FAMILIES})
 _BY_RELATION_TYPE = MappingProxyType(
     {family.primary_relation_type: family for family in _FAMILIES}

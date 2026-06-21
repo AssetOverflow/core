@@ -16,7 +16,7 @@ from generate.kernel_facts import SourceSpan
 
 def test_catalog_entries_are_diagnostic_only_and_serving_forbidden() -> None:
     families = all_diagnostic_families()
-    assert len(families) == 3
+    assert len(families) == 4
     for family in families:
         assert family.diagnostic_only is True
         assert family.serving_allowed is False
@@ -30,6 +30,7 @@ def test_catalog_ordering_is_deterministic() -> None:
         "binding.quantity_entity",
         "partition.percent_partition",
         "proportional_change.decrease_to_fraction",
+        "state_change.unary_delta",
     ]
 
 
@@ -48,6 +49,11 @@ def test_lookups_correctness() -> None:
     assert partition_family is not None
     assert lookup_by_organ("percent_partition") is partition_family
     assert lookup_by_relation_type("percent_of") is partition_family
+
+    unary_delta = lookup_family("state_change.unary_delta")
+    assert unary_delta is not None
+    assert lookup_by_organ("unary_delta") is unary_delta
+    assert lookup_by_relation_type("unary_delta") is unary_delta
 
     assert lookup_family("invalid_family_id") is None
     assert lookup_by_organ("invalid_organ") is None
@@ -81,6 +87,12 @@ def test_lookups_correctness() -> None:
             "percent_partition",
             {"whole", "part", "scale"},
         ),
+        (
+            "state_change.unary_delta",
+            "unary_delta",
+            "unary_delta",
+            {"action_cue", "delta_quantity", "changed_object", "direction"},
+        ),
     ),
 )
 def test_propose_construction_is_preassessment_and_catalog_backed(
@@ -111,6 +123,7 @@ def test_propose_construction_is_preassessment_and_catalog_backed(
         "binding.quantity_entity",
         "proportional_change.decrease_to_fraction",
         "partition.percent_partition",
+        "state_change.unary_delta",
     ),
 )
 def test_make_proposal_rejects_migrated_proposal_first_families(

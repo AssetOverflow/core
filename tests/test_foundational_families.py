@@ -19,6 +19,7 @@ from generate.foundational_families import (
 EXPECTED_FAMILY_IDS = (
     "binding.quantity_entity",
     "state_change.transition",
+    "state_change.unary_delta",
 )
 
 
@@ -35,10 +36,12 @@ def test_registry_contains_only_the_two_approved_specs_in_deterministic_order() 
 def test_public_family_accessors() -> None:
     quantity = get_foundational_family("binding.quantity_entity")
     state_change = require_foundational_family("state_change.transition")
+    unary_delta = require_foundational_family("state_change.unary_delta")
 
     assert quantity is not None
     assert quantity.family_id == "binding.quantity_entity"
     assert state_change.family_id == "state_change.transition"
+    assert unary_delta.family_id == "state_change.unary_delta"
     assert get_foundational_family("missing.family") is None
 
     with pytest.raises(KeyError, match="missing.family"):
@@ -48,9 +51,11 @@ def test_public_family_accessors() -> None:
 def test_lookup_by_primary_relation_type() -> None:
     quantity = get_foundational_family_by_relation_type("quantity_entity")
     state_change = get_foundational_family_by_relation_type("state_change")
+    unary_delta = get_foundational_family_by_relation_type("unary_delta")
 
     assert quantity is get_foundational_family("binding.quantity_entity")
     assert state_change is get_foundational_family("state_change.transition")
+    assert unary_delta is get_foundational_family("state_change.unary_delta")
     assert get_foundational_family_by_relation_type("missing_relation") is None
 
 
@@ -63,7 +68,7 @@ def test_registry_keys_are_unique() -> None:
     assert len(relation_types) == len(set(relation_types))
 
 
-def test_specs_are_frozen_and_only_quantity_entity_is_authorized() -> None:
+def test_specs_are_frozen_and_only_authorized_slices_are_implemented() -> None:
     for family in iter_foundational_families():
         assert isinstance(family, FoundationalFamilySpec)
         assert family.serving_allowed is False
@@ -78,6 +83,9 @@ def test_specs_are_frozen_and_only_quantity_entity_is_authorized() -> None:
     assert require_foundational_family(
         "state_change.transition"
     ).implementation_authorized is False
+    assert require_foundational_family(
+        "state_change.unary_delta"
+    ).implementation_authorized is True
 
 
 def test_required_adr_0224_fields_are_populated() -> None:

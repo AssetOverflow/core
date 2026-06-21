@@ -17,6 +17,7 @@ from generate.construction_affordances import (
     _DECREASE_TO_FRACTION_FAMILY,
     _PERCENT_PARTITION_FAMILY,
     _QUANTITY_ENTITY_FAMILY,
+    _UNARY_DELTA_FAMILY,
 )
 from generate.kernel_facts import BoundRelation, GroundedMention, SourceSpan
 from generate.problem_frame import ProblemFrame
@@ -52,6 +53,10 @@ _CONTRACT_REGISTRY: dict[str, ConstructionContract] = {
     "quantity_entity_binding": ConstructionContract(
         family=_QUANTITY_ENTITY_FAMILY,
         assess_fn_name="assess_quantity_entity",
+    ),
+    "unary_delta": ConstructionContract(
+        family=_UNARY_DELTA_FAMILY,
+        assess_fn_name="assess_unary_delta",
     ),
 }
 
@@ -97,6 +102,11 @@ def _evidence(frame: ProblemFrame, relation_type: str) -> tuple[SourceSpan, ...]
 
 def _role_target(relation: BoundRelation, role_name: str) -> str | None:
     return next((role.target_id for role in relation.roles if role.role == role_name), None)
+
+
+def _role_spans(relation: BoundRelation, role_name: str) -> tuple[SourceSpan, ...]:
+    role = next((item for item in relation.roles if item.role == role_name), None)
+    return () if role is None else role.evidence_spans
 
 
 def _mention_map(frame: ProblemFrame) -> dict[str, object]:
@@ -448,6 +458,115 @@ def assess_fraction_decrease(frame: ProblemFrame) -> ContractAssessment:
     )
 
 
+def assess_unary_delta(frame: ProblemFrame) -> ContractAssessment:
+    proposals = tuple(
+        proposal
+        for proposal in frame.proposals
+        if proposal.family_id == _UNARY_DELTA_FAMILY.family_id
+    )
+    relations = tuple(
+        relation
+        for relation in frame.bound_relations
+        if relation.relation_type == "unary_delta"
+    )
+    mentions = _mention_map(frame)
+    dispositions = tuple(frame.quantity_kind_dispositions)
+
+    missing: list[str] = []
+    unresolved: set[str] = set()
+
+    if len(proposals) != 1:
+        missing.append("unary_delta_proposal_required")
+    proposal = proposals[0] if len(proposals) == 1 else None
+
+    if len(relations) != 1:
+        missing.append("unary_delta_relation_ambiguous")
+    relation = relations[0] if len(relations) == 1 else None
+
+    cue_spans = _role_spans(relation, "action_cue") if relation is not None else ()
+    quantity_id = _role_target(relation, "delta_quantity") if relation is not None else None
+    object_id = _role_target(relation, "changed_object") if relation is not None else None
+    direction = _role_target(relation, "direction") if relation is not None else None
+
+    if len(cue_spans) != 1:
+        missing.append("action_cue_unbound")
+    cue_span = cue_spans[0] if len(cue_spans) == 1 else None
+    if cue_span is not None and cue_span.text not in {"gained", "lost"}:
+        missing.append("action_cue_unbound")
+
+    quantity = mentions.get(quantity_id) if quantity_id is not None else None
+    if quantity is None or quantity.kind != "quantity":
+        missing.append("delta_quantity_unbound")
+
+    changed_object = mentions.get(object_id) if object_id is not None else None
+    if changed_object is None or changed_object.kind != "object":
+        missing.append("changed_object_unbound")
+
+    expected_direction = None
+    if cue_span is not None:
+        expected_direction = "increase" if cue_span.text == "gained" else "decrease"
+    if direction is None or direction != expected_direction:
+        missing.append("direction_unbound")
+
+    if quantity is not None and changed_object is not None:
+        matching_dispositions = tuple(
+            disposition
+            for disposition in dispositions
+            if disposition.quantity_mention_id == quantity.mention_id
+            and disposition.entity_mention_id == changed_object.mention_id
+        )
+        if len(matching_dispositions) != 1:
+            missing.append("quantity_kind_unresolved")
+
+    exact_evidence = _unique_evidence(tuple(
+        span
+        for group in (
+            (() if proposal is None else proposal.evidence_spans),
+            (() if cue_span is None else (cue_span,)),
+            (() if quantity is None else (quantity.span,)),
+            (() if changed_object is None else (changed_object.span,)),
+        )
+        for span in group
+    ))
+    if proposal is not None and cue_span is not None and proposal.evidence_spans != (cue_span,):
+        missing.append("provenance_span_inexact")
+    if relation is not None and quantity is not None and changed_object is not None and cue_span is not None:
+        if relation.evidence_spans != (cue_span, quantity.span, changed_object.span):
+            missing.append("provenance_span_inexact")
+    if not exact_evidence or not all(_span_is_exact(frame, span) for span in exact_evidence):
+        missing.append("provenance_span_inexact")
+
+    if cue_span is not None and changed_object is not None and not _spans_are_local(
+        frame.problem_text,
+        cue_span,
+        changed_object.span,
+    ):
+        missing.append("quantity_entity_nonlocal")
+    if cue_span is not None and quantity is not None and not _spans_are_local(
+        frame.problem_text,
+        cue_span,
+        quantity.span,
+    ):
+        missing.append("quantity_entity_nonlocal")
+
+    missing_bindings = tuple(dict.fromkeys(missing))
+    unresolved_hazards = tuple(sorted(unresolved))
+    runnable = not missing_bindings and not unresolved_hazards
+    return ContractAssessment(
+        candidate_organ="unary_delta",
+        missing_bindings=missing_bindings,
+        unresolved_hazards=unresolved_hazards,
+        runnable=runnable,
+        explanation=(
+            "one exact local unary gained/lost delta is grounded diagnostically"
+            if runnable
+            else "diagnostic candidate is not runnable: "
+            + ", ".join((*missing_bindings, *unresolved_hazards))
+        ),
+        evidence_spans=exact_evidence,
+    )
+
+
 def assess_percent_partition(frame: ProblemFrame) -> ContractAssessment:
     mentions = {mention.mention_id: mention for mention in frame.mentions}
     quantities = _quantity_value_by_mention_id(frame)
@@ -547,11 +666,15 @@ def assess_contracts(frame: ProblemFrame) -> tuple[ContractAssessment, ...]:
        family in ``frame.proposals``.  Routes to ``assess_fraction_decrease``,
        which still determines closure from bound frame evidence.
        Registry key: ``_CONTRACT_REGISTRY["fraction_decrease"]``.
-    3. ``percent_partition`` — triggered by its proposal-first catalog family
+    3. ``unary_delta`` — triggered by its proposal-first catalog family in
+       ``frame.proposals``. Routes to ``assess_unary_delta``, which closes
+       only exact local gained/lost cue, quantity, and object evidence.
+       Registry key: ``_CONTRACT_REGISTRY["unary_delta"]``.
+    4. ``percent_partition`` — triggered by its proposal-first catalog family
        in ``frame.proposals``.  Routes to ``assess_percent_partition``, which
        still determines closure from bound frame evidence.
        Registry key: ``_CONTRACT_REGISTRY["percent_partition"]``.
-    4. ``container_packing`` / ``labor_rate`` — inline skeleton assessments;
+    5. ``container_packing`` / ``labor_rate`` — inline skeleton assessments;
        not yet in the catalog registry (added to registry when obligations are
        fully specified).
 
@@ -570,6 +693,9 @@ def assess_contracts(frame: ProblemFrame) -> tuple[ContractAssessment, ...]:
     if _DECREASE_TO_FRACTION_FAMILY.family_id in proposed_family_ids:
         # Catalog: _CONTRACT_REGISTRY["fraction_decrease"]
         results.append(assess_fraction_decrease(frame))
+    if _UNARY_DELTA_FAMILY.family_id in proposed_family_ids:
+        # Catalog: _CONTRACT_REGISTRY["unary_delta"]
+        results.append(assess_unary_delta(frame))
     if _PERCENT_PARTITION_FAMILY.family_id in proposed_family_ids:
         # Catalog: _CONTRACT_REGISTRY["percent_partition"]
         results.append(assess_percent_partition(frame))

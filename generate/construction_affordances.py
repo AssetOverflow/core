@@ -458,11 +458,80 @@ _QUANTITY_ENTITY_FAMILY = ConstructionFamily(
     serving_allowed=False,
 )
 
+_UNARY_DELTA_FAMILY = ConstructionFamily(
+    family_id="state_change.unary_delta",
+    display_name="Unary gained/lost delta",
+    signature=ConstructionSignature(
+        relation_type="unary_delta",
+        candidate_organ="unary_delta",
+        required_roles=(
+            RoleObligation(
+                "action_cue",
+                required=True,
+                description="Exact local gained/lost cue span from the original text.",
+            ),
+            RoleObligation(
+                "delta_quantity",
+                required=True,
+                description="Exactly one grounded scalar quantity attached to the event.",
+            ),
+            RoleObligation(
+                "changed_object",
+                required=True,
+                description="Exactly one grounded local object whose quantity changed.",
+            ),
+            RoleObligation(
+                "direction",
+                required=True,
+                description="Increase for gained and decrease for lost.",
+            ),
+        ),
+        optional_roles=(),
+    ),
+    hazards=(
+        ConstructionHazard(
+            hazard_category="quantity_entity_nonlocal",
+            blocking=True,
+            description=(
+                "Pronoun repair or cross-sentence binding would be required to "
+                "decide the changed object."
+            ),
+        ),
+        ConstructionHazard(
+            hazard_category="percent_change_vs_percent_of",
+            blocking=True,
+            description=(
+                "Percent/rate/comparison phrasing would widen this slice beyond "
+                "a local unary gained/lost event."
+            ),
+        ),
+    ),
+    target_semantics=(
+        "authority:diagnostic_only",
+        "cue_inventory:gained|lost",
+        "locality:single_clause",
+    ),
+    contract_labels=(
+        "unary_delta_proposal_required",
+        "unary_delta_relation_ambiguous",
+        "action_cue_unbound",
+        "delta_quantity_unbound",
+        "changed_object_unbound",
+        "direction_unbound",
+        "quantity_kind_unresolved",
+        "provenance_span_inexact",
+        "quantity_entity_nonlocal",
+    ),
+    diagnostic_only=True,
+    serving_allowed=False,
+)
+
 # The catalog.  Keys are family_id strings.  Sorted for deterministic iteration.
 _CATALOG: dict[str, ConstructionFamily] = {
     _DECREASE_TO_FRACTION_FAMILY.family_id: _DECREASE_TO_FRACTION_FAMILY,
     _PERCENT_PARTITION_FAMILY.family_id: _PERCENT_PARTITION_FAMILY,
     _QUANTITY_ENTITY_FAMILY.family_id: _QUANTITY_ENTITY_FAMILY,
+    _UNARY_DELTA_FAMILY.family_id: _UNARY_DELTA_FAMILY,
 }
 
 # Secondary indices for O(1) lookup by organ or relation type.
@@ -479,6 +548,7 @@ _PROPOSAL_FIRST_FAMILIES: frozenset[str] = frozenset({
     "binding.quantity_entity",
     "proportional_change.decrease_to_fraction",
     "partition.percent_partition",
+    "state_change.unary_delta",
 })
 
 
