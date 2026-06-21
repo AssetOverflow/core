@@ -1,7 +1,7 @@
 """Diagnostic organ-contract readiness derived only from ProblemFrame evidence.
 
 Contract dispatch is deliberately narrow:
-- ``assess_contracts()`` routes to two diagnostic assessment functions.
+- ``assess_contracts()`` routes to three diagnostic assessment functions.
 - The ``_CONTRACT_REGISTRY`` provides catalog metadata for introspection and
   proposal-trace generation; it does not replace the structural logic inside
   each assessment function.
@@ -16,8 +16,9 @@ from generate.construction_affordances import (
     ConstructionContract,
     _DECREASE_TO_FRACTION_FAMILY,
     _PERCENT_PARTITION_FAMILY,
+    _QUANTITY_ENTITY_FAMILY,
 )
-from generate.kernel_facts import BoundRelation, SourceSpan
+from generate.kernel_facts import BoundRelation, GroundedMention, SourceSpan
 from generate.problem_frame import ProblemFrame
 
 
@@ -47,6 +48,10 @@ _CONTRACT_REGISTRY: dict[str, ConstructionContract] = {
     "percent_partition": ConstructionContract(
         family=_PERCENT_PARTITION_FAMILY,
         assess_fn_name="assess_percent_partition",
+    ),
+    "quantity_entity_binding": ConstructionContract(
+        family=_QUANTITY_ENTITY_FAMILY,
+        assess_fn_name="assess_quantity_entity",
     ),
 }
 
@@ -121,6 +126,245 @@ def _quantity_unit_bindings(frame: ProblemFrame) -> dict[str, str]:
         for binding in frame.bindings
         if binding.binding_type == "quantity_unit"
     }
+
+
+_UNRESOLVED_ENTITY_SURFACES: frozenset[str] = frozenset({
+    "he", "her", "hers", "him", "his", "it", "its", "one", "ones",
+    "she", "their", "theirs", "them", "these", "they", "this", "those",
+})
+
+
+def _span_is_exact(frame: ProblemFrame, span: SourceSpan) -> bool:
+    return (
+        bool(frame.problem_text)
+        and 0 <= span.start <= span.end <= len(frame.problem_text)
+        and bool(span.text)
+        and frame.problem_text[span.start:span.end] == span.text
+    )
+
+
+def _spans_are_local(
+    problem_text: str,
+    first: SourceSpan,
+    second: SourceSpan,
+) -> bool:
+    left, right = sorted((first, second), key=lambda span: span.start)
+    if left.end > right.start:
+        return False
+    return not any(marker in problem_text[left.end:right.start] for marker in ".!?")
+
+
+def _unique_evidence(spans: tuple[SourceSpan, ...]) -> tuple[SourceSpan, ...]:
+    unique = {
+        (span.start, span.end, span.text): span
+        for span in spans
+    }
+    return tuple(unique[key] for key in sorted(unique))
+
+
+def _entity_mentions(frame: ProblemFrame) -> tuple[GroundedMention, ...]:
+    return tuple(
+        mention
+        for mention in frame.mentions
+        if mention.kind in {"entity", "object", "actor"}
+    )
+
+
+def assess_quantity_entity(frame: ProblemFrame) -> ContractAssessment:
+    """Assess one proposal-backed local quantity/entity edge.
+
+    This contract is deliberately stricter than generic mention extraction: it
+    closes only one exact scalar, one exact entity, one exact local edge, and a
+    positively grounded count/measurement disposition.  It derives neither an
+    answer nor serving authority.
+    """
+
+    proposals = tuple(
+        proposal
+        for proposal in frame.proposals
+        if proposal.family_id == _QUANTITY_ENTITY_FAMILY.family_id
+    )
+    bindings = tuple(
+        binding
+        for binding in frame.bindings
+        if binding.binding_type == "quantity_entity"
+    )
+    mentions = {mention.mention_id: mention for mention in frame.mentions}
+    quantity_facts = {quantity.fact_id: quantity for quantity in frame.quantities}
+
+    missing: list[str] = []
+    unresolved: set[str] = set()
+    if len(proposals) != 1:
+        missing.append("quantity_entity_proposal_required")
+    proposal = proposals[0] if len(proposals) == 1 else None
+
+    if not bindings:
+        missing.append("local_binding_relation_unbound")
+    elif len(bindings) != 1:
+        missing.append("local_binding_relation_ambiguous")
+    binding = bindings[0] if len(bindings) == 1 else None
+
+    quantity = (
+        mentions.get(binding.source_mention_id)
+        if binding is not None
+        else None
+    )
+    entity = (
+        mentions.get(binding.target_mention_id)
+        if binding is not None
+        else None
+    )
+    if quantity is None or quantity.kind != "quantity":
+        missing.append("quantity_unbound")
+    elif quantity.fact_id is None or quantity.fact_id not in quantity_facts:
+        missing.append("quantity_unbound")
+    if len(frame.quantities) != 1:
+        missing.append("quantity_ambiguous")
+
+    if entity is None or entity.kind not in {"entity", "object"}:
+        missing.append("entity_unbound")
+    elif entity.surface.lower() in _UNRESOLVED_ENTITY_SURFACES:
+        missing.append("entity_unbound")
+        unresolved.add("quantity_entity_nonlocal")
+
+    if quantity is not None and entity is not None:
+        competing_entities = tuple(
+            mention
+            for mention in _entity_mentions(frame)
+            if mention.mention_id != entity.mention_id
+            and _spans_are_local(frame.problem_text, entity.span, mention.span)
+        )
+        if competing_entities:
+            missing.append("entity_ambiguous")
+        if not _spans_are_local(frame.problem_text, quantity.span, entity.span):
+            missing.append("quantity_entity_nonlocal")
+
+    if proposal is not None and quantity is not None and entity is not None:
+        cue_contains_binding = any(
+            cue.start <= quantity.span.start
+            and entity.span.end <= cue.end
+            for cue in proposal.evidence_spans
+        )
+        if not cue_contains_binding:
+            missing.append("local_binding_relation_unbound")
+
+    dispositions = tuple(
+        disposition
+        for disposition in frame.quantity_kind_dispositions
+        if quantity is not None
+        and entity is not None
+        and disposition.quantity_mention_id == quantity.mention_id
+        and disposition.entity_mention_id == entity.mention_id
+    )
+    if len(dispositions) != 1:
+        missing.append("quantity_kind_unresolved")
+    disposition = dispositions[0] if len(dispositions) == 1 else None
+
+    unit_bindings = tuple(
+        binding
+        for binding in frame.bindings
+        if quantity is not None
+        and binding.binding_type == "quantity_unit"
+        and binding.source_mention_id == quantity.mention_id
+    )
+    if len(unit_bindings) > 1:
+        missing.append("unit_kind_conflict")
+    unit_binding = unit_bindings[0] if len(unit_bindings) == 1 else None
+    unit = (
+        mentions.get(unit_binding.target_mention_id)
+        if unit_binding is not None
+        else None
+    )
+    if disposition is not None:
+        if disposition.quantity_kind == "count" and unit_binding is not None:
+            missing.append("unit_kind_conflict")
+        elif disposition.quantity_kind == "measurement":
+            if (
+                unit_binding is None
+                or disposition.unit_mention_id != unit_binding.target_mention_id
+                or unit is None
+                or unit.kind != "unit"
+            ):
+                missing.append("unit_kind_conflict")
+    elif unit_binding is not None:
+        missing.append("unit_kind_conflict")
+
+    if unit is not None and entity is not None and unit.span == entity.span:
+        missing.append("unit_kind_conflict")
+
+    evidence = _unique_evidence(tuple(
+        span
+        for group in (
+            (() if proposal is None else proposal.evidence_spans),
+            (() if binding is None else binding.evidence_spans),
+            (() if disposition is None else disposition.evidence_spans),
+            (() if unit_binding is None else unit_binding.evidence_spans),
+        )
+        for span in group
+    ))
+    exact_evidence = evidence
+    if quantity is not None:
+        exact_evidence = _unique_evidence((*exact_evidence, quantity.span))
+        quantity_fact = (
+            quantity_facts.get(quantity.fact_id)
+            if quantity.fact_id is not None
+            else None
+        )
+        if (
+            quantity_fact is None
+            or quantity.span not in quantity_fact.provenance.source_spans
+        ):
+            missing.append("provenance_span_inexact")
+    if entity is not None:
+        exact_evidence = _unique_evidence((*exact_evidence, entity.span))
+    if unit is not None:
+        exact_evidence = _unique_evidence((*exact_evidence, unit.span))
+        unit_fact = next(
+            (
+                grounded
+                for grounded in frame.units
+                if unit.fact_id == grounded.fact_id
+            ),
+            None,
+        )
+        if unit_fact is None or unit.span not in unit_fact.provenance.source_spans:
+            missing.append("provenance_span_inexact")
+
+    if binding is not None and quantity is not None and entity is not None:
+        if binding.evidence_spans != (quantity.span, entity.span):
+            missing.append("provenance_span_inexact")
+    if unit_binding is not None and quantity is not None and unit is not None:
+        if unit_binding.evidence_spans != (quantity.span, unit.span):
+            missing.append("provenance_span_inexact")
+    if not exact_evidence or not all(
+        _span_is_exact(frame, span)
+        for span in exact_evidence
+    ):
+        missing.append("provenance_span_inexact")
+
+    competing_families = {candidate.name for candidate in frame.process_frames}
+    if competing_families:
+        missing.append("competing_family_context")
+    categories = {hazard.category for hazard in frame.hazards}
+    if "percent_change_vs_percent_of" in categories:
+        unresolved.add("percent_change_vs_percent_of")
+
+    missing_bindings = tuple(dict.fromkeys(missing))
+    unresolved_hazards = tuple(sorted(unresolved))
+    runnable = not missing_bindings and not unresolved_hazards
+    return ContractAssessment(
+        candidate_organ="quantity_entity_binding",
+        missing_bindings=missing_bindings,
+        unresolved_hazards=unresolved_hazards,
+        runnable=runnable,
+        explanation=(
+            "one exact local quantity/entity binding is grounded diagnostically"
+            if runnable
+            else "diagnostic candidate is not runnable: "
+            + ", ".join((*missing_bindings, *unresolved_hazards))
+        ),
+        evidence_spans=exact_evidence,
+    )
 
 
 def assess_fraction_decrease(frame: ProblemFrame) -> ContractAssessment:
@@ -295,15 +539,19 @@ def assess_contracts(frame: ProblemFrame) -> tuple[ContractAssessment, ...]:
     """Return deterministic diagnostic assessments; never admits serving.
 
     Dispatch order:
-    1. ``decrease_to_fraction`` — triggered by its proposal-first catalog
+    1. ``quantity_entity`` — triggered by its proposal-first foundational
+       family in ``frame.proposals``.  Routes to
+       ``assess_quantity_entity``, which closes only exact local evidence.
+       Registry key: ``_CONTRACT_REGISTRY["quantity_entity_binding"]``.
+    2. ``decrease_to_fraction`` — triggered by its proposal-first catalog
        family in ``frame.proposals``.  Routes to ``assess_fraction_decrease``,
        which still determines closure from bound frame evidence.
        Registry key: ``_CONTRACT_REGISTRY["fraction_decrease"]``.
-    2. ``percent_partition`` — triggered by its proposal-first catalog family
+    3. ``percent_partition`` — triggered by its proposal-first catalog family
        in ``frame.proposals``.  Routes to ``assess_percent_partition``, which
        still determines closure from bound frame evidence.
        Registry key: ``_CONTRACT_REGISTRY["percent_partition"]``.
-    3. ``container_packing`` / ``labor_rate`` — inline skeleton assessments;
+    4. ``container_packing`` / ``labor_rate`` — inline skeleton assessments;
        not yet in the catalog registry (added to registry when obligations are
        fully specified).
 
@@ -316,6 +564,9 @@ def assess_contracts(frame: ProblemFrame) -> tuple[ContractAssessment, ...]:
 
     # Registry-backed diagnostic families
     proposed_family_ids = {proposal.family_id for proposal in frame.proposals}
+    if _QUANTITY_ENTITY_FAMILY.family_id in proposed_family_ids:
+        # Catalog: _CONTRACT_REGISTRY["quantity_entity_binding"]
+        results.append(assess_quantity_entity(frame))
     if _DECREASE_TO_FRACTION_FAMILY.family_id in proposed_family_ids:
         # Catalog: _CONTRACT_REGISTRY["fraction_decrease"]
         results.append(assess_fraction_decrease(frame))

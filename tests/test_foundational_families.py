@@ -63,15 +63,21 @@ def test_registry_keys_are_unique() -> None:
     assert len(relation_types) == len(set(relation_types))
 
 
-def test_specs_are_frozen_and_explicitly_not_authorized() -> None:
+def test_specs_are_frozen_and_only_quantity_entity_is_authorized() -> None:
     for family in iter_foundational_families():
         assert isinstance(family, FoundationalFamilySpec)
         assert family.serving_allowed is False
-        assert family.implementation_authorized is False
         assert "not serving" in family.serving_status.lower()
 
         with pytest.raises(FrozenInstanceError):
             family.display_name = "mutated"  # type: ignore[misc]
+
+    assert require_foundational_family(
+        "binding.quantity_entity"
+    ).implementation_authorized is True
+    assert require_foundational_family(
+        "state_change.transition"
+    ).implementation_authorized is False
 
 
 def test_required_adr_0224_fields_are_populated() -> None:
