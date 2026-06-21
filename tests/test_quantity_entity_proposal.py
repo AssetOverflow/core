@@ -120,6 +120,7 @@ def test_confusers_do_not_dispatch_quantity_entity(problem_text: str) -> None:
     frame = build_problem_frame(problem_text)
 
     assert FAMILY_ID not in {proposal.family_id for proposal in frame.proposals}
+    assert frame.quantity_kind_dispositions == ()
     assert CANDIDATE_ORGAN not in {
         assessment.candidate_organ
         for assessment in assess_contracts(frame)
