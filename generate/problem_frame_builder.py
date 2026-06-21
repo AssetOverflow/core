@@ -562,8 +562,18 @@ def _extract_bindings(
 def _quantity_kind_dispositions(
     mentions: tuple[GroundedMention, ...],
     bindings: tuple[MentionBinding, ...],
+    proposals: tuple[ConstructionProposal, ...],
 ) -> tuple[QuantityKindDisposition, ...]:
-    """Close count/measurement kind only from existing local bindings."""
+    """Close kind only for the exact proposal-backed local binding."""
+
+    quantity_entity_proposals = tuple(
+        proposal
+        for proposal in proposals
+        if proposal.family_id == "binding.quantity_entity"
+    )
+    if len(quantity_entity_proposals) != 1:
+        return ()
+    proposal = quantity_entity_proposals[0]
 
     mentions_by_id = {mention.mention_id: mention for mention in mentions}
     unit_bindings: dict[str, list[MentionBinding]] = {}
@@ -578,6 +588,11 @@ def _quantity_kind_dispositions(
         quantity = mentions_by_id.get(binding.source_mention_id)
         entity = mentions_by_id.get(binding.target_mention_id)
         if quantity is None or entity is None or quantity.fact_id is None:
+            continue
+        if not any(
+            cue.start <= quantity.span.start and entity.span.end <= cue.end
+            for cue in proposal.evidence_spans
+        ):
             continue
 
         bound_units = unit_bindings.get(quantity.mention_id, [])
@@ -917,11 +932,12 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
         builder.add_proposal(proposal)
     for proposal in _percent_partition_proposals(problem_text, frames):
         builder.add_proposal(proposal)
-    for proposal in _quantity_entity_proposals(
+    quantity_entity_proposals = _quantity_entity_proposals(
         problem_text,
         tuple(grounded_quantities),
         frames,
-    ):
+    )
+    for proposal in quantity_entity_proposals:
         builder.add_proposal(proposal)
 
     mentions = _extract_mentions(problem_text, tuple(grounded_quantities), units)
@@ -934,7 +950,11 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
             builder.add_object(mention.surface)
     for binding in bindings:
         builder.add_binding(binding)
-    for disposition in _quantity_kind_dispositions(mentions, bindings):
+    for disposition in _quantity_kind_dispositions(
+        mentions,
+        bindings,
+        quantity_entity_proposals,
+    ):
         builder.add_quantity_kind_disposition(disposition)
     for relation in _bound_relations(problem_text, mentions, bindings):
         builder.add_bound_relation(relation)

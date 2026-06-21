@@ -138,25 +138,35 @@ def test_make_proposal_still_rejects_unknown_family_ids() -> None:
         propose_construction("invalid_family_id", (span,))
 
 
-def test_construction_proposal_status_validation() -> None:
+def test_construction_proposal_cannot_carry_assessment_authority() -> None:
     span = SourceSpan("test text", 0, 9)
     ConstructionProposal(
         family_id="proportional_change.decrease_to_fraction",
         relation_type="decrease_to_fraction",
         candidate_organ="fraction_decrease",
         evidence_spans=(span,),
-        status="closed",
-        missing_roles=(),
-        active_hazards=(),
+        status="proposed",
     )
 
-    with pytest.raises(ValueError, match="status must be one of"):
+    for status in ("partial", "closed", "refused"):
+        with pytest.raises(ValueError, match="must remain 'proposed'"):
+            ConstructionProposal(
+                family_id="proportional_change.decrease_to_fraction",
+                relation_type="decrease_to_fraction",
+                candidate_organ="fraction_decrease",
+                evidence_spans=(span,),
+                status=status,  # type: ignore[arg-type]
+            )
+
+    assert "missing_roles" not in ConstructionProposal.__dataclass_fields__
+    assert "active_hazards" not in ConstructionProposal.__dataclass_fields__
+
+    with pytest.raises(TypeError, match="unexpected keyword argument 'missing_roles'"):
         ConstructionProposal(
             family_id="proportional_change.decrease_to_fraction",
             relation_type="decrease_to_fraction",
             candidate_organ="fraction_decrease",
             evidence_spans=(span,),
-            status="invalid_status",
-            missing_roles=(),
-            active_hazards=(),
+            status="proposed",
+            missing_roles=("base_quantity_unbound",),
         )

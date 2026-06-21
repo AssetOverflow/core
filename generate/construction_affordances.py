@@ -24,8 +24,8 @@ Design doctrine (from ADR-0223):
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, ClassVar, Literal
 
 if TYPE_CHECKING:
     from generate.kernel_facts import SourceSpan
@@ -170,11 +170,8 @@ class ConstructionProposal:
         relation_type:   The ``BoundRelation.relation_type`` that was searched.
         candidate_organ: The organ this proposal targets.
         evidence_spans:  Source spans that motivated the proposal.
-        status:          One of ``"proposed"``, ``"partial"``, ``"closed"``,
-                         ``"refused"``.  ``"closed"`` means the contract
-                         assessment was runnable.
-        missing_roles:   Role obligation names that were absent at assessment time.
-        active_hazards:  Hazard categories that were unresolved at assessment time.
+        status:          Always ``"proposed"``.  Runnable/refused authority
+                         belongs exclusively to ``ContractAssessment``.
         role_obligations: Catalog-declared roles that downstream binding and
                           assessment must ground or explicitly refuse.
         diagnostic_only: True for every proposal in the current catalog.
@@ -185,27 +182,35 @@ class ConstructionProposal:
     relation_type: str
     candidate_organ: str
     evidence_spans: tuple[SourceSpan, ...]
-    status: str
-    missing_roles: tuple[str, ...]
-    active_hazards: tuple[str, ...]
+    status: Literal["proposed"]
     role_obligations: tuple[RoleObligation, ...] = ()
     diagnostic_only: bool = True
     serving_allowed: bool = False
 
-    _VALID_STATUSES: frozenset[str] = frozenset({
-        "proposed", "partial", "closed", "refused"
-    })
+    _VALID_STATUS: ClassVar[Literal["proposed"]] = "proposed"
 
     def __post_init__(self) -> None:
-        if self.status not in self._VALID_STATUSES:
+        if self.status != self._VALID_STATUS:
             raise ValueError(
-                f"ConstructionProposal.status must be one of "
-                f"{sorted(self._VALID_STATUSES)}, got {self.status!r}"
+                "ConstructionProposal.status must remain 'proposed'; "
+                "ContractAssessment is the sole runnable/refused authority"
             )
         if not self.diagnostic_only or self.serving_allowed:
             raise ValueError(
                 "ConstructionProposal must remain diagnostic-only and serving-disallowed"
             )
+
+    @property
+    def missing_roles(self) -> tuple[str, ...]:
+        """Compatibility view; assessment blockers are not proposal state."""
+
+        return ()
+
+    @property
+    def active_hazards(self) -> tuple[str, ...]:
+        """Compatibility view; assessment hazards are not proposal state."""
+
+        return ()
 
 
 # ---------------------------------------------------------------------------
@@ -527,8 +532,6 @@ def propose_construction(
         candidate_organ=family.signature.candidate_organ,
         evidence_spans=evidence_spans,
         status="proposed",
-        missing_roles=(),
-        active_hazards=(),
         role_obligations=(
             *family.signature.required_roles,
             *family.signature.optional_roles,
@@ -545,11 +548,11 @@ def make_proposal(
     missing_roles: tuple[str, ...],
     active_hazards: tuple[str, ...],
 ) -> ConstructionProposal:
-    """Map assessment evidence onto a proposal for legacy catalog paths.
+    """Reject assessment-backed proposal synthesis.
 
-    Migrated proposal-first families must enter through
-    :func:`propose_construction`.  This adapter remains only for explicitly
-    unmigrated catalog paths that still synthesize proposals from assessments.
+    Every catalog family is proposal-first.  The assessment-shaped signature
+    remains temporarily for callers that need a loud migration failure, but no
+    ``ConstructionProposal`` may encode assessment output.
 
     Args:
         family_id:           Catalog family identifier.
@@ -559,35 +562,14 @@ def make_proposal(
         missing_roles:       ContractAssessment.missing_bindings contents.
         active_hazards:      ContractAssessment.unresolved_hazards contents.
 
-    Returns:
-        A ConstructionProposal with status derived from the assessment:
-        - ``"closed"``   if runnable and no missing roles/hazards;
-        - ``"partial"``  if some roles are bound but closure is incomplete;
-        - ``"refused"``  if active hazards block closure;
-        - ``"proposed"`` otherwise (construction proposed but not evaluated).
-
     Raises:
         KeyError: If *family_id* is not registered in the catalog.
-        ValueError: If *family_id* has already migrated to the proposal-first seam.
+        ValueError: For every catalog family; use ``propose_construction``
+            before assessment instead.
     """
-    if family_id in _PROPOSAL_FIRST_FAMILIES:
-        raise ValueError(
-            f"{family_id} is proposal-first; use propose_construction before assessment"
-        )
-    proposal = propose_construction(family_id, evidence_spans)
-
-    if assessment_runnable:
-        status = "closed"
-    elif active_hazards:
-        status = "refused"
-    elif missing_roles:
-        status = "partial"
-    else:
-        status = "proposed"
-
-    return replace(
-        proposal,
-        status=status,
-        missing_roles=missing_roles,
-        active_hazards=active_hazards,
+    _ = (evidence_spans, assessment_runnable, missing_roles, active_hazards)
+    if family_id not in _CATALOG:
+        raise KeyError(family_id)
+    raise ValueError(
+        f"{family_id} is proposal-first; use propose_construction before assessment"
     )
