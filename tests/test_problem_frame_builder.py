@@ -46,7 +46,7 @@ def test_travel_text_produces_travel_process_frame_without_solving() -> None:
     text = "A car drove 30 miles each way."
     frame = build_problem_frame(text)
 
-    assert "travel" in _frame_names(text)
+    assert "travel" in tuple(f.name for f in frame.process_frames)
 
 
 def test_ambiguous_quarter_surfaces_carry_hazards() -> None:
