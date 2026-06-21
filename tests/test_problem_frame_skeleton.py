@@ -4,7 +4,7 @@ from __future__ import annotations
 from fractions import Fraction
 import pytest
 
-from generate.problem_frame import BoundQuestionTarget, ProblemFrame, ProblemFrameBuilder, QuestionTarget
+from generate.problem_frame import BoundQuestionTarget, ProblemFrameBuilder, QuestionTarget
 from generate.kernel_facts import (
     SourceSpan,
     KernelProvenance,

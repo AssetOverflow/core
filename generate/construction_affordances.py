@@ -24,7 +24,7 @@ Design doctrine (from ADR-0223):
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -160,9 +160,9 @@ class ConstructionProposal:
         → hazards
         → status
 
-    A proposal is created by ``make_proposal()`` from ProblemFrame evidence.
-    It does not affect serving.  Its ``status`` reflects whether the
-    corresponding contract assessment declared the frame runnable.
+    A proposal is created from exact surface evidence before contract
+    assessment.  It does not affect serving.  Its initial ``status`` is
+    ``"proposed"``; assessment remains a separate, downstream judgment.
 
     Args:
         family_id:       Catalog family identifier, e.g.
@@ -175,6 +175,10 @@ class ConstructionProposal:
                          assessment was runnable.
         missing_roles:   Role obligation names that were absent at assessment time.
         active_hazards:  Hazard categories that were unresolved at assessment time.
+        role_obligations: Catalog-declared roles that downstream binding and
+                          assessment must ground or explicitly refuse.
+        diagnostic_only: True for every proposal in the current catalog.
+        serving_allowed: False for every proposal in the current catalog.
     """
 
     family_id: str
@@ -184,6 +188,9 @@ class ConstructionProposal:
     status: str
     missing_roles: tuple[str, ...]
     active_hazards: tuple[str, ...]
+    role_obligations: tuple[RoleObligation, ...] = ()
+    diagnostic_only: bool = True
+    serving_allowed: bool = False
 
     _VALID_STATUSES: frozenset[str] = frozenset({
         "proposed", "partial", "closed", "refused"
@@ -194,6 +201,10 @@ class ConstructionProposal:
             raise ValueError(
                 f"ConstructionProposal.status must be one of "
                 f"{sorted(self._VALID_STATUSES)}, got {self.status!r}"
+            )
+        if not self.diagnostic_only or self.serving_allowed:
+            raise ValueError(
+                "ConstructionProposal must remain diagnostic-only and serving-disallowed"
             )
 
 
@@ -374,6 +385,11 @@ _BY_RELATION_TYPE: dict[str, ConstructionFamily] = {
     for family in _CATALOG.values()
 }
 
+_PROPOSAL_FIRST_FAMILIES: frozenset[str] = frozenset({
+    "proportional_change.decrease_to_fraction",
+    "partition.percent_partition",
+})
+
 
 # ---------------------------------------------------------------------------
 # Public accessors
@@ -405,6 +421,37 @@ def all_diagnostic_families() -> tuple[ConstructionFamily, ...]:
     return tuple(_CATALOG[key] for key in sorted(_CATALOG))
 
 
+def propose_construction(
+    family_id: str,
+    evidence_spans: tuple[SourceSpan, ...],
+) -> ConstructionProposal:
+    """Create a catalog-backed proposal from pre-assessment surface evidence.
+
+    This factory deliberately has no assessment inputs.  It records the
+    construction hypothesis and its catalog obligations; bound relations and
+    ``ContractAssessment`` remain responsible for grounding and determination.
+
+    Raises:
+        KeyError: If *family_id* is not registered in the catalog.
+    """
+    family = _CATALOG[family_id]
+    return ConstructionProposal(
+        family_id=family.family_id,
+        relation_type=family.signature.relation_type,
+        candidate_organ=family.signature.candidate_organ,
+        evidence_spans=evidence_spans,
+        status="proposed",
+        missing_roles=(),
+        active_hazards=(),
+        role_obligations=(
+            *family.signature.required_roles,
+            *family.signature.optional_roles,
+        ),
+        diagnostic_only=family.diagnostic_only,
+        serving_allowed=family.serving_allowed,
+    )
+
+
 def make_proposal(
     family_id: str,
     evidence_spans: tuple[SourceSpan, ...],
@@ -412,11 +459,11 @@ def make_proposal(
     missing_roles: tuple[str, ...],
     active_hazards: tuple[str, ...],
 ) -> ConstructionProposal:
-    """Create a lightweight diagnostic-only ConstructionProposal from frame evidence.
+    """Map assessment evidence onto a proposal for legacy catalog paths.
 
-    This is a thin factory.  The caller supplies evidence already gathered by
-    ``assess_contracts()``; this function only maps that evidence to the
-    standard proposal trace shape.
+    Migrated proposal-first families must enter through
+    :func:`propose_construction`.  This adapter remains only for explicitly
+    unmigrated catalog paths that still synthesize proposals from assessments.
 
     Args:
         family_id:           Catalog family identifier.
@@ -435,8 +482,13 @@ def make_proposal(
 
     Raises:
         KeyError: If *family_id* is not registered in the catalog.
+        ValueError: If *family_id* has already migrated to the proposal-first seam.
     """
-    family = _CATALOG[family_id]  # raises KeyError if absent — intended
+    if family_id in _PROPOSAL_FIRST_FAMILIES:
+        raise ValueError(
+            f"{family_id} is proposal-first; use propose_construction before assessment"
+        )
+    proposal = propose_construction(family_id, evidence_spans)
 
     if assessment_runnable:
         status = "closed"
@@ -447,11 +499,8 @@ def make_proposal(
     else:
         status = "proposed"
 
-    return ConstructionProposal(
-        family_id=family_id,
-        relation_type=family.signature.relation_type,
-        candidate_organ=family.signature.candidate_organ,
-        evidence_spans=evidence_spans,
+    return replace(
+        proposal,
         status=status,
         missing_roles=missing_roles,
         active_hazards=active_hazards,
