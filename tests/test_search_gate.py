@@ -35,6 +35,15 @@ def _span(
     )
 
 
+def _span_payload(span: SourceSpan) -> dict[str, object]:
+    return {
+        "text": span.text,
+        "start": span.start,
+        "end": span.end,
+        "sentence_index": span.sentence_index,
+    }
+
+
 def _residual(
     *,
     residual_id: str | None = None,
@@ -47,19 +56,12 @@ def _residual(
     explanation: str = "explanation text",
 ) -> ContractResidual:
     if residual_id is None:
-        # Generate a deterministic ID based on fields
         payload = {
             "candidate_organ": candidate_organ,
             "residual_kind": residual_kind.value,
             "residual_code": residual_code,
             "evidence_spans": [
-                {
-                    "text": s.text,
-                    "start": s.start,
-                    "end": s.end,
-                    "sentence_index": s.sentence_index,
-                }
-                for s in evidence_spans
+                _span_payload(span) for span in evidence_spans
             ],
         }
         encoded = json.dumps(
@@ -83,12 +85,10 @@ def test_public_api() -> None:
     import generate.search_gate as sg
 
     assert hasattr(sg, "__all__")
-    assert sorted(sg.__all__) == sorted(
-        [
-            "SearchGateStatus",
-            "SearchGateDecision",
-            "decide_search_gate",
-        ]
+    assert tuple(sg.__all__) == (
+        "SearchGateStatus",
+        "SearchGateDecision",
+        "decide_search_gate",
     )
 
 
@@ -115,6 +115,19 @@ def test_non_authority_fields() -> None:
     assert not intersection, f"Forbidden authority/action fields found: {intersection}"
 
 
+def test_policy_version_and_input_digest_are_present() -> None:
+    fields = {f.name for f in dataclasses.fields(SearchGateDecision)}
+    assert "policy_version" in fields
+    assert "input_digest" in fields
+
+    decision = decide_search_gate((_residual(),))[0]
+
+    assert decision.policy_version == "search_gate.v1"
+    assert len(decision.input_digest) == 64
+    assert len(decision.decision_id) == 64
+    assert decision.input_digest != decision.decision_id
+
+
 def test_empty_context() -> None:
     decisions = decide_search_gate(())
     assert len(decisions) == 1
@@ -125,10 +138,12 @@ def test_empty_context() -> None:
     assert dec.residual_ids == ()
     assert dec.evidence_spans == ()
     assert dec.explanation == "Empty residual context."
+    assert dec.policy_version == "search_gate.v1"
+    assert len(dec.input_digest) == 64
 
-    # Verify ID is deterministic
     decisions2 = decide_search_gate(())
     assert decisions[0].decision_id == decisions2[0].decision_id
+    assert decisions[0].input_digest == decisions2[0].input_digest
 
 
 def test_mixed_candidate_organs() -> None:
@@ -149,17 +164,12 @@ def test_mixed_candidate_organs() -> None:
     assert dec.reason_code == "unassessable_mixed_candidate_organs"
     assert dec.candidate_organ is None
     assert dec.residual_ids == tuple(sorted([r1.residual_id, r2.residual_id]))
-    # Sorted by residual ID, spans preserved
-    expected_spans = tuple(
-        sorted([r1, r2], key=lambda r: r.residual_id)
-    )[0].evidence_spans + tuple(
-        sorted([r1, r2], key=lambda r: r.residual_id)
-    )[1].evidence_spans
+    sorted_res = tuple(sorted([r1, r2], key=lambda r: r.residual_id))
+    expected_spans = sorted_res[0].evidence_spans + sorted_res[1].evidence_spans
     assert dec.evidence_spans == expected_spans
 
 
 def test_all_eligible_prioritization() -> None:
-    # missing_relation has higher priority (2) than missing_role (3)
     r1 = _residual(
         residual_kind=ResidualKind.MISSING_ROLE,
         residual_code="quantity_unbound",
@@ -222,7 +232,6 @@ def test_residual_kind_mapping(
 
 
 def test_unknown_residual_kind_fails_closed() -> None:
-    # Create a residual with a mocked residual_kind that is not in the Enum/dict
     r = _residual()
     object.__setattr__(r, "residual_kind", "UNKNOWN_FUTURE_KIND")
     decisions = decide_search_gate((r,))
@@ -248,12 +257,11 @@ def test_determinism_and_hashing() -> None:
     decisions_forward = decide_search_gate((r1, r2))
     decisions_backward = decide_search_gate((r2, r1))
 
-    # Same decisions, same IDs, regardless of input order
     assert decisions_forward[0].decision_id == decisions_backward[0].decision_id
+    assert decisions_forward[0].input_digest == decisions_backward[0].input_digest
     assert decisions_forward[0].residual_ids == decisions_backward[0].residual_ids
     assert decisions_forward[0].evidence_spans == decisions_backward[0].evidence_spans
 
-    # Hashing vector verification: changing explanation does not change ID
     r1_diff_exp = _residual(
         residual_kind=ResidualKind.MISSING_ROLE,
         residual_code="quantity_unbound",
@@ -262,26 +270,27 @@ def test_determinism_and_hashing() -> None:
     )
     decisions_diff_exp = decide_search_gate((r1_diff_exp, r2))
     assert decisions_diff_exp[0].decision_id == decisions_forward[0].decision_id
+    assert decisions_diff_exp[0].input_digest == decisions_forward[0].input_digest
 
-    # Changing span details does change ID
     r1_diff_span = _residual(
         residual_kind=ResidualKind.MISSING_ROLE,
         residual_code="quantity_unbound",
-        evidence_spans=(_span("aaa", 0, 3), _span("bbb", 5, 9)),  # end=9 instead of 8
+        evidence_spans=(_span("aaa", 0, 3), _span("bbb", 5, 9)),
         explanation="explanation A",
     )
     decisions_diff_span = decide_search_gate((r1_diff_span, r2))
     assert decisions_diff_span[0].decision_id != decisions_forward[0].decision_id
+    assert decisions_diff_span[0].input_digest != decisions_forward[0].input_digest
 
-    # Changing span order changes ID
     r1_diff_span_order = _residual(
         residual_kind=ResidualKind.MISSING_ROLE,
         residual_code="quantity_unbound",
-        evidence_spans=(_span("bbb", 5, 8), _span("aaa", 0, 3)),  # reversed spans
+        evidence_spans=(_span("bbb", 5, 8), _span("aaa", 0, 3)),
         explanation="explanation A",
     )
     decisions_diff_span_order = decide_search_gate((r1_diff_span_order, r2))
     assert decisions_diff_span_order[0].decision_id != decisions_forward[0].decision_id
+    assert decisions_diff_span_order[0].input_digest != decisions_forward[0].input_digest
 
 
 def test_span_preservation() -> None:
@@ -298,11 +307,63 @@ def test_span_preservation() -> None:
 
     decisions = decide_search_gate((r1, r2))
     assert len(decisions) == 1
-    # Check that spans are exactly equal to source spans, in deterministic residual ID order
     sorted_res = sorted([r1, r2], key=lambda r: r.residual_id)
     expected_spans = tuple(sorted_res[0].evidence_spans) + tuple(sorted_res[1].evidence_spans)
     assert decisions[0].evidence_spans == expected_spans
-    assert not any(s.text == "" for s in decisions[0].evidence_spans)  # No synthetic empty span
+    assert not any(s.text == "" for s in decisions[0].evidence_spans)
+
+
+def test_duplicate_evidence_spans_are_preserved_per_residual() -> None:
+    span = _span("same", 0, 4, 0)
+    r1 = _residual(residual_id="a", evidence_spans=(span,))
+    r2 = _residual(
+        residual_id="b",
+        residual_code="entity_unbound",
+        evidence_spans=(span,),
+    )
+
+    decision = decide_search_gate((r2, r1))[0]
+
+    assert decision.residual_ids == ("a", "b")
+    assert decision.evidence_spans == (span, span)
+
+
+def test_input_digest_uses_complete_residual_context_without_explanation() -> None:
+    span = _span("aaa", 0, 3, 0)
+    residual = _residual(
+        residual_id="residual-a",
+        candidate_organ="unary_delta_transition",
+        family_id="state_change.unary_delta",
+        residual_kind=ResidualKind.MISSING_ROLE,
+        residual_code="changed_object_unbound",
+        source_axis=ResidualSourceAxis.ROLE,
+        evidence_spans=(span,),
+        explanation="excluded explanation",
+    )
+    decision = decide_search_gate((residual,))[0]
+    expected_payload = {
+        "residuals": [
+            {
+                "residual_id": "residual-a",
+                "candidate_organ": "unary_delta_transition",
+                "family_id": "state_change.unary_delta",
+                "residual_kind": "missing_role",
+                "residual_code": "changed_object_unbound",
+                "source_axis": "role",
+                "evidence_spans": [_span_payload(span)],
+            }
+        ]
+    }
+    expected_digest = hashlib.sha256(
+        json.dumps(
+            expected_payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+    ).hexdigest()
+
+    assert decision.input_digest == expected_digest
 
 
 def test_coupling_guards() -> None:
