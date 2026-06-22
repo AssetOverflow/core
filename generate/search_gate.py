@@ -1,11 +1,4 @@
-"""Diagnostic-only SearchGateDecision adapter over ContractResidual records.
-
-This module is a read-only, fail-closed decision gate. It must not search,
-allocate budget, generate candidates, repair frames, or mutate any serving or
-runtime state. The dependency direction is:
-
-    ContractAssessment -> ContractResidual -> SearchGateDecision
-"""
+"""Diagnostic-only SearchGateDecision adapter over ContractResidual records."""
 
 from __future__ import annotations
 
@@ -16,6 +9,8 @@ from enum import Enum, unique
 
 from generate.contract_residuals import ContractResidual, ResidualKind
 from generate.kernel_facts import SourceSpan
+
+SEARCH_GATE_POLICY_VERSION = "search_gate.v1"
 
 
 @unique
@@ -29,6 +24,8 @@ class SearchGateStatus(str, Enum):
 @dataclass(frozen=True, slots=True)
 class SearchGateDecision:
     decision_id: str
+    policy_version: str
+    input_digest: str
     residual_ids: tuple[str, ...]
     candidate_organ: str | None
     status: SearchGateStatus
@@ -107,7 +104,11 @@ _ELIGIBLE_PRIORITY: dict[str, int] = {
 }
 
 
-def _map_residual(kind: ResidualKind) -> tuple[SearchGateStatus, str]:
+def _enum_value(value: object) -> object:
+    return getattr(value, "value", value)
+
+
+def _map_residual(kind: object) -> tuple[SearchGateStatus, str]:
     return _KIND_MAP.get(
         kind, (SearchGateStatus.INELIGIBLE, "blocked_unclassified_gap")
     )
@@ -122,21 +123,37 @@ def _span_payload(span: SourceSpan) -> dict[str, object]:
     }
 
 
-def _decision_id(
-    *,
-    residual_ids: tuple[str, ...],
-    candidate_organ: str | None,
-    status: SearchGateStatus,
-    reason_code: str,
-    evidence_spans: tuple[SourceSpan, ...],
-) -> str:
-    payload = {
-        "residual_ids": list(residual_ids),
-        "candidate_organ": candidate_organ,
-        "status": status.value,
-        "reason_code": reason_code,
-        "evidence_spans": [_span_payload(span) for span in evidence_spans],
+def _ordered_residuals(
+    residuals: tuple[ContractResidual, ...],
+) -> tuple[ContractResidual, ...]:
+    return tuple(sorted(residuals, key=lambda residual: residual.residual_id))
+
+
+def _collect_evidence_spans(
+    residuals: tuple[ContractResidual, ...],
+) -> tuple[SourceSpan, ...]:
+    return tuple(
+        span
+        for residual in residuals
+        for span in residual.evidence_spans
+    )
+
+
+def _residual_payload(residual: ContractResidual) -> dict[str, object]:
+    return {
+        "residual_id": residual.residual_id,
+        "candidate_organ": residual.candidate_organ,
+        "family_id": residual.family_id,
+        "residual_kind": _enum_value(residual.residual_kind),
+        "residual_code": residual.residual_code,
+        "source_axis": _enum_value(residual.source_axis),
+        "evidence_spans": [
+            _span_payload(span) for span in residual.evidence_spans
+        ],
     }
+
+
+def _sha256_json(payload: dict[str, object]) -> str:
     encoded = json.dumps(
         payload,
         ensure_ascii=False,
@@ -146,103 +163,105 @@ def _decision_id(
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _input_digest(residuals: tuple[ContractResidual, ...]) -> str:
+    return _sha256_json(
+        {"residuals": [_residual_payload(residual) for residual in residuals]}
+    )
+
+
+def _decision_id(
+    *,
+    policy_version: str,
+    input_digest: str,
+    residual_ids: tuple[str, ...],
+    candidate_organ: str | None,
+    status: SearchGateStatus,
+    reason_code: str,
+    evidence_spans: tuple[SourceSpan, ...],
+) -> str:
+    return _sha256_json(
+        {
+            "policy_version": policy_version,
+            "input_digest": input_digest,
+            "residual_ids": list(residual_ids),
+            "candidate_organ": candidate_organ,
+            "status": status.value,
+            "reason_code": reason_code,
+            "evidence_spans": [_span_payload(span) for span in evidence_spans],
+        }
+    )
+
+
+def _make_decision(
+    *,
+    ordered_residuals: tuple[ContractResidual, ...],
+    candidate_organ: str | None,
+    status: SearchGateStatus,
+    reason_code: str,
+    explanation: str,
+) -> SearchGateDecision:
+    residual_ids = tuple(residual.residual_id for residual in ordered_residuals)
+    evidence_spans = _collect_evidence_spans(ordered_residuals)
+    input_digest = _input_digest(ordered_residuals)
+    decision_id = _decision_id(
+        policy_version=SEARCH_GATE_POLICY_VERSION,
+        input_digest=input_digest,
+        residual_ids=residual_ids,
+        candidate_organ=candidate_organ,
+        status=status,
+        reason_code=reason_code,
+        evidence_spans=evidence_spans,
+    )
+    return SearchGateDecision(
+        decision_id=decision_id,
+        policy_version=SEARCH_GATE_POLICY_VERSION,
+        input_digest=input_digest,
+        residual_ids=residual_ids,
+        candidate_organ=candidate_organ,
+        status=status,
+        reason_code=reason_code,
+        evidence_spans=evidence_spans,
+        explanation=explanation,
+    )
+
+
 def decide_search_gate(
     residuals: tuple[ContractResidual, ...],
 ) -> tuple[SearchGateDecision, ...]:
-    """Assess eligibility of the residual context for future exploration.
-
-    This function operates over a residual context/set, grouping residuals
-    together, and fails closed if any residual blocks exploration.
-    """
     if not residuals:
-        status = SearchGateStatus.UNASSESSABLE
-        reason_code = "unassessable_empty_context"
-        candidate_organ = None
-        residual_ids: tuple[str, ...] = ()
-        evidence_spans: tuple[SourceSpan, ...] = ()
-        explanation = "Empty residual context."
-        decision_id = _decision_id(
-            residual_ids=residual_ids,
-            candidate_organ=candidate_organ,
-            status=status,
-            reason_code=reason_code,
-            evidence_spans=evidence_spans,
-        )
         return (
-            SearchGateDecision(
-                decision_id=decision_id,
-                residual_ids=residual_ids,
-                candidate_organ=candidate_organ,
-                status=status,
-                reason_code=reason_code,
-                evidence_spans=evidence_spans,
-                explanation=explanation,
+            _make_decision(
+                ordered_residuals=(),
+                candidate_organ=None,
+                status=SearchGateStatus.UNASSESSABLE,
+                reason_code="unassessable_empty_context",
+                explanation="Empty residual context.",
             ),
         )
 
-    # Context Grouping Check:
-    organs = {r.candidate_organ for r in residuals}
+    ordered_residuals = _ordered_residuals(residuals)
+    organs = {residual.candidate_organ for residual in ordered_residuals}
     if len(organs) > 1:
-        # Mixed candidate organs: Fail Closed
-        status = SearchGateStatus.UNASSESSABLE
-        reason_code = "unassessable_mixed_candidate_organs"
-        candidate_organ = None
-        sorted_res = sorted(residuals, key=lambda r: r.residual_id)
-        residual_ids = tuple(r.residual_id for r in sorted_res)
-
-        # Collect and deduplicate spans deterministically
-        seen_spans = set()
-        spans_list = []
-        for r in sorted_res:
-            for span in r.evidence_spans:
-                span_key = (span.text, span.start, span.end, span.sentence_index)
-                if span_key not in seen_spans:
-                    seen_spans.add(span_key)
-                    spans_list.append(span)
-        evidence_spans = tuple(spans_list)
-        explanation = "Mixed candidate organs in residual context."
-        decision_id = _decision_id(
-            residual_ids=residual_ids,
-            candidate_organ=candidate_organ,
-            status=status,
-            reason_code=reason_code,
-            evidence_spans=evidence_spans,
-        )
         return (
-            SearchGateDecision(
-                decision_id=decision_id,
-                residual_ids=residual_ids,
-                candidate_organ=candidate_organ,
-                status=status,
-                reason_code=reason_code,
-                evidence_spans=evidence_spans,
-                explanation=explanation,
+            _make_decision(
+                ordered_residuals=ordered_residuals,
+                candidate_organ=None,
+                status=SearchGateStatus.UNASSESSABLE,
+                reason_code="unassessable_mixed_candidate_organs",
+                explanation="Mixed candidate organs in residual context.",
             ),
         )
 
-    # Single organ context
-    candidate_organ = residuals[0].candidate_organ
-    sorted_res = sorted(residuals, key=lambda r: r.residual_id)
-    residual_ids = tuple(r.residual_id for r in sorted_res)
-
-    # Collect and deduplicate spans deterministically
-    seen_spans = set()
-    spans_list = []
-    for r in sorted_res:
-        for span in r.evidence_spans:
-            span_key = (span.text, span.start, span.end, span.sentence_index)
-            if span_key not in seen_spans:
-                seen_spans.add(span_key)
-                spans_list.append(span)
-    evidence_spans = tuple(spans_list)
-
-    mapped = [(_map_residual(r.residual_kind), r) for r in sorted_res]
+    candidate_organ = ordered_residuals[0].candidate_organ
+    mapped = [
+        (_map_residual(residual.residual_kind), residual)
+        for residual in ordered_residuals
+    ]
     blocked_items = [
         item for item in mapped if item[0][0] != SearchGateStatus.ELIGIBLE
     ]
 
     if blocked_items:
-        # Determine overall fail-closed status: BLOCKED or INELIGIBLE
         if any(
             status == SearchGateStatus.BLOCKED
             for (status, _), _ in blocked_items
@@ -251,41 +270,32 @@ def decide_search_gate(
         else:
             overall_status = SearchGateStatus.INELIGIBLE
 
-        # Select highest-priority reason code
-        def blocked_priority_key(item: tuple[tuple[SearchGateStatus, str], ContractResidual]) -> int:
+        def blocked_priority_key(
+            item: tuple[tuple[SearchGateStatus, str], ContractResidual],
+        ) -> int:
             return _BLOCKED_PRIORITY.get(item[0][1], 99)
 
         best_blocked = min(blocked_items, key=blocked_priority_key)
         reason_code = best_blocked[0][1]
         explanation = f"Search gate blocked: {best_blocked[1].explanation}"
     else:
-        # All residuals are eligible
         overall_status = SearchGateStatus.ELIGIBLE
 
-        # Select highest-priority reason code
-        def eligible_priority_key(item: tuple[tuple[SearchGateStatus, str], ContractResidual]) -> int:
+        def eligible_priority_key(
+            item: tuple[tuple[SearchGateStatus, str], ContractResidual],
+        ) -> int:
             return _ELIGIBLE_PRIORITY.get(item[0][1], 99)
 
         best_eligible = min(mapped, key=eligible_priority_key)
         reason_code = best_eligible[0][1]
         explanation = f"Search gate eligible: {best_eligible[1].explanation}"
 
-    decision_id = _decision_id(
-        residual_ids=residual_ids,
-        candidate_organ=candidate_organ,
-        status=overall_status,
-        reason_code=reason_code,
-        evidence_spans=evidence_spans,
-    )
-
     return (
-        SearchGateDecision(
-            decision_id=decision_id,
-            residual_ids=residual_ids,
+        _make_decision(
+            ordered_residuals=ordered_residuals,
             candidate_organ=candidate_organ,
             status=overall_status,
             reason_code=reason_code,
-            evidence_spans=evidence_spans,
             explanation=explanation,
         ),
     )
