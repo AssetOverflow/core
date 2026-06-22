@@ -110,7 +110,7 @@ def _enum_value(value: object) -> object:
 
 def _map_residual(kind: object) -> tuple[SearchGateStatus, str]:
     return _KIND_MAP.get(
-        kind, (SearchGateStatus.INELIGIBLE, "blocked_unclassified_gap")
+        kind, (SearchGateStatus.BLOCKED, "blocked_unclassified_gap")
     )
 
 
