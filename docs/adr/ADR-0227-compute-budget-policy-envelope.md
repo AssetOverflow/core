@@ -1,12 +1,20 @@
 # ADR-0227: ComputeBudgetPolicy Envelope
 
-**Status:** Proposed
+**Status:** Accepted
 
 **Date:** 2026-06-22
 
 **Scope:** Kernel diagnostics, bounded contemplation, sealed practice
 
 **Depends on:** ADR-0226 and PR #865
+
+## Ratification note
+
+Accepted for staged implementation.
+
+This ADR authorizes exactly one next implementation PR: a diagnostic-only `ComputeBudgetDecision` read adapter over `SearchGateDecision`.
+
+This authorization does not include `GeometricSearchRun`, search execution, candidate generation, repair, Workbench implementation, serving/runtime behavior, teaching/proposal/report/eval mutation, answer production, or any unreviewed artifact mutation. Those remain separately gated by future PRs.
 
 ---
 
