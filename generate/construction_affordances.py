@@ -463,7 +463,7 @@ _UNARY_DELTA_FAMILY = ConstructionFamily(
     display_name="Unary gained/lost delta",
     signature=ConstructionSignature(
         relation_type="unary_delta",
-        candidate_organ="unary_delta",
+        candidate_organ="unary_delta_transition",
         required_roles=(
             RoleObligation(
                 "action_cue",
@@ -516,11 +516,19 @@ _UNARY_DELTA_FAMILY = ConstructionFamily(
         "unary_delta_relation_ambiguous",
         "action_cue_unbound",
         "delta_quantity_unbound",
+        "delta_quantity_ambiguous",
         "changed_object_unbound",
+        "changed_object_ambiguous",
+        "local_binding_relation_unbound",
         "direction_unbound",
         "quantity_kind_unresolved",
+        "unit_object_conflict",
         "provenance_span_inexact",
         "quantity_entity_nonlocal",
+        "pronoun_antecedent_unresolved",
+        "event_assertion_unlicensed",
+        "passive_voice_unsupported",
+        "multiple_actor_surface",
     ),
     diagnostic_only=True,
     serving_allowed=False,

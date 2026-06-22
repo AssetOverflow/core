@@ -126,6 +126,33 @@ class QuantityKindDisposition:
             raise ValueError("quantity kind dispositions require exact evidence spans")
 
 
+UnaryDeltaDirection = Literal["increase", "decrease"]
+UnaryDeltaActionKind = Literal["gain", "loss"]
+
+
+@dataclass(frozen=True, slots=True)
+class GroundedUnaryDeltaCue:
+    cue_id: str
+    surface: str
+    action_kind: UnaryDeltaActionKind
+    direction: UnaryDeltaDirection
+    span: SourceSpan
+
+    def __post_init__(self) -> None:
+        if self.surface not in {"gained", "lost"}:
+            raise ValueError(f"invalid surface: {self.surface!r}")
+        if self.surface == "gained":
+            if self.action_kind != "gain" or self.direction != "increase":
+                raise ValueError("invalid gained triple")
+        elif self.surface == "lost":
+            if self.action_kind != "loss" or self.direction != "decrease":
+                raise ValueError("invalid lost triple")
+        if self.surface != self.span.text:
+            raise ValueError(
+                f"surface {self.surface!r} must match span text {self.span.text!r}"
+            )
+
+
 @dataclass(frozen=True, slots=True)
 class ProblemFrame:
     """Immutable target representation of a mathematical word problem.
@@ -149,6 +176,7 @@ class ProblemFrame:
     bound_question_target: BoundQuestionTarget | None = None
     proposals: tuple[ConstructionProposal, ...] = ()
     quantity_kind_dispositions: tuple[QuantityKindDisposition, ...] = ()
+    unary_delta_cues: tuple[GroundedUnaryDeltaCue, ...] = ()
     problem_text: str = ""
 
 
@@ -172,6 +200,7 @@ class ProblemFrameBuilder:
         self._bound_question_target: BoundQuestionTarget | None = None
         self._proposals: list[ConstructionProposal] = []
         self._quantity_kind_dispositions: list[QuantityKindDisposition] = []
+        self._unary_delta_cues: list[GroundedUnaryDeltaCue] = []
         self._problem_text = ""
 
     def set_problem_text(self, problem_text: str) -> None:
@@ -248,6 +277,17 @@ class ProblemFrameBuilder:
     ) -> None:
         self._quantity_kind_dispositions.append(disposition)
 
+    def add_unary_delta_cue(self, cue: GroundedUnaryDeltaCue) -> None:
+        self._unary_delta_cues.append(cue)
+
+    @property
+    def unary_delta_cue_count(self) -> int:
+        return len(self._unary_delta_cues)
+
+    @property
+    def unary_delta_cues(self) -> tuple[GroundedUnaryDeltaCue, ...]:
+        return tuple(self._unary_delta_cues)
+
     def build(self) -> ProblemFrame:
         """Produce the immutable ProblemFrame."""
         return ProblemFrame(
@@ -267,5 +307,6 @@ class ProblemFrameBuilder:
             bound_question_target=self._bound_question_target,
             proposals=tuple(self._proposals),
             quantity_kind_dispositions=tuple(self._quantity_kind_dispositions),
+            unary_delta_cues=tuple(self._unary_delta_cues),
             problem_text=self._problem_text,
         )
