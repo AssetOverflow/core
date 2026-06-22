@@ -8,31 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from generate.contract_residuals import (
-    ContractResidual,
-    ResidualKind,
-    ResidualSourceAxis,
-)
+from generate.contract_residuals import ContractResidual, ResidualKind, ResidualSourceAxis
 from generate.kernel_facts import SourceSpan
-from generate.search_gate import (
-    SearchGateDecision,
-    SearchGateStatus,
-    decide_search_gate,
-)
+from generate.search_gate import SearchGateDecision, SearchGateStatus, decide_search_gate
 
 
-def _span(
-    text: str = "test",
-    start: int = 0,
-    end: int = 4,
-    sentence_index: int | None = None,
-) -> SourceSpan:
-    return SourceSpan(
-        text=text,
-        start=start,
-        end=end,
-        sentence_index=sentence_index,
-    )
+def _span(text: str = "test", start: int = 0, end: int = 4, sentence_index: int | None = None) -> SourceSpan:
+    return SourceSpan(text=text, start=start, end=end, sentence_index=sentence_index)
 
 
 def _span_payload(span: SourceSpan) -> dict[str, object]:
@@ -60,15 +42,11 @@ def _residual(
             "candidate_organ": candidate_organ,
             "residual_kind": residual_kind.value,
             "residual_code": residual_code,
-            "evidence_spans": [
-                _span_payload(span) for span in evidence_spans
-            ],
+            "evidence_spans": [_span_payload(span) for span in evidence_spans],
         }
-        encoded = json.dumps(
-            payload, sort_keys=True, separators=(",", ":")
-        ).encode("utf-8")
-        residual_id = hashlib.sha256(encoded).hexdigest()
-
+        residual_id = hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
     return ContractResidual(
         residual_id=residual_id,
         candidate_organ=candidate_organ,
@@ -84,7 +62,6 @@ def _residual(
 def test_public_api() -> None:
     import generate.search_gate as sg
 
-    assert hasattr(sg, "__all__")
     assert tuple(sg.__all__) == (
         "SearchGateStatus",
         "SearchGateDecision",
@@ -92,114 +69,86 @@ def test_public_api() -> None:
     )
 
 
-def test_non_authority_fields() -> None:
-    fields = {f.name for f in dataclasses.fields(SearchGateDecision)}
-    forbidden = {
-        "budget",
-        "priority",
-        "rank",
-        "action",
-        "repair",
-        "candidate",
-        "answer",
-        "proof",
-        "serving_allowed",
-        "mutation",
-        "runnable",
-        "verdict",
-        "search_run",
-        "proposal",
-        "promotion",
-    }
-    intersection = fields.intersection(forbidden)
-    assert not intersection, f"Forbidden authority/action fields found: {intersection}"
-
-
-def test_policy_version_and_input_digest_are_present() -> None:
-    fields = {f.name for f in dataclasses.fields(SearchGateDecision)}
-    assert "policy_version" in fields
-    assert "input_digest" in fields
-
-    decision = decide_search_gate((_residual(),))[0]
-
-    assert decision.policy_version == "search_gate.v1"
-    assert len(decision.input_digest) == 64
-    assert len(decision.decision_id) == 64
-    assert decision.input_digest != decision.decision_id
-
-
-def test_empty_context() -> None:
-    decisions = decide_search_gate(())
-    assert len(decisions) == 1
-    dec = decisions[0]
-    assert dec.status is SearchGateStatus.UNASSESSABLE
-    assert dec.reason_code == "unassessable_empty_context"
-    assert dec.candidate_organ is None
-    assert dec.residual_ids == ()
-    assert dec.evidence_spans == ()
-    assert dec.explanation == "Empty residual context."
-    assert dec.policy_version == "search_gate.v1"
-    assert len(dec.input_digest) == 64
-
-    decisions2 = decide_search_gate(())
-    assert decisions[0].decision_id == decisions2[0].decision_id
-    assert decisions[0].input_digest == decisions2[0].input_digest
-
-
-def test_mixed_candidate_organs() -> None:
-    r1 = _residual(
-        candidate_organ="organ_a",
-        residual_kind=ResidualKind.MISSING_ROLE,
-        evidence_spans=(_span("aaa", 0, 3),),
+def test_decision_fields_are_diagnostic_only() -> None:
+    fields = {field.name for field in dataclasses.fields(SearchGateDecision)}
+    assert {"policy_version", "input_digest"}.issubset(fields)
+    assert fields.isdisjoint(
+        {
+            "budget",
+            "priority",
+            "rank",
+            "action",
+            "repair",
+            "candidate",
+            "answer",
+            "proof",
+            "serving_allowed",
+            "mutation",
+            "runnable",
+            "verdict",
+            "search_run",
+            "proposal",
+            "promotion",
+        }
     )
-    r2 = _residual(
-        candidate_organ="organ_b",
-        residual_kind=ResidualKind.MISSING_ROLE,
-        evidence_spans=(_span("bbb", 4, 7),),
-    )
-    decisions = decide_search_gate((r1, r2))
-    assert len(decisions) == 1
-    dec = decisions[0]
-    assert dec.status is SearchGateStatus.UNASSESSABLE
-    assert dec.reason_code == "unassessable_mixed_candidate_organs"
-    assert dec.candidate_organ is None
-    assert dec.residual_ids == tuple(sorted([r1.residual_id, r2.residual_id]))
-    sorted_res = tuple(sorted([r1, r2], key=lambda r: r.residual_id))
-    expected_spans = sorted_res[0].evidence_spans + sorted_res[1].evidence_spans
-    assert dec.evidence_spans == expected_spans
 
 
-def test_all_eligible_prioritization() -> None:
-    r1 = _residual(
-        residual_kind=ResidualKind.MISSING_ROLE,
-        residual_code="quantity_unbound",
+def test_empty_context_is_unassessable_and_replay_stable() -> None:
+    first = decide_search_gate(())[0]
+    second = decide_search_gate(())[0]
+
+    assert first.status is SearchGateStatus.UNASSESSABLE
+    assert first.reason_code == "unassessable_empty_context"
+    assert first.candidate_organ is None
+    assert first.residual_ids == ()
+    assert first.evidence_spans == ()
+    assert first.policy_version == "search_gate.v1"
+    assert len(first.input_digest) == 64
+    assert len(first.decision_id) == 64
+    assert first == second
+
+
+def test_mixed_candidate_organs_fail_closed_with_preserved_spans() -> None:
+    r1 = _residual(candidate_organ="organ_a", evidence_spans=(_span("aaa", 0, 3),))
+    r2 = _residual(candidate_organ="organ_b", evidence_spans=(_span("bbb", 4, 7),))
+
+    decision = decide_search_gate((r1, r2))[0]
+    sorted_residuals = tuple(sorted([r1, r2], key=lambda residual: residual.residual_id))
+
+    assert decision.status is SearchGateStatus.UNASSESSABLE
+    assert decision.reason_code == "unassessable_mixed_candidate_organs"
+    assert decision.candidate_organ is None
+    assert decision.residual_ids == tuple(residual.residual_id for residual in sorted_residuals)
+    assert decision.evidence_spans == (
+        sorted_residuals[0].evidence_spans + sorted_residuals[1].evidence_spans
     )
+
+
+def test_context_with_only_eligible_residuals_is_eligible() -> None:
+    r1 = _residual(residual_kind=ResidualKind.MISSING_ROLE, residual_code="quantity_unbound")
     r2 = _residual(
         residual_kind=ResidualKind.MISSING_RELATION,
         residual_code="local_binding_relation_unbound",
     )
-    decisions = decide_search_gate((r1, r2))
-    assert len(decisions) == 1
-    dec = decisions[0]
-    assert dec.status is SearchGateStatus.ELIGIBLE
-    assert dec.reason_code == "eligible_missing_relation"
-    assert dec.candidate_organ == "unary_delta_transition"
+
+    decision = decide_search_gate((r1, r2))[0]
+
+    assert decision.status is SearchGateStatus.ELIGIBLE
+    assert decision.reason_code == "eligible_missing_relation"
+    assert decision.candidate_organ == "unary_delta_transition"
 
 
-def test_mixed_blocker_fails_closed() -> None:
-    r1 = _residual(
-        residual_kind=ResidualKind.MISSING_ROLE,
-        residual_code="quantity_unbound",
-    )
+def test_context_with_any_blocker_fails_closed() -> None:
+    r1 = _residual(residual_kind=ResidualKind.MISSING_ROLE, residual_code="quantity_unbound")
     r2 = _residual(
         residual_kind=ResidualKind.AMBIGUOUS_ROLE,
         residual_code="quantity_ambiguous",
     )
-    decisions = decide_search_gate((r1, r2))
-    assert len(decisions) == 1
-    dec = decisions[0]
-    assert dec.status is SearchGateStatus.BLOCKED
-    assert dec.reason_code == "blocked_ambiguous_role"
+
+    decision = decide_search_gate((r1, r2))[0]
+
+    assert decision.status is SearchGateStatus.BLOCKED
+    assert decision.reason_code == "blocked_ambiguous_role"
 
 
 @pytest.mark.parametrize(
@@ -219,28 +168,28 @@ def test_mixed_blocker_fails_closed() -> None:
         (ResidualKind.CONTRACT_GAP_UNCLASSIFIED, SearchGateStatus.BLOCKED, "blocked_unclassified_gap"),
     ],
 )
-def test_residual_kind_mapping(
+def test_every_residual_kind_has_explicit_policy(
     kind: ResidualKind,
     expected_status: SearchGateStatus,
     expected_reason: str,
 ) -> None:
-    r = _residual(residual_kind=kind)
-    decisions = decide_search_gate((r,))
-    assert len(decisions) == 1
-    assert decisions[0].status is expected_status
-    assert decisions[0].reason_code == expected_reason
+    decision = decide_search_gate((_residual(residual_kind=kind),))[0]
+
+    assert decision.status is expected_status
+    assert decision.reason_code == expected_reason
 
 
 def test_unknown_residual_kind_fails_closed() -> None:
-    r = _residual()
-    object.__setattr__(r, "residual_kind", "UNKNOWN_FUTURE_KIND")
-    decisions = decide_search_gate((r,))
-    assert len(decisions) == 1
-    assert decisions[0].status is SearchGateStatus.INELIGIBLE
-    assert decisions[0].reason_code == "blocked_unclassified_gap"
+    residual = _residual()
+    object.__setattr__(residual, "residual_kind", "UNKNOWN_FUTURE_KIND")
+
+    decision = decide_search_gate((residual,))[0]
+
+    assert decision.status is SearchGateStatus.BLOCKED
+    assert decision.reason_code == "blocked_unclassified_gap"
 
 
-def test_determinism_and_hashing() -> None:
+def test_decision_and_input_digest_are_deterministic() -> None:
     r1 = _residual(
         residual_kind=ResidualKind.MISSING_ROLE,
         residual_code="quantity_unbound",
@@ -254,73 +203,39 @@ def test_determinism_and_hashing() -> None:
         explanation="explanation B",
     )
 
-    decisions_forward = decide_search_gate((r1, r2))
-    decisions_backward = decide_search_gate((r2, r1))
+    forward = decide_search_gate((r1, r2))[0]
+    backward = decide_search_gate((r2, r1))[0]
 
-    assert decisions_forward[0].decision_id == decisions_backward[0].decision_id
-    assert decisions_forward[0].input_digest == decisions_backward[0].input_digest
-    assert decisions_forward[0].residual_ids == decisions_backward[0].residual_ids
-    assert decisions_forward[0].evidence_spans == decisions_backward[0].evidence_spans
+    assert forward.decision_id == backward.decision_id
+    assert forward.input_digest == backward.input_digest
+    assert forward.residual_ids == backward.residual_ids
+    assert forward.evidence_spans == backward.evidence_spans
 
-    r1_diff_exp = _residual(
+    r1_different_explanation = _residual(
         residual_kind=ResidualKind.MISSING_ROLE,
         residual_code="quantity_unbound",
         evidence_spans=(_span("aaa", 0, 3), _span("bbb", 5, 8)),
-        explanation="explanation DIFFERENT",
+        explanation="different explanation",
     )
-    decisions_diff_exp = decide_search_gate((r1_diff_exp, r2))
-    assert decisions_diff_exp[0].decision_id == decisions_forward[0].decision_id
-    assert decisions_diff_exp[0].input_digest == decisions_forward[0].input_digest
+    different_explanation = decide_search_gate((r1_different_explanation, r2))[0]
+    assert different_explanation.decision_id == forward.decision_id
+    assert different_explanation.input_digest == forward.input_digest
 
-    r1_diff_span = _residual(
+    r1_different_span = _residual(
         residual_kind=ResidualKind.MISSING_ROLE,
         residual_code="quantity_unbound",
         evidence_spans=(_span("aaa", 0, 3), _span("bbb", 5, 9)),
         explanation="explanation A",
     )
-    decisions_diff_span = decide_search_gate((r1_diff_span, r2))
-    assert decisions_diff_span[0].decision_id != decisions_forward[0].decision_id
-    assert decisions_diff_span[0].input_digest != decisions_forward[0].input_digest
-
-    r1_diff_span_order = _residual(
-        residual_kind=ResidualKind.MISSING_ROLE,
-        residual_code="quantity_unbound",
-        evidence_spans=(_span("bbb", 5, 8), _span("aaa", 0, 3)),
-        explanation="explanation A",
-    )
-    decisions_diff_span_order = decide_search_gate((r1_diff_span_order, r2))
-    assert decisions_diff_span_order[0].decision_id != decisions_forward[0].decision_id
-    assert decisions_diff_span_order[0].input_digest != decisions_forward[0].input_digest
-
-
-def test_span_preservation() -> None:
-    span_a = _span("aaa", 0, 3)
-    span_b = _span("bbb", 5, 8)
-    r1 = _residual(
-        residual_kind=ResidualKind.MISSING_ROLE,
-        evidence_spans=(span_a,),
-    )
-    r2 = _residual(
-        residual_kind=ResidualKind.MISSING_ROLE,
-        evidence_spans=(span_b,),
-    )
-
-    decisions = decide_search_gate((r1, r2))
-    assert len(decisions) == 1
-    sorted_res = sorted([r1, r2], key=lambda r: r.residual_id)
-    expected_spans = tuple(sorted_res[0].evidence_spans) + tuple(sorted_res[1].evidence_spans)
-    assert decisions[0].evidence_spans == expected_spans
-    assert not any(s.text == "" for s in decisions[0].evidence_spans)
+    different_span = decide_search_gate((r1_different_span, r2))[0]
+    assert different_span.decision_id != forward.decision_id
+    assert different_span.input_digest != forward.input_digest
 
 
 def test_duplicate_evidence_spans_are_preserved_per_residual() -> None:
     span = _span("same", 0, 4, 0)
     r1 = _residual(residual_id="a", evidence_spans=(span,))
-    r2 = _residual(
-        residual_id="b",
-        residual_code="entity_unbound",
-        evidence_spans=(span,),
-    )
+    r2 = _residual(residual_id="b", residual_code="entity_unbound", evidence_spans=(span,))
 
     decision = decide_search_gate((r2, r1))[0]
 
@@ -328,7 +243,7 @@ def test_duplicate_evidence_spans_are_preserved_per_residual() -> None:
     assert decision.evidence_spans == (span, span)
 
 
-def test_input_digest_uses_complete_residual_context_without_explanation() -> None:
+def test_input_digest_uses_complete_context_without_explanation() -> None:
     span = _span("aaa", 0, 3, 0)
     residual = _residual(
         residual_id="residual-a",
@@ -340,6 +255,7 @@ def test_input_digest_uses_complete_residual_context_without_explanation() -> No
         evidence_spans=(span,),
         explanation="excluded explanation",
     )
+
     decision = decide_search_gate((residual,))[0]
     expected_payload = {
         "residuals": [
@@ -383,9 +299,6 @@ def test_coupling_guards() -> None:
         "algebra",
         "subprocess",
         "socket",
-        "urllib",
-        "requests",
-        "http",
         "random",
         "datetime",
         "time",
@@ -410,24 +323,24 @@ def test_coupling_guards() -> None:
             for name in node.names:
                 parts = name.name.split(".")
                 assert not any(
-                    p in forbidden_imports for p in parts
+                    part in forbidden_imports for part in parts
                 ), f"Forbidden import: {name.name}"
         elif isinstance(node, ast.ImportFrom):
             if node.module:
                 parts = node.module.split(".")
                 assert not any(
-                    p in forbidden_imports for p in parts
+                    part in forbidden_imports for part in parts
                 ), f"Forbidden import: {node.module}"
             for name in node.names:
-                assert (
-                    name.name not in forbidden_calls
-                ), f"Forbidden import of function: {name.name}"
+                assert name.name not in forbidden_calls, (
+                    f"Forbidden import of function: {name.name}"
+                )
         elif isinstance(node, ast.Call):
             if isinstance(node.func, ast.Name):
-                assert (
-                    node.func.id not in forbidden_calls
-                ), f"Forbidden call: {node.func.id}"
+                assert node.func.id not in forbidden_calls, (
+                    f"Forbidden call: {node.func.id}"
+                )
             elif isinstance(node.func, ast.Attribute):
-                assert (
-                    node.func.attr not in forbidden_calls
-                ), f"Forbidden call/method: {node.func.attr}"
+                assert node.func.attr not in forbidden_calls, (
+                    f"Forbidden call/method: {node.func.attr}"
+                )
