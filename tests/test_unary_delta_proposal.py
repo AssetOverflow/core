@@ -561,3 +561,54 @@ def test_forbidden_import_coupling_checks() -> None:
             assert forbid not in imported
             for imp in imported:
                 assert not imp.startswith(forbid)
+
+
+def test_unary_delta_cue_conformance() -> None:
+    from generate.problem_frame import GroundedUnaryDeltaCue
+    from generate.kernel_facts import SourceSpan
+
+    # 1. Invalid surface/action_kind/direction triples must raise ValueError
+    span = SourceSpan("gained", 0, 6)
+    with pytest.raises(ValueError):
+        GroundedUnaryDeltaCue("cue-0000", "gained", "loss", "increase", span)
+    with pytest.raises(ValueError):
+        GroundedUnaryDeltaCue("cue-0000", "gained", "gain", "decrease", span)
+    with pytest.raises(ValueError):
+        GroundedUnaryDeltaCue("cue-0000", "lost", "gain", "decrease", span)
+    with pytest.raises(ValueError):
+        GroundedUnaryDeltaCue("cue-0000", "lost", "loss", "increase", span)
+    with pytest.raises(ValueError):
+        GroundedUnaryDeltaCue("cue-0000", "gained", "gain", "increase", SourceSpan("lost", 0, 4))
+
+    # Valid triples must succeed
+    c1 = GroundedUnaryDeltaCue("cue-0001", "gained", "gain", "increase", span)
+    assert c1.cue_id == "cue-0001"
+
+    # 2. Test exact span resolution in _bound_relations
+    from generate.problem_frame_builder import _bound_relations, GroundedMention, MentionBinding, ConstructionProposal
+    mentions = (
+        GroundedMention("m-0000", "quantity", "3", SourceSpan("3", 7, 8)),
+        GroundedMention("m-0001", "object", "apples", SourceSpan("apples", 9, 15)),
+    )
+    bindings = (
+        MentionBinding("b-0000", "quantity_entity", "m-0000", "m-0001", (SourceSpan("3 apples", 7, 15),)),
+    )
+    proposals = (
+        ConstructionProposal(
+            family_id="state_change.unary_delta",
+            relation_type="unary_delta",
+            candidate_organ="unary_delta_transition",
+            evidence_spans=(span,),
+            status="proposed",
+            diagnostic_only=True,
+            serving_allowed=False,
+        ),
+    )
+    # If the cue has a different ID and is passed in, _bound_relations must resolve and use it
+    cues = (
+        GroundedUnaryDeltaCue("cue-1234", "gained", "gain", "increase", span),
+    )
+    relations = _bound_relations("gained 3 apples", mentions, bindings, proposals, cues)
+    assert len(relations) == 1
+    action_cue_role = next(r for r in relations[0].roles if r.role == "action_cue")
+    assert action_cue_role.target_id == "cue-1234"

@@ -139,10 +139,14 @@ class GroundedUnaryDeltaCue:
     span: SourceSpan
 
     def __post_init__(self) -> None:
-        if self.action_kind not in {"gain", "loss"}:
-            raise ValueError(f"invalid action_kind: {self.action_kind!r}")
-        if self.direction not in {"increase", "decrease"}:
-            raise ValueError(f"invalid direction: {self.direction!r}")
+        if self.surface not in {"gained", "lost"}:
+            raise ValueError(f"invalid surface: {self.surface!r}")
+        if self.surface == "gained":
+            if self.action_kind != "gain" or self.direction != "increase":
+                raise ValueError("invalid gained triple")
+        elif self.surface == "lost":
+            if self.action_kind != "loss" or self.direction != "decrease":
+                raise ValueError("invalid lost triple")
         if self.surface != self.span.text:
             raise ValueError(
                 f"surface {self.surface!r} must match span text {self.span.text!r}"
@@ -275,6 +279,14 @@ class ProblemFrameBuilder:
 
     def add_unary_delta_cue(self, cue: GroundedUnaryDeltaCue) -> None:
         self._unary_delta_cues.append(cue)
+
+    @property
+    def unary_delta_cue_count(self) -> int:
+        return len(self._unary_delta_cues)
+
+    @property
+    def unary_delta_cues(self) -> tuple[GroundedUnaryDeltaCue, ...]:
+        return tuple(self._unary_delta_cues)
 
     def build(self) -> ProblemFrame:
         """Produce the immutable ProblemFrame."""

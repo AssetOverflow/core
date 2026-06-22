@@ -363,12 +363,7 @@ _DECREASE_DELTA_QUESTION_RE = re.compile(
     r"\bwhat\s+will\s+the\s+(?P<entity>[A-Za-z][A-Za-z'-]*)\s+decrease\s+by\??",
     re.IGNORECASE,
 )
-_UNARY_DELTA_RE = re.compile(
-    r"\b(?P<subject>(?:[A-Z][A-Za-z'-]*|[Tt]he\s+[A-Za-z][A-Za-z'-]*))\s+"
-    r"(?P<cue>gained|lost)\s+"
-    r"(?P<quantity>\d+(?:\.\d+)?)\s+"
-    r"(?P<object>[A-Za-z][A-Za-z'-]*)\b"
-)
+
 _ACTOR_VERB_RE = re.compile(
     r"\b(?P<actor>[A-Z][A-Za-z'-]*)\s+"
     r"(?:gave|gives|give|received|receives|spent|spends|ate|eats|bought|buys|sold|sells)\b"
@@ -546,14 +541,17 @@ def _unary_delta_proposals(
         "per",
         "each",
         "ratio",
+        "than",
         "more than",
         "less than",
         "fewer than",
         "greater than",
         "times as",
     }
-    if any(c in text.lower() for c in confusers):
-        return ()
+    for c in confusers:
+        pattern = rf"\b{re.escape(c)}\b" if c[0].isalnum() and c[-1].isalnum() else re.escape(c)
+        if re.search(pattern, text, re.IGNORECASE):
+            return ()
 
     # Transfer / transaction verbs
     transfer_verbs = {
@@ -595,7 +593,10 @@ def _unary_delta_proposals(
         return ()
 
     # List coordination / enumeration
-    if any(coord in text.lower() for coord in {"and", "or", ","}):
+    for coord in {"and", "or"}:
+        if re.search(rf"\b{coord}\b", text, re.IGNORECASE):
+            return ()
+    if "," in text:
         return ()
 
     evidence = SourceSpan(
@@ -809,6 +810,7 @@ def _bound_relations(
     mentions: tuple[GroundedMention, ...],
     bindings: tuple[MentionBinding, ...],
     proposals: tuple[ConstructionProposal, ...],
+    unary_delta_cues: tuple[GroundedUnaryDeltaCue, ...],
 ) -> tuple[BoundRelation, ...]:
     by_id = {m.mention_id: m for m in mentions}
     relations: list[BoundRelation] = []
@@ -945,48 +947,52 @@ def _bound_relations(
             if cue_span.text == cue_surface and cue_surface in {"gained", "lost"}:
                 direction = "increase" if cue_surface == "gained" else "decrease"
                 # Locate corresponding GroundedUnaryDeltaCue's cue_id
-                cue_id = "cue-0000"
-
-                matching_bindings = []
-                for binding in quantity_entity:
-                    qty = by_id.get(binding.source_mention_id)
-                    obj = by_id.get(binding.target_mention_id)
-                    if qty is not None and obj is not None:
-                        if (
-                            cue_span.end <= qty.span.start
-                            and qty.span.end <= obj.span.start
-                        ):
-                            segment = text[cue_span.start : obj.span.end]
-                            if not any(marker in segment for marker in ".!?"):
-                                matching_bindings.append((binding, qty, obj))
-                if len(matching_bindings) == 1:
-                    binding, quantity, obj = matching_bindings[0]
-                    roles = (
-                        BoundRole(
-                            "action_cue",
-                            cue_id,
-                            "span",
-                            (cue_span,),
-                        ),
-                        BoundRole(
-                            "delta_quantity",
-                            quantity.mention_id,
-                            quantity.kind,
-                            (quantity.span,),
-                        ),
-                        BoundRole(
-                            "changed_object", obj.mention_id, obj.kind, (obj.span,)
-                        ),
-                        BoundRole("direction", direction, "direction", (cue_span,)),
-                    )
-                    relations.append(
-                        BoundRelation(
-                            relation_id="",
-                            relation_type="unary_delta",
-                            roles=roles,
-                            evidence_spans=(cue_span, quantity.span, obj.span),
+                cue_id = None
+                for cue in unary_delta_cues:
+                    if cue.span.start == cue_span.start and cue.span.end == cue_span.end:
+                        cue_id = cue.cue_id
+                        break
+                if cue_id is not None:
+                    matching_bindings = []
+                    for binding in quantity_entity:
+                        qty = by_id.get(binding.source_mention_id)
+                        obj = by_id.get(binding.target_mention_id)
+                        if qty is not None and obj is not None:
+                            if (
+                                cue_span.end <= qty.span.start
+                                and qty.span.end <= obj.span.start
+                            ):
+                                segment = text[cue_span.start : obj.span.end]
+                                if not any(marker in segment for marker in ".!?"):
+                                    matching_bindings.append((binding, qty, obj))
+                    if len(matching_bindings) == 1:
+                        binding, quantity, obj = matching_bindings[0]
+                        roles = (
+                            BoundRole(
+                                "action_cue",
+                                cue_id,
+                                "span",
+                                (cue_span,),
+                            ),
+                            BoundRole(
+                                "delta_quantity",
+                                quantity.mention_id,
+                                quantity.kind,
+                                (quantity.span,),
+                            ),
+                            BoundRole(
+                                "changed_object", obj.mention_id, obj.kind, (obj.span,)
+                            ),
+                            BoundRole("direction", direction, "direction", (cue_span,)),
                         )
-                    )
+                        relations.append(
+                            BoundRelation(
+                                relation_id="",
+                                relation_type="unary_delta",
+                                roles=roles,
+                                evidence_spans=(cue_span, quantity.span, obj.span),
+                            )
+                        )
 
     decrease_matches = list(_DECREASE_TO_FRACTION_RE.finditer(text))
     if len(decrease_matches) == 1:
@@ -1302,7 +1308,7 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
                 action_kind = "gain" if surface == "gained" else "loss"
                 direction = "increase" if surface == "gained" else "decrease"
                 cue = GroundedUnaryDeltaCue(
-                    cue_id=f"cue-{len(builder._unary_delta_cues):04d}",
+                    cue_id=f"cue-{builder.unary_delta_cue_count:04d}",
                     surface=surface,
                     action_kind=action_kind,
                     direction=direction,
@@ -1332,6 +1338,7 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
         mentions,
         bindings,
         (*quantity_entity_proposals, *unary_delta_proposals),
+        builder.unary_delta_cues,
     ):
         builder.add_bound_relation(relation)
     bound_target = _bound_question_target(problem_text, mentions)
