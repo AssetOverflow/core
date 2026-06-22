@@ -80,7 +80,7 @@ We define a closed taxonomy of `ResidualKind` to classify existing `ContractAsse
 * The taxonomy classifies existing `ContractAssessment` labels; it does not replace them.
 * `residual_code` must preserve the original missing binding or unresolved hazard label exactly.
 * `CONTRACT_GAP_UNCLASSIFIED` is restricted to non-searchable diagnostic fallback only.
-* Broad, vague, or non-deterministic kinds (e.g., `MATH_FAILED`, `REASONING_FAILED`, `UNKNOWN_TRUTH`) are database-forbidden and structurally disallowed.
+* Broad, vague, or non-deterministic kinds (e.g., `MATH_FAILED`, `REASONING_FAILED`, `UNKNOWN_TRUTH`) are architecturally forbidden and structurally disallowed.
 
 ## ResidualSourceAxis
 
