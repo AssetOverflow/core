@@ -1,8 +1,16 @@
 # ADR-0225: ContractResidual Read-Model
 
-**Status:** Proposed
+**Status:** Accepted
 **Author:** Antigravity
 **Date:** 2026-06-22
+
+## Ratification note
+
+Accepted for implementation after #860 review.
+
+This ADR authorizes exactly one diagnostic-only implementation PR for the `ContractResidual` projection over existing `ContractAssessment` outputs.
+
+The authorization does not include SearchGate, ComputeBudgetPolicy, GeometricSearchRun, Workbench implementation, serving behavior, teaching/proposal/report/eval mutation, or runtime repair. Those remain separately gated by future ADRs/PRs.
 
 ## Context
 
