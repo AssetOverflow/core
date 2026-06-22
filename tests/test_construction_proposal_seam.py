@@ -57,7 +57,7 @@ MIGRATED_CASES = (
     (
         UNARY_DELTA_CASE,
         "state_change.unary_delta",
-        "unary_delta",
+        "unary_delta_transition",
     ),
 )
 

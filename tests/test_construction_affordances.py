@@ -52,7 +52,7 @@ def test_lookups_correctness() -> None:
 
     unary_delta = lookup_family("state_change.unary_delta")
     assert unary_delta is not None
-    assert lookup_by_organ("unary_delta") is unary_delta
+    assert lookup_by_organ("unary_delta_transition") is unary_delta
     assert lookup_by_relation_type("unary_delta") is unary_delta
 
     assert lookup_family("invalid_family_id") is None
@@ -90,7 +90,7 @@ def test_lookups_correctness() -> None:
         (
             "state_change.unary_delta",
             "unary_delta",
-            "unary_delta",
+            "unary_delta_transition",
             {"action_cue", "delta_quantity", "changed_object", "direction"},
         ),
     ),

@@ -288,7 +288,7 @@ _UNARY_DELTA = FoundationalFamilySpec(
         "ConstructionProposal(status='proposed', family_id='state_change.unary_delta')",
         "BoundRelation(relation_type='unary_delta') with action_cue, delta_quantity, changed_object, and direction roles",
         "Exact SourceSpan evidence for cue, quantity, and object",
-        "ContractAssessment(candidate_organ='unary_delta') as the sole runnable/refused authority",
+        "ContractAssessment(candidate_organ='unary_delta_transition') as the sole runnable/refused authority",
     ),
     contract_readiness_criteria=(
         "Exactly one local gained/lost cue is grounded from the original text.",

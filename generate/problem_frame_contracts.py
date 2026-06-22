@@ -8,8 +8,10 @@ Contract dispatch is deliberately narrow:
 - All registered contracts have ``serving_allowed=False``; this module must
   never be imported from serving dispatch paths.
 """
+
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from generate.construction_affordances import (
@@ -54,7 +56,7 @@ _CONTRACT_REGISTRY: dict[str, ConstructionContract] = {
         family=_QUANTITY_ENTITY_FAMILY,
         assess_fn_name="assess_quantity_entity",
     ),
-    "unary_delta": ConstructionContract(
+    "unary_delta_transition": ConstructionContract(
         family=_UNARY_DELTA_FAMILY,
         assess_fn_name="assess_unary_delta",
     ),
@@ -65,7 +67,6 @@ def get_contract_family_id(candidate_organ: str) -> str | None:
     """Return the catalog family ID for a candidate organ, if registered."""
     contract = _CONTRACT_REGISTRY.get(candidate_organ)
     return contract.family.family_id if contract else None
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,7 +102,9 @@ def _evidence(frame: ProblemFrame, relation_type: str) -> tuple[SourceSpan, ...]
 
 
 def _role_target(relation: BoundRelation, role_name: str) -> str | None:
-    return next((role.target_id for role in relation.roles if role.role == role_name), None)
+    return next(
+        (role.target_id for role in relation.roles if role.role == role_name), None
+    )
 
 
 def _role_spans(relation: BoundRelation, role_name: str) -> tuple[SourceSpan, ...]:
@@ -138,10 +141,27 @@ def _quantity_unit_bindings(frame: ProblemFrame) -> dict[str, str]:
     }
 
 
-_UNRESOLVED_ENTITY_SURFACES: frozenset[str] = frozenset({
-    "he", "her", "hers", "him", "his", "it", "its", "one", "ones",
-    "she", "their", "theirs", "them", "these", "they", "this", "those",
-})
+_UNRESOLVED_ENTITY_SURFACES: frozenset[str] = frozenset(
+    {
+        "he",
+        "her",
+        "hers",
+        "him",
+        "his",
+        "it",
+        "its",
+        "one",
+        "ones",
+        "she",
+        "their",
+        "theirs",
+        "them",
+        "these",
+        "they",
+        "this",
+        "those",
+    }
+)
 
 
 def _span_is_exact(frame: ProblemFrame, span: SourceSpan) -> bool:
@@ -149,7 +169,7 @@ def _span_is_exact(frame: ProblemFrame, span: SourceSpan) -> bool:
         bool(frame.problem_text)
         and 0 <= span.start <= span.end <= len(frame.problem_text)
         and bool(span.text)
-        and frame.problem_text[span.start:span.end] == span.text
+        and frame.problem_text[span.start : span.end] == span.text
     )
 
 
@@ -161,14 +181,11 @@ def _spans_are_local(
     left, right = sorted((first, second), key=lambda span: span.start)
     if left.end > right.start:
         return False
-    return not any(marker in problem_text[left.end:right.start] for marker in ".!?")
+    return not any(marker in problem_text[left.end : right.start] for marker in ".!?")
 
 
 def _unique_evidence(spans: tuple[SourceSpan, ...]) -> tuple[SourceSpan, ...]:
-    unique = {
-        (span.start, span.end, span.text): span
-        for span in spans
-    }
+    unique = {(span.start, span.end, span.text): span for span in spans}
     return tuple(unique[key] for key in sorted(unique))
 
 
@@ -214,16 +231,8 @@ def assess_quantity_entity(frame: ProblemFrame) -> ContractAssessment:
         missing.append("local_binding_relation_ambiguous")
     binding = bindings[0] if len(bindings) == 1 else None
 
-    quantity = (
-        mentions.get(binding.source_mention_id)
-        if binding is not None
-        else None
-    )
-    entity = (
-        mentions.get(binding.target_mention_id)
-        if binding is not None
-        else None
-    )
+    quantity = mentions.get(binding.source_mention_id) if binding is not None else None
+    entity = mentions.get(binding.target_mention_id) if binding is not None else None
     if quantity is None or quantity.kind != "quantity":
         missing.append("quantity_unbound")
     elif quantity.fact_id is None or quantity.fact_id not in quantity_facts:
@@ -251,8 +260,7 @@ def assess_quantity_entity(frame: ProblemFrame) -> ContractAssessment:
 
     if proposal is not None and quantity is not None and entity is not None:
         cue_contains_binding = any(
-            cue.start <= quantity.span.start
-            and entity.span.end <= cue.end
+            cue.start <= quantity.span.start and entity.span.end <= cue.end
             for cue in proposal.evidence_spans
         )
         if not cue_contains_binding:
@@ -302,16 +310,18 @@ def assess_quantity_entity(frame: ProblemFrame) -> ContractAssessment:
     if unit is not None and entity is not None and unit.span == entity.span:
         missing.append("unit_kind_conflict")
 
-    evidence = _unique_evidence(tuple(
-        span
-        for group in (
-            (() if proposal is None else proposal.evidence_spans),
-            (() if binding is None else binding.evidence_spans),
-            (() if disposition is None else disposition.evidence_spans),
-            (() if unit_binding is None else unit_binding.evidence_spans),
+    evidence = _unique_evidence(
+        tuple(
+            span
+            for group in (
+                (() if proposal is None else proposal.evidence_spans),
+                (() if binding is None else binding.evidence_spans),
+                (() if disposition is None else disposition.evidence_spans),
+                (() if unit_binding is None else unit_binding.evidence_spans),
+            )
+            for span in group
         )
-        for span in group
-    ))
+    )
     exact_evidence = evidence
     if quantity is not None:
         exact_evidence = _unique_evidence((*exact_evidence, quantity.span))
@@ -330,11 +340,7 @@ def assess_quantity_entity(frame: ProblemFrame) -> ContractAssessment:
     if unit is not None:
         exact_evidence = _unique_evidence((*exact_evidence, unit.span))
         unit_fact = next(
-            (
-                grounded
-                for grounded in frame.units
-                if unit.fact_id == grounded.fact_id
-            ),
+            (grounded for grounded in frame.units if unit.fact_id == grounded.fact_id),
             None,
         )
         if unit_fact is None or unit.span not in unit_fact.provenance.source_spans:
@@ -347,8 +353,7 @@ def assess_quantity_entity(frame: ProblemFrame) -> ContractAssessment:
         if unit_binding.evidence_spans != (quantity.span, unit.span):
             missing.append("provenance_span_inexact")
     if not exact_evidence or not all(
-        _span_is_exact(frame, span)
-        for span in exact_evidence
+        _span_is_exact(frame, span) for span in exact_evidence
     ):
         missing.append("provenance_span_inexact")
 
@@ -381,7 +386,11 @@ def assess_fraction_decrease(frame: ProblemFrame) -> ContractAssessment:
     mentions = _mention_map(frame)
     quantities = _quantity_value_by_mention_id(frame)
     quantity_units = _quantity_unit_bindings(frame)
-    relations = [relation for relation in frame.bound_relations if relation.relation_type == "decrease_to_fraction"]
+    relations = [
+        relation
+        for relation in frame.bound_relations
+        if relation.relation_type == "decrease_to_fraction"
+    ]
     question_target = frame.bound_question_target
 
     missing: list[str] = []
@@ -405,7 +414,11 @@ def assess_fraction_decrease(frame: ProblemFrame) -> ContractAssessment:
         missing.append("base_quantity_provenance_missing")
     if scale_id is not None and scale_id not in quantities:
         missing.append("scale_provenance_missing")
-    if unit_id is not None and base_id is not None and quantity_units.get(base_id) != unit_id:
+    if (
+        unit_id is not None
+        and base_id is not None
+        and quantity_units.get(base_id) != unit_id
+    ):
         missing.append("unit_continuity_unproven")
 
     if question_target is None or not question_target.grounded:
@@ -417,7 +430,11 @@ def assess_fraction_decrease(frame: ProblemFrame) -> ContractAssessment:
             and question_target.target_direction == "decrease"
         ):
             missing.append("delta_decrease_target_required")
-        if state_id is not None and state_id in mentions and question_target.target_mention_id in mentions:
+        if (
+            state_id is not None
+            and state_id in mentions
+            and question_target.target_mention_id in mentions
+        ):
             relation_state = mentions[state_id]
             target_state = mentions[question_target.target_mention_id]
             if relation_state.surface.lower() != target_state.surface.lower():
@@ -428,7 +445,10 @@ def assess_fraction_decrease(frame: ProblemFrame) -> ContractAssessment:
         missing.append("scale_out_of_range")
 
     categories = {hazard.category for hazard in frame.hazards}
-    if any(item.startswith("base_quantity") for item in missing) and "unbound_base_quantity" in categories:
+    if (
+        any(item.startswith("base_quantity") for item in missing)
+        and "unbound_base_quantity" in categories
+    ):
         unresolved.add("unbound_base_quantity")
 
     evidence_spans = (
@@ -438,7 +458,10 @@ def assess_fraction_decrease(frame: ProblemFrame) -> ContractAssessment:
             sorted(
                 {
                     (span.start, span.end, span.text): span
-                    for span in (*relation.evidence_spans, *(question_target.evidence_spans if question_target else ()))
+                    for span in (
+                        *relation.evidence_spans,
+                        *(question_target.evidence_spans if question_target else ()),
+                    )
                 }.values(),
                 key=lambda span: (span.start, span.end, span.text),
             )
@@ -452,7 +475,9 @@ def assess_fraction_decrease(frame: ProblemFrame) -> ContractAssessment:
         runnable=runnable,
         explanation=(
             "all fraction-decrease roles and delta target obligations are grounded"
-            if runnable else "diagnostic candidate is not runnable: " + ", ".join((*dict.fromkeys(missing), *sorted(unresolved)))
+            if runnable
+            else "diagnostic candidate is not runnable: "
+            + ", ".join((*dict.fromkeys(missing), *sorted(unresolved)))
         ),
         evidence_spans=evidence_spans,
     )
@@ -470,90 +495,224 @@ def assess_unary_delta(frame: ProblemFrame) -> ContractAssessment:
         if relation.relation_type == "unary_delta"
     )
     mentions = _mention_map(frame)
-    dispositions = tuple(frame.quantity_kind_dispositions)
 
     missing: list[str] = []
     unresolved: set[str] = set()
 
+    # 1. require exactly one unary-delta proposal
     if len(proposals) != 1:
         missing.append("unary_delta_proposal_required")
     proposal = proposals[0] if len(proposals) == 1 else None
 
-    if len(relations) != 1:
-        missing.append("unary_delta_relation_ambiguous")
+    # 2. require exactly one typed cue in frame.unary_delta_cues
+    if len(frame.unary_delta_cues) != 1:
+        missing.append("action_cue_unbound")
+    cue = frame.unary_delta_cues[0] if len(frame.unary_delta_cues) == 1 else None
+
+    # 3. require exact proposal cue span == typed cue span
+    if proposal is not None and cue is not None:
+        if proposal.evidence_spans != (cue.span,):
+            missing.append("provenance_span_inexact")
+
     relation = relations[0] if len(relations) == 1 else None
 
-    cue_spans = _role_spans(relation, "action_cue") if relation is not None else ()
-    quantity_id = _role_target(relation, "delta_quantity") if relation is not None else None
-    object_id = _role_target(relation, "changed_object") if relation is not None else None
-    direction = _role_target(relation, "direction") if relation is not None else None
+    # Check if multiple relations exist
+    if len(relations) > 1:
+        missing.append("unary_delta_relation_ambiguous")
 
-    if len(cue_spans) != 1:
+    # Roles / targets
+    cue_id_role = None
+    quantity_id = None
+    object_id = None
+    direction_role = None
+
+    if relation is not None:
+        cue_id_role = _role_target(relation, "action_cue")
+        quantity_id = _role_target(relation, "delta_quantity")
+        object_id = _role_target(relation, "changed_object")
+        direction_role = _role_target(relation, "direction")
+
+        # 4. require relation action_cue target to equal cue.cue_id
+        if cue is not None and cue_id_role != cue.cue_id:
+            missing.append("action_cue_unbound")
+
+        # 5. derive expected direction from the typed cue and check it
+        expected_direction = cue.direction if cue is not None else None
+        if direction_role is None or direction_role != expected_direction:
+            missing.append("direction_unbound")
+    else:
+        # If relation is absent, all roles are unbound
         missing.append("action_cue_unbound")
-    cue_span = cue_spans[0] if len(cue_spans) == 1 else None
-    if cue_span is not None and cue_span.text not in {"gained", "lost"}:
-        missing.append("action_cue_unbound")
-
-    quantity = mentions.get(quantity_id) if quantity_id is not None else None
-    if quantity is None or quantity.kind != "quantity":
-        missing.append("delta_quantity_unbound")
-
-    changed_object = mentions.get(object_id) if object_id is not None else None
-    if changed_object is None or changed_object.kind != "object":
-        missing.append("changed_object_unbound")
-
-    expected_direction = None
-    if cue_span is not None:
-        expected_direction = "increase" if cue_span.text == "gained" else "decrease"
-    if direction is None or direction != expected_direction:
         missing.append("direction_unbound")
 
-    if quantity is not None and changed_object is not None:
-        matching_dispositions = tuple(
-            disposition
-            for disposition in dispositions
-            if disposition.quantity_mention_id == quantity.mention_id
-            and disposition.entity_mention_id == changed_object.mention_id
+    # Get mentions if they are referenced by the relation
+    quantity = mentions.get(quantity_id) if quantity_id is not None else None
+    changed_object = mentions.get(object_id) if object_id is not None else None
+
+    # 6. require quantity and changed_object roles only when a relation is present
+    if relation is not None:
+        if quantity is None or quantity.kind != "quantity":
+            missing.append("delta_quantity_unbound")
+        if changed_object is None or changed_object.kind != "object":
+            missing.append("changed_object_unbound")
+    else:
+        # Refuse missing quantity/object with stable missing labels from frame evidence
+        quantities_in_frame = [m for m in frame.mentions if m.kind == "quantity"]
+        objects_in_frame = [m for m in frame.mentions if m.kind == "object"]
+
+        if not quantities_in_frame:
+            missing.append("delta_quantity_unbound")
+        elif len(quantities_in_frame) > 1:
+            missing.append("delta_quantity_ambiguous")
+        else:
+            quantity = quantities_in_frame[0]
+
+        if not objects_in_frame:
+            missing.append("changed_object_unbound")
+        elif len(objects_in_frame) > 1:
+            missing.append("changed_object_ambiguous")
+        else:
+            changed_object = objects_in_frame[0]
+
+        # Check local binding relation if both exist but relation is absent
+        if quantity is not None and changed_object is not None:
+            has_binding = any(
+                b.binding_type == "quantity_entity"
+                and b.source_mention_id == quantity.mention_id
+                and b.target_mention_id == changed_object.mention_id
+                for b in frame.bindings
+            )
+            if not has_binding:
+                missing.append("local_binding_relation_unbound")
+
+    # 7. refuse unit/object conflict such as `Tom gained 3 degrees.`
+    if quantity is not None:
+        has_unit = any(
+            b.binding_type == "quantity_unit"
+            and b.source_mention_id == quantity.mention_id
+            for b in frame.bindings
         )
-        if len(matching_dispositions) != 1:
+        if has_unit:
             missing.append("quantity_kind_unresolved")
+            missing.append("unit_object_conflict")
 
-    exact_evidence = _unique_evidence(tuple(
-        span
-        for group in (
-            (() if proposal is None else proposal.evidence_spans),
-            (() if cue_span is None else (cue_span,)),
-            (() if quantity is None else (quantity.span,)),
-            (() if changed_object is None else (changed_object.span,)),
+    # 8. use exact spans only
+    exact_evidence = _unique_evidence(
+        tuple(
+            span
+            for group in (
+                (() if proposal is None else proposal.evidence_spans),
+                (() if cue is None else (cue.span,)),
+                (() if quantity is None else (quantity.span,)),
+                (() if changed_object is None else (changed_object.span,)),
+            )
+            for span in group
         )
-        for span in group
-    ))
-    if proposal is not None and cue_span is not None and proposal.evidence_spans != (cue_span,):
-        missing.append("provenance_span_inexact")
-    if relation is not None and quantity is not None and changed_object is not None and cue_span is not None:
-        if relation.evidence_spans != (cue_span, quantity.span, changed_object.span):
-            missing.append("provenance_span_inexact")
-    if not exact_evidence or not all(_span_is_exact(frame, span) for span in exact_evidence):
+    )
+
+    # Span check for proposal cue vs cue
+    if (
+        proposal is not None
+        and cue is not None
+        and proposal.evidence_spans != (cue.span,)
+    ):
         missing.append("provenance_span_inexact")
 
-    if cue_span is not None and changed_object is not None and not _spans_are_local(
-        frame.problem_text,
-        cue_span,
-        changed_object.span,
+    # Span check for relation evidence
+    if (
+        relation is not None
+        and quantity is not None
+        and changed_object is not None
+        and cue is not None
+    ):
+        if relation.evidence_spans != (cue.span, quantity.span, changed_object.span):
+            missing.append("provenance_span_inexact")
+
+    if not exact_evidence or not all(
+        _span_is_exact(frame, span) for span in exact_evidence
+    ):
+        missing.append("provenance_span_inexact")
+
+    # Order/containment check
+    if (
+        cue is not None
+        and changed_object is not None
+        and not _spans_are_local(
+            frame.problem_text,
+            cue.span,
+            changed_object.span,
+        )
     ):
         missing.append("quantity_entity_nonlocal")
-    if cue_span is not None and quantity is not None and not _spans_are_local(
-        frame.problem_text,
-        cue_span,
-        quantity.span,
+    if (
+        cue is not None
+        and quantity is not None
+        and not _spans_are_local(
+            frame.problem_text,
+            cue.span,
+            quantity.span,
+        )
     ):
         missing.append("quantity_entity_nonlocal")
+
+    # Check for pronoun antecedent unresolved
+    pronouns = {
+        "he",
+        "her",
+        "hers",
+        "him",
+        "his",
+        "it",
+        "its",
+        "one",
+        "ones",
+        "she",
+        "their",
+        "theirs",
+        "them",
+        "these",
+        "they",
+        "this",
+        "those",
+    }
+    if any(re.search(rf"\b{p}\b", frame.problem_text.lower()) for p in pronouns):
+        unresolved.add("pronoun_antecedent_unresolved")
+
+    # Check negation / modality
+    negation_modality = {
+        "not",
+        "never",
+        "may",
+        "might",
+        "could",
+        "would",
+        "should",
+        "can",
+    }
+    if any(
+        re.search(rf"\b{word}\b", frame.problem_text.lower())
+        for word in negation_modality
+    ):
+        unresolved.add("event_assertion_unlicensed")
+
+    # Check passive voice
+    if cue is not None:
+        passive_pattern = rf"\b(was|were|been|be)\s+{cue.surface}\b"
+        by_pattern = rf"\b{cue.surface}\s+by\b"
+        if re.search(passive_pattern, frame.problem_text.lower()) or re.search(
+            by_pattern, frame.problem_text.lower()
+        ):
+            unresolved.add("passive_voice_unsupported")
+
+    # Check for multiple actors
+    if len(frame.actors) > 1:
+        unresolved.add("multiple_actor_surface")
 
     missing_bindings = tuple(dict.fromkeys(missing))
     unresolved_hazards = tuple(sorted(unresolved))
     runnable = not missing_bindings and not unresolved_hazards
     return ContractAssessment(
-        candidate_organ="unary_delta",
+        candidate_organ="unary_delta_transition",
         missing_bindings=missing_bindings,
         unresolved_hazards=unresolved_hazards,
         runnable=runnable,
@@ -571,8 +730,16 @@ def assess_percent_partition(frame: ProblemFrame) -> ContractAssessment:
     mentions = {mention.mention_id: mention for mention in frame.mentions}
     quantities = _quantity_value_by_mention_id(frame)
     quantity_entity = _quantity_entity_bindings(frame)
-    subgroups = [relation for relation in frame.bound_relations if relation.relation_type == "subgroup_partition"]
-    percentages = [relation for relation in frame.bound_relations if relation.relation_type == "percent_of"]
+    subgroups = [
+        relation
+        for relation in frame.bound_relations
+        if relation.relation_type == "subgroup_partition"
+    ]
+    percentages = [
+        relation
+        for relation in frame.bound_relations
+        if relation.relation_type == "percent_of"
+    ]
     linked_pairs: list[tuple[BoundRelation, BoundRelation]] = []
     subgroup_part_ids: set[str] = set()
     shared_whole_ids: set[str] = set()
@@ -621,16 +788,36 @@ def assess_percent_partition(frame: ProblemFrame) -> ContractAssessment:
         and question_target.target_state == "aggregate"
         and question_target.target_direction == "forward"
     ):
-        if question_target.target_state == "initial" and question_target.target_direction == "inverse":
-            missing.extend(("inverse_topology_unlicensed", "forward_aggregate_target_required"))
+        if (
+            question_target.target_state == "initial"
+            and question_target.target_direction == "inverse"
+        ):
+            missing.extend(
+                ("inverse_topology_unlicensed", "forward_aggregate_target_required")
+            )
         else:
             missing.append("forward_aggregate_target_required")
 
     unresolved: set[str] = set()
     categories = {hazard.category for hazard in frame.hazards}
-    if any(item in missing for item in ("grounded_whole_entity", "original_whole_unbound")) and "unbound_base_quantity" in categories:
+    if (
+        any(
+            item in missing
+            for item in ("grounded_whole_entity", "original_whole_unbound")
+        )
+        and "unbound_base_quantity" in categories
+    ):
         unresolved.add("unbound_base_quantity")
-    if any(item in missing for item in ("grounded_partition_subgroup", "percent_subgroup_links_incomplete")) and "percent_change_vs_percent_of" in categories:
+    if (
+        any(
+            item in missing
+            for item in (
+                "grounded_partition_subgroup",
+                "percent_subgroup_links_incomplete",
+            )
+        )
+        and "percent_change_vs_percent_of" in categories
+    ):
         unresolved.add("percent_change_vs_percent_of")
     runnable = not missing and not unresolved
     return ContractAssessment(
@@ -640,17 +827,22 @@ def assess_percent_partition(frame: ProblemFrame) -> ContractAssessment:
         runnable=runnable,
         explanation=(
             "all percent-partition roles and the question target are grounded"
-            if runnable else "diagnostic candidate is not runnable: " + ", ".join((*dict.fromkeys(missing), *sorted(unresolved)))
+            if runnable
+            else "diagnostic candidate is not runnable: "
+            + ", ".join((*dict.fromkeys(missing), *sorted(unresolved)))
         ),
-        evidence_spans=tuple(sorted(
-            {
-                (span.start, span.end, span.text): span
-                for pair in linked_pairs
-                for relation in pair
-                for span in relation.evidence_spans
-            }.values(),
-            key=lambda span: (span.start, span.end, span.text),
-        )) + (() if question_target is None else question_target.evidence_spans),
+        evidence_spans=tuple(
+            sorted(
+                {
+                    (span.start, span.end, span.text): span
+                    for pair in linked_pairs
+                    for relation in pair
+                    for span in relation.evidence_spans
+                }.values(),
+                key=lambda span: (span.start, span.end, span.text),
+            )
+        )
+        + (() if question_target is None else question_target.evidence_spans),
     )
 
 
@@ -694,7 +886,7 @@ def assess_contracts(frame: ProblemFrame) -> tuple[ContractAssessment, ...]:
         # Catalog: _CONTRACT_REGISTRY["fraction_decrease"]
         results.append(assess_fraction_decrease(frame))
     if _UNARY_DELTA_FAMILY.family_id in proposed_family_ids:
-        # Catalog: _CONTRACT_REGISTRY["unary_delta"]
+        # Catalog: _CONTRACT_REGISTRY["unary_delta_transition"]
         results.append(assess_unary_delta(frame))
     if _PERCENT_PARTITION_FAMILY.family_id in proposed_family_ids:
         # Catalog: _CONTRACT_REGISTRY["percent_partition"]
@@ -703,20 +895,38 @@ def assess_contracts(frame: ProblemFrame) -> tuple[ContractAssessment, ...]:
     # Skeleton families not yet in the catalog registry
     if "container_packing" in frame_names and frame.bound_question_target is not None:
         roles = _roles(frame, "container_packing")
-        missing = tuple(name for name in ("container", "content", "count_per") if name not in roles)
-        results.append(ContractAssessment(
-            "nested_fraction_remainder_total", missing, (), not missing,
-            "container contract grounded" if not missing else "missing container bindings: " + ", ".join(missing),
-            _evidence(frame, "container_packing"),
-        ))
+        missing = tuple(
+            name for name in ("container", "content", "count_per") if name not in roles
+        )
+        results.append(
+            ContractAssessment(
+                "nested_fraction_remainder_total",
+                missing,
+                (),
+                not missing,
+                "container contract grounded"
+                if not missing
+                else "missing container bindings: " + ", ".join(missing),
+                _evidence(frame, "container_packing"),
+            )
+        )
     if "labor_rate" in frame_names:
         roles = _roles(frame, "labor_rate")
-        missing = tuple(name for name in ("worker", "rate", "duration") if name not in roles)
-        results.append(ContractAssessment(
-            "temporal_tariff", missing, (), not missing,
-            "temporal tariff contract grounded" if not missing else "missing tariff bindings: " + ", ".join(missing),
-            _evidence(frame, "labor_rate"),
-        ))
+        missing = tuple(
+            name for name in ("worker", "rate", "duration") if name not in roles
+        )
+        results.append(
+            ContractAssessment(
+                "temporal_tariff",
+                missing,
+                (),
+                not missing,
+                "temporal tariff contract grounded"
+                if not missing
+                else "missing tariff bindings: " + ", ".join(missing),
+                _evidence(frame, "labor_rate"),
+            )
+        )
     return tuple(sorted(results, key=lambda item: item.candidate_organ))
 
 
@@ -725,6 +935,12 @@ def recommended_migration_target(assessments: tuple[ContractAssessment, ...]) ->
     if runnable:
         return sorted(runnable)[0]
     if assessments:
-        best = min(assessments, key=lambda item: (len(item.missing_bindings) + len(item.unresolved_hazards), item.candidate_organ))
+        best = min(
+            assessments,
+            key=lambda item: (
+                len(item.missing_bindings) + len(item.unresolved_hazards),
+                item.candidate_organ,
+            ),
+        )
         return f"substrate:contract_gap:{best.candidate_organ}"
     return "substrate:problem_frame_builder"

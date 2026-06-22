@@ -463,7 +463,7 @@ _UNARY_DELTA_FAMILY = ConstructionFamily(
     display_name="Unary gained/lost delta",
     signature=ConstructionSignature(
         relation_type="unary_delta",
-        candidate_organ="unary_delta",
+        candidate_organ="unary_delta_transition",
         required_roles=(
             RoleObligation(
                 "action_cue",

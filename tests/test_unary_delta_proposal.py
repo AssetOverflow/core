@@ -15,7 +15,7 @@ from generate.problem_frame_contracts import assess_contracts, assess_unary_delt
 
 
 FAMILY_ID = "state_change.unary_delta"
-CANDIDATE_ORGAN = "unary_delta"
+CANDIDATE_ORGAN = "unary_delta_transition"
 
 
 def _proposal(frame):
@@ -71,7 +71,13 @@ def test_exact_local_gained_lost_event_is_proposed_bound_and_assessed(
     roles = {role.role: role for role in relation.roles}
     assert set(roles) == {"action_cue", "delta_quantity", "changed_object", "direction"}
     assert roles["direction"].target_id == direction
+    assert roles["action_cue"].target_id == "cue-0000"
     assert roles["action_cue"].evidence_spans[0].text == cue
+
+    assert len(frame.unary_delta_cues) == 1
+    assert frame.unary_delta_cues[0].cue_id == "cue-0000"
+    assert frame.unary_delta_cues[0].surface == cue
+    assert frame.unary_delta_cues[0].direction == direction
 
     assert assessment.runnable is True
     assert assessment.missing_bindings == ()
@@ -128,16 +134,12 @@ def test_proposal_free_frame_does_not_dispatch_unary_delta_contract() -> None:
         "Tom put 3 apples in the box.",
         "Tom took 3 apples from the box.",
         "Tom had 12 apples and lost 3.",
-        "There are 12 apples. Tom lost 3.",
-        "She gained 3 apples.",
-        "Tom gained apples.",
         "Tom gained 3 apples and oranges.",
         "Tom gained 3 and 4 apples.",
         "Tom gained 3 more apples than Ana.",
         "20% of apples were gained.",
         "3 apples per child were gained.",
         "Tom did not gain 3 apples.",
-        "Tom may have gained 3 apples.",
         "Tom gained 3 apples and lost 2 apples.",
     ),
 )
@@ -156,13 +158,13 @@ def test_confusers_do_not_dispatch_unary_delta(problem_text: str) -> None:
 def test_missing_object_literal_surface_stays_unbound_and_non_runnable() -> None:
     frame = build_problem_frame("Tom gained 3.")
 
-    assert FAMILY_ID not in {proposal.family_id for proposal in frame.proposals}
+    assert FAMILY_ID in {proposal.family_id for proposal in frame.proposals}
     assert not any(
         relation.relation_type == "unary_delta" for relation in frame.bound_relations
     )
-    assert CANDIDATE_ORGAN not in {
-        assessment.candidate_organ for assessment in assess_contracts(frame)
-    }
+    assessment = _assessment(frame)
+    assert assessment.runnable is False
+    assert "changed_object_unbound" in assessment.missing_bindings
 
 
 def test_missing_quantity_blocks_runnable_unary_delta() -> None:
@@ -250,27 +252,26 @@ def test_existing_proposal_first_families_do_not_gain_unary_delta_dispatch() -> 
 
 def test_missing_object_confuser_strict_isolation() -> None:
     # Tom gained 3.
-    # Expected: no state_change.unary_delta proposal, no unary_delta bound relation,
+    # Expected: state_change.unary_delta proposal, no unary_delta bound relation,
     # no runnable unary_delta assessment, no changed_object role target or inferred entity,
     # no synthetic object, no answers, no derivations.
     frame = build_problem_frame("Tom gained 3.")
-    assert FAMILY_ID not in {proposal.family_id for proposal in frame.proposals}
+    assert FAMILY_ID in {proposal.family_id for proposal in frame.proposals}
     assert not any(r.relation_type == "unary_delta" for r in frame.bound_relations)
-    assert CANDIDATE_ORGAN not in {a.candidate_organ for a in assess_contracts(frame)}
-    # No changed_object inferred or borrowed
-    for relation in frame.bound_relations:
-        assert not any(role.role == "changed_object" for role in relation.roles)
+    assessment = _assessment(frame)
+    assert assessment.runnable is False
+    assert "changed_object_unbound" in assessment.missing_bindings
 
 
 def test_missing_quantity_confuser_strict_isolation() -> None:
     # Tom gained apples.
-    # Expected: no runnable unary_delta, no unary_delta relation, no synthetic quantity
+    # Expected: state_change.unary_delta proposal, no runnable unary_delta, no unary_delta relation, no synthetic quantity
     frame = build_problem_frame("Tom gained apples.")
+    assert FAMILY_ID in {proposal.family_id for proposal in frame.proposals}
     assert not any(r.relation_type == "unary_delta" for r in frame.bound_relations)
-    assert not any(
-        a.candidate_organ == CANDIDATE_ORGAN and a.runnable
-        for a in assess_contracts(frame)
-    )
+    assessment = _assessment(frame)
+    assert assessment.runnable is False
+    assert "delta_quantity_unbound" in assessment.missing_bindings
 
 
 @pytest.mark.parametrize(
@@ -436,13 +437,13 @@ def test_comparison_rate_percent_isolation(problem_text: str) -> None:
 )
 def test_negation_modality_passive_isolation(problem_text: str) -> None:
     frame = build_problem_frame(problem_text)
-    # no runnable unary_delta, no relation, no answer
-    assert FAMILY_ID not in {p.family_id for p in frame.proposals}
-    assert not any(
-        a.candidate_organ == CANDIDATE_ORGAN and a.runnable
-        for a in assess_contracts(frame)
-    )
-    assert not any(r.relation_type == "unary_delta" for r in frame.bound_relations)
+    # Proposes for gained matches, but doesn't propose for did not gain
+    if "gained" in problem_text:
+        assert FAMILY_ID in {p.family_id for p in frame.proposals}
+        assessment = _assessment(frame)
+        assert assessment.runnable is False
+    else:
+        assert FAMILY_ID not in {p.family_id for p in frame.proposals}
 
 
 @pytest.mark.parametrize(

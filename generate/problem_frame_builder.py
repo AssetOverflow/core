@@ -10,6 +10,7 @@ Non-goals:
   - serving admission
   - guessing unsupported or ambiguous surfaces
 """
+
 from __future__ import annotations
 
 import dataclasses
@@ -32,6 +33,7 @@ from generate.kernel_facts import (
 )
 from generate.problem_frame import (
     BoundQuestionTarget,
+    GroundedUnaryDeltaCue,
     ProblemFrame,
     ProblemFrameBuilder,
     QuantityKindDisposition,
@@ -51,11 +53,32 @@ from language_packs.unit_dimensions import classify_dimension
 
 _UNIT_TOKEN_RE: re.Pattern[str] = re.compile(r"\b\d+(?:\.\d+)?\s+([a-zA-Z]+)\b")
 
-_UNIT_STOPWORDS: frozenset[str] = frozenset({
-    "more", "less", "times", "percent", "percentage", "of", "and", "or",
-    "the", "a", "an", "in", "to", "for", "with", "at", "by", "from",
-    "each", "per", "way", "ways",
-})
+_UNIT_STOPWORDS: frozenset[str] = frozenset(
+    {
+        "more",
+        "less",
+        "times",
+        "percent",
+        "percentage",
+        "of",
+        "and",
+        "or",
+        "the",
+        "a",
+        "an",
+        "in",
+        "to",
+        "for",
+        "with",
+        "at",
+        "by",
+        "from",
+        "each",
+        "per",
+        "way",
+        "ways",
+    }
+)
 
 _ORDINAL_SUFFIX_RE: re.Pattern[str] = re.compile(
     r"\b(half|third|quarter)\s+(place|position|grade|rank)\b",
@@ -65,11 +88,14 @@ _ORDINAL_SUFFIX_RE: re.Pattern[str] = re.compile(
 
 def surface_in_text(surface: str, text: str) -> bool:
     """Match a registered surface at lexical, including punctuation, boundaries."""
-    return re.search(
-        rf"(?<![\w]){re.escape(surface)}(?![\w])",
-        text,
-        flags=re.IGNORECASE,
-    ) is not None
+    return (
+        re.search(
+            rf"(?<![\w]){re.escape(surface)}(?![\w])",
+            text,
+            flags=re.IGNORECASE,
+        )
+        is not None
+    )
 
 
 def _hazard_to_kernel(hazard: AmbiguityHazard) -> KernelHazard:
@@ -112,7 +138,9 @@ def _extract_unit_candidates(text: str) -> tuple[GroundedUnit, ...]:
             )
         )
 
-    return tuple(sorted(units, key=lambda u: (u.provenance.source_spans[0].start, u.surface)))
+    return tuple(
+        sorted(units, key=lambda u: (u.provenance.source_spans[0].start, u.surface))
+    )
 
 
 def _extract_hazards(text: str) -> tuple[KernelHazard, ...]:
@@ -176,7 +204,7 @@ def _trigger_span(text: str, trigger: str) -> SourceSpan | None:
     )
     if match is None:
         return None
-    return SourceSpan(text[match.start():match.end()], match.start(), match.end())
+    return SourceSpan(text[match.start() : match.end()], match.start(), match.end())
 
 
 def _sentence_contains_current_or_now(text: str, index: int) -> bool:
@@ -186,7 +214,8 @@ def _sentence_contains_current_or_now(text: str, index: int) -> bool:
         text.rfind("!", 0, index),
     )
     end_candidates = [
-        pos for pos in (
+        pos
+        for pos in (
             text.find(".", index),
             text.find("?", index),
             text.find("!", index),
@@ -194,7 +223,7 @@ def _sentence_contains_current_or_now(text: str, index: int) -> bool:
         if pos != -1
     ]
     end = min(end_candidates) if end_candidates else len(text)
-    sentence = text[start + 1:end].lower()
+    sentence = text[start + 1 : end].lower()
     return "current" in sentence or "now" in sentence
 
 
@@ -350,10 +379,27 @@ _TRANSFER_RE = re.compile(
     r"(?P<quantity>\d+(?:\.\d+)?)\s+(?P<object>[A-Za-z][A-Za-z'-]*)",
 )
 
-_QUANTITY_ENTITY_PRONOUNS: frozenset[str] = frozenset({
-    "he", "her", "hers", "him", "his", "it", "its", "one", "ones",
-    "she", "their", "theirs", "them", "these", "they", "this", "those",
-})
+_QUANTITY_ENTITY_PRONOUNS: frozenset[str] = frozenset(
+    {
+        "he",
+        "her",
+        "hers",
+        "him",
+        "his",
+        "it",
+        "its",
+        "one",
+        "ones",
+        "she",
+        "their",
+        "theirs",
+        "them",
+        "these",
+        "they",
+        "this",
+        "those",
+    }
+)
 
 _QUANTITY_ENTITY_CONFUSER_SURFACES: tuple[str, ...] = (
     "each",
@@ -375,7 +421,7 @@ def _proportional_decrease_proposals(text: str) -> tuple[ConstructionProposal, .
         return ()
     match = matches[0]
     evidence = SourceSpan(
-        text[match.start():match.end()],
+        text[match.start() : match.end()],
         match.start(),
         match.end(),
     )
@@ -397,7 +443,7 @@ def _percent_partition_proposals(
         return ()
 
     evidence_spans = tuple(
-        SourceSpan(text[match.start():match.end()], match.start(), match.end())
+        SourceSpan(text[match.start() : match.end()], match.start(), match.end())
         for match in _PERCENT_OF_PROPOSAL_RE.finditer(text)
     )
     if not evidence_spans:
@@ -413,9 +459,7 @@ def _percent_partition_proposals(
 
 def _has_list_or_enumeration_suffix(text: str, end: int) -> bool:
     sentence_ends = tuple(
-        index
-        for marker in ".!?"
-        if (index := text.find(marker, end)) != -1
+        index for marker in ".!?" if (index := text.find(marker, end)) != -1
     )
     sentence_end = min(sentence_ends, default=len(text))
     tail = text[end:sentence_end].lstrip().lower()
@@ -430,7 +474,7 @@ def _spans_are_local(
     left, right = sorted((first, second), key=lambda span: span.start)
     if left.end > right.start:
         return False
-    return not any(marker in problem_text[left.end:right.start] for marker in ".!?")
+    return not any(marker in problem_text[left.end : right.start] for marker in ".!?")
 
 
 def _quantity_entity_proposals(
@@ -448,8 +492,7 @@ def _quantity_entity_proposals(
     if len(quantities) != 1 or frames:
         return ()
     if any(
-        surface_in_text(surface, text)
-        for surface in _QUANTITY_ENTITY_CONFUSER_SURFACES
+        surface_in_text(surface, text) for surface in _QUANTITY_ENTITY_CONFUSER_SURFACES
     ):
         return ()
 
@@ -465,14 +508,13 @@ def _quantity_entity_proposals(
         return ()
 
     quantity_span = quantities[0].provenance.source_spans[0]
-    if (
-        quantity_span.start != match.start("quantity")
-        or quantity_span.end != match.end("quantity")
+    if quantity_span.start != match.start("quantity") or quantity_span.end != match.end(
+        "quantity"
     ):
         return ()
 
     evidence = SourceSpan(
-        text[match.start():match.end()],
+        text[match.start() : match.end()],
         match.start(),
         match.end(),
     )
@@ -483,34 +525,83 @@ def _unary_delta_proposals(
     text: str,
 ) -> tuple[ConstructionProposal, ...]:
     """Propose the narrow gained/lost unary-delta slice from exact local cues."""
-    if any(
-        surface_in_text(surface, text)
-        for surface in _QUANTITY_ENTITY_CONFUSER_SURFACES
-    ):
-        return ()
-
-    matches = tuple(_UNARY_DELTA_RE.finditer(text))
+    matches = list(re.finditer(r"\b(gained|lost)\b", text))
     if len(matches) != 1:
         return ()
     match = matches[0]
-    if match.group("subject").lower() in _QUANTITY_ENTITY_PRONOUNS:
+
+    # Block if there are multiple sentences
+    clean_text = re.sub(r"\d+\.\d+", "", text)
+    trimmed = clean_text.strip()
+    if trimmed and trimmed[-1] in ".!?":
+        trimmed = trimmed[:-1]
+    if any(marker in trimmed for marker in ".!?"):
         return ()
-    if _has_list_or_enumeration_suffix(text, match.end("object")):
+
+    # Competing / blocking surfaces
+    confusers = {
+        "percent",
+        "percentage",
+        "%",
+        "per",
+        "each",
+        "ratio",
+        "more than",
+        "less than",
+        "fewer than",
+        "greater than",
+        "times as",
+    }
+    if any(c in text.lower() for c in confusers):
         return ()
-    sentence_ends = tuple(
-        index
-        for marker in ".!?"
-        if (index := text.find(marker, match.end("object"))) != -1
-    )
-    sentence_end = min(sentence_ends, default=len(text))
-    trailing = text[match.end("object"):sentence_end].strip()
-    if trailing:
+
+    # Transfer / transaction verbs
+    transfer_verbs = {
+        "gave",
+        "give",
+        "gives",
+        "handed",
+        "passed",
+        "sent",
+        "send",
+        "sends",
+        "received",
+        "receives",
+        "bought",
+        "buys",
+        "sold",
+        "sells",
+        "spent",
+        "spends",
+        "ate",
+        "eats",
+    }
+    if any(re.search(rf"\b{verb}\b", text.lower()) for verb in transfer_verbs):
+        return ()
+
+    # Containment verbs
+    containment_verbs = {
+        "put",
+        "took",
+        "moved",
+        "filled",
+    }
+    if any(re.search(rf"\b{verb}\b", text.lower()) for verb in containment_verbs):
+        return ()
+
+    # Before / after state keywords
+    before_after = {"had", "was", "became", "originally", "now has"}
+    if any(re.search(rf"\b{word}\b", text.lower()) for word in before_after):
+        return ()
+
+    # List coordination / enumeration
+    if any(coord in text.lower() for coord in {"and", "or", ","}):
         return ()
 
     evidence = SourceSpan(
-        text[match.start("cue"):match.end("cue")],
-        match.start("cue"),
-        match.end("cue"),
+        text[match.start() : match.end()],
+        match.start(),
+        match.end(),
     )
     return (propose_construction("state_change.unary_delta", (evidence,)),)
 
@@ -527,8 +618,11 @@ def _extract_mentions(
         if key in records:
             return
         records[key] = GroundedMention(
-            mention_id="", kind=kind, surface=text[start:end],
-            span=SourceSpan(text[start:end], start, end), fact_id=fact_id,
+            mention_id="",
+            kind=kind,
+            surface=text[start:end],
+            span=SourceSpan(text[start:end], start, end),
+            fact_id=fact_id,
         )
 
     for quantity in quantities:
@@ -537,7 +631,11 @@ def _extract_mentions(
     for unit in units:
         span = unit.provenance.source_spans[0]
         add("unit", span.start, span.end, fact_id=unit.fact_id)
-    for pattern in (_ENTITY_AFTER_QUANTITY_RE, _FRACTION_ENTITY_RE, _QUESTION_ENTITY_RE):
+    for pattern in (
+        _ENTITY_AFTER_QUANTITY_RE,
+        _FRACTION_ENTITY_RE,
+        _QUESTION_ENTITY_RE,
+    ):
         for match in pattern.finditer(text):
             add("object", match.start("entity"), match.end("entity"))
     for match in _COPULAR_PARTITION_RE.finditer(text):
@@ -558,8 +656,11 @@ def _extract_mentions(
     )
     return tuple(
         GroundedMention(
-            mention_id=f"mention-{index:04d}", kind=m.kind, surface=m.surface,
-            span=m.span, fact_id=m.fact_id,
+            mention_id=f"mention-{index:04d}",
+            kind=m.kind,
+            surface=m.surface,
+            span=m.span,
+            fact_id=m.fact_id,
         )
         for index, m in enumerate(ordered)
     )
@@ -574,23 +675,33 @@ def _extract_bindings(
     bindings: list[MentionBinding] = []
     seen: set[tuple[str, str, str]] = set()
 
-    def bind(binding_type: str, source: GroundedMention, target: GroundedMention) -> None:
+    def bind(
+        binding_type: str, source: GroundedMention, target: GroundedMention
+    ) -> None:
         key = (binding_type, source.mention_id, target.mention_id)
         if key in seen:
             return
         seen.add(key)
-        bindings.append(MentionBinding(
-            binding_id="", binding_type=binding_type,
-            source_mention_id=source.mention_id, target_mention_id=target.mention_id,
-            evidence_spans=(source.span, target.span),
-        ))
+        bindings.append(
+            MentionBinding(
+                binding_id="",
+                binding_type=binding_type,
+                source_mention_id=source.mention_id,
+                target_mention_id=target.mention_id,
+                evidence_spans=(source.span, target.span),
+            )
+        )
 
     for pattern in (_ENTITY_AFTER_QUANTITY_RE, _FRACTION_ENTITY_RE):
         for match in pattern.finditer(text):
-            entity = by_span_kind.get((match.start("entity"), match.end("entity"), "object"))
+            entity = by_span_kind.get(
+                (match.start("entity"), match.end("entity"), "object")
+            )
             if entity is None:
                 continue
-            candidates = [q for q in quantities if q.span.start == match.start("quantity")]
+            candidates = [
+                q for q in quantities if q.span.start == match.start("quantity")
+            ]
             if candidates:
                 bind("quantity_entity", candidates[0], entity)
     units = [m for m in mentions if m.kind == "unit"]
@@ -599,17 +710,25 @@ def _extract_bindings(
             unit
             for unit in units
             if unit.span.start >= quantity.span.end
-            and not text[quantity.span.end:unit.span.start].strip()
+            and not text[quantity.span.end : unit.span.start].strip()
         ]
         if following:
             bind("quantity_unit", quantity, min(following, key=lambda u: u.span.start))
 
-    ordered = sorted(bindings, key=lambda b: (b.evidence_spans[0].start, b.binding_type, b.target_mention_id))
-    return tuple(MentionBinding(
-        binding_id=f"binding-{index:04d}", binding_type=b.binding_type,
-        source_mention_id=b.source_mention_id, target_mention_id=b.target_mention_id,
-        evidence_spans=b.evidence_spans,
-    ) for index, b in enumerate(ordered))
+    ordered = sorted(
+        bindings,
+        key=lambda b: (b.evidence_spans[0].start, b.binding_type, b.target_mention_id),
+    )
+    return tuple(
+        MentionBinding(
+            binding_id=f"binding-{index:04d}",
+            binding_type=b.binding_type,
+            source_mention_id=b.source_mention_id,
+            target_mention_id=b.target_mention_id,
+            evidence_spans=b.evidence_spans,
+        )
+        for index, b in enumerate(ordered)
+    )
 
 
 def _quantity_kind_dispositions(
@@ -625,15 +744,9 @@ def _quantity_kind_dispositions(
         for proposal in proposals
         if proposal.family_id == "binding.quantity_entity"
     )
-    unary_delta_proposals = tuple(
-        proposal
-        for proposal in proposals
-        if proposal.family_id == "state_change.unary_delta"
-    )
-    if len(quantity_entity_proposals) + len(unary_delta_proposals) != 1:
+    if len(quantity_entity_proposals) != 1:
         return ()
-    quantity_entity_proposal = quantity_entity_proposals[0] if quantity_entity_proposals else None
-    unary_delta_proposal = unary_delta_proposals[0] if unary_delta_proposals else None
+    quantity_entity_proposal = quantity_entity_proposals[0]
 
     mentions_by_id = {mention.mention_id: mention for mention in mentions}
     unit_bindings: dict[str, list[MentionBinding]] = {}
@@ -649,26 +762,23 @@ def _quantity_kind_dispositions(
         entity = mentions_by_id.get(binding.target_mention_id)
         if quantity is None or entity is None or quantity.fact_id is None:
             continue
-        if quantity_entity_proposal is not None:
-            if not any(
-                cue.start <= quantity.span.start and entity.span.end <= cue.end
-                for cue in quantity_entity_proposal.evidence_spans
-            ):
-                continue
-        elif unary_delta_proposal is not None:
-            cue = unary_delta_proposal.evidence_spans[0]
-            if quantity.span.start < cue.end or not _spans_are_local(text, cue, entity.span):
-                continue
+        if not any(
+            cue.start <= quantity.span.start and entity.span.end <= cue.end
+            for cue in quantity_entity_proposal.evidence_spans
+        ):
+            continue
 
         bound_units = unit_bindings.get(quantity.mention_id, [])
         if not bound_units:
-            dispositions.append(QuantityKindDisposition(
-                quantity_mention_id=quantity.mention_id,
-                entity_mention_id=entity.mention_id,
-                quantity_kind="count",
-                unit_mention_id=None,
-                evidence_spans=binding.evidence_spans,
-            ))
+            dispositions.append(
+                QuantityKindDisposition(
+                    quantity_mention_id=quantity.mention_id,
+                    entity_mention_id=entity.mention_id,
+                    quantity_kind="count",
+                    unit_mention_id=None,
+                    evidence_spans=binding.evidence_spans,
+                )
+            )
             continue
         if len(bound_units) != 1:
             continue
@@ -681,13 +791,15 @@ def _quantity_kind_dispositions(
             (span.start, span.end, span.text): span
             for span in (*binding.evidence_spans, *unit_binding.evidence_spans)
         }
-        dispositions.append(QuantityKindDisposition(
-            quantity_mention_id=quantity.mention_id,
-            entity_mention_id=entity.mention_id,
-            quantity_kind="measurement",
-            unit_mention_id=unit.mention_id,
-            evidence_spans=tuple(evidence[key] for key in sorted(evidence)),
-        ))
+        dispositions.append(
+            QuantityKindDisposition(
+                quantity_mention_id=quantity.mention_id,
+                entity_mention_id=entity.mention_id,
+                quantity_kind="measurement",
+                unit_mention_id=unit.mention_id,
+                evidence_spans=tuple(evidence[key] for key in sorted(evidence)),
+            )
+        )
 
     return tuple(dispositions)
 
@@ -718,52 +830,107 @@ def _bound_relations(
             (
                 mention
                 for mention in mentions
-                if mention.kind == part.kind and mention.surface.lower() == part.surface.lower()
+                if mention.kind == part.kind
+                and mention.surface.lower() == part.surface.lower()
             ),
             key=lambda mention: mention.span.start,
             default=part,
         )
-        if "%" not in quantity.surface and quantity.surface.lower() not in {"half", "third", "quarter"}:
+        if "%" not in quantity.surface and quantity.surface.lower() not in {
+            "half",
+            "third",
+            "quarter",
+        }:
             continue
         roles = [
-            BoundRole("part", canonical_part.mention_id, canonical_part.kind, (canonical_part.span,)),
+            BoundRole(
+                "part",
+                canonical_part.mention_id,
+                canonical_part.kind,
+                (canonical_part.span,),
+            ),
             BoundRole("scale", quantity.mention_id, quantity.kind, (quantity.span,)),
         ]
         if whole is not None:
             whole_entity = by_id[whole.target_mention_id]
-            roles.insert(0, BoundRole("whole", whole_entity.mention_id, whole_entity.kind, (whole_entity.span,)))
-        relation_type = "percent_of" if "%" in quantity.surface else "subgroup_partition"
-        relations.append(BoundRelation(
-            relation_id="", relation_type=relation_type, roles=tuple(roles),
-            evidence_spans=tuple(span for role in roles for span in role.evidence_spans),
-        ))
+            roles.insert(
+                0,
+                BoundRole(
+                    "whole",
+                    whole_entity.mention_id,
+                    whole_entity.kind,
+                    (whole_entity.span,),
+                ),
+            )
+        relation_type = (
+            "percent_of" if "%" in quantity.surface else "subgroup_partition"
+        )
+        relations.append(
+            BoundRelation(
+                relation_id="",
+                relation_type=relation_type,
+                roles=tuple(roles),
+                evidence_spans=tuple(
+                    span for role in roles for span in role.evidence_spans
+                ),
+            )
+        )
 
     for match in _COPULAR_PARTITION_RE.finditer(text):
-        quantity = next((m for m in mentions if m.kind == "quantity" and m.span.start == match.start("quantity")), None)
-        whole = next((m for m in mentions if m.kind == "object" and m.span.start == match.start("whole")), None)
-        part = next((m for m in mentions if m.kind == "object" and m.span.start == match.start("part")), None)
+        quantity = next(
+            (
+                m
+                for m in mentions
+                if m.kind == "quantity" and m.span.start == match.start("quantity")
+            ),
+            None,
+        )
+        whole = next(
+            (
+                m
+                for m in mentions
+                if m.kind == "object" and m.span.start == match.start("whole")
+            ),
+            None,
+        )
+        part = next(
+            (
+                m
+                for m in mentions
+                if m.kind == "object" and m.span.start == match.start("part")
+            ),
+            None,
+        )
         if quantity is None or whole is None or part is None:
             continue
         canonical_whole = min(
             (
                 mention
                 for mention in mentions
-                if mention.kind == "object" and mention.surface.lower() == whole.surface.lower()
+                if mention.kind == "object"
+                and mention.surface.lower() == whole.surface.lower()
             ),
             key=lambda mention: mention.span.start,
             default=whole,
         )
         roles = (
-            BoundRole("whole", canonical_whole.mention_id, canonical_whole.kind, (canonical_whole.span,)),
+            BoundRole(
+                "whole",
+                canonical_whole.mention_id,
+                canonical_whole.kind,
+                (canonical_whole.span,),
+            ),
             BoundRole("part", part.mention_id, part.kind, (part.span,)),
             BoundRole("scale", quantity.mention_id, quantity.kind, (quantity.span,)),
         )
-        relations.append(BoundRelation(
-            relation_id="",
-            relation_type="subgroup_partition",
-            roles=roles,
-            evidence_spans=(quantity.span, canonical_whole.span, part.span),
-        ))
+        relations.append(
+            BoundRelation(
+                relation_id="",
+                relation_type="subgroup_partition",
+                roles=roles,
+                evidence_spans=(quantity.span, canonical_whole.span, part.span),
+            )
+        )
 
     unary_delta_proposals = tuple(
         proposal
@@ -771,45 +938,67 @@ def _bound_relations(
         if proposal.family_id == "state_change.unary_delta"
     )
     if len(unary_delta_proposals) == 1:
-        unary_match = _UNARY_DELTA_RE.search(text)
         proposal = unary_delta_proposals[0]
-        if unary_match is not None and len(proposal.evidence_spans) == 1:
+        if len(proposal.evidence_spans) == 1:
             cue_span = proposal.evidence_spans[0]
-            cue_surface = text[cue_span.start:cue_span.end]
+            cue_surface = text[cue_span.start : cue_span.end]
             if cue_span.text == cue_surface and cue_surface in {"gained", "lost"}:
                 direction = "increase" if cue_surface == "gained" else "decrease"
-                matching_bindings = [
-                    binding
-                    for binding in quantity_entity
-                    if by_id[binding.source_mention_id].span.start == unary_match.start("quantity")
-                    and by_id[binding.target_mention_id].span.start == unary_match.start("object")
-                ]
+                # Locate corresponding GroundedUnaryDeltaCue's cue_id
+                cue_id = "cue-0000"
+
+                matching_bindings = []
+                for binding in quantity_entity:
+                    qty = by_id.get(binding.source_mention_id)
+                    obj = by_id.get(binding.target_mention_id)
+                    if qty is not None and obj is not None:
+                        if (
+                            cue_span.end <= qty.span.start
+                            and qty.span.end <= obj.span.start
+                        ):
+                            segment = text[cue_span.start : obj.span.end]
+                            if not any(marker in segment for marker in ".!?"):
+                                matching_bindings.append((binding, qty, obj))
                 if len(matching_bindings) == 1:
-                    binding = matching_bindings[0]
-                    quantity = by_id[binding.source_mention_id]
-                    obj = by_id[binding.target_mention_id]
+                    binding, quantity, obj = matching_bindings[0]
                     roles = (
                         BoundRole(
                             "action_cue",
-                            f"span:{cue_span.start}:{cue_span.end}",
+                            cue_id,
                             "span",
                             (cue_span,),
                         ),
-                        BoundRole("delta_quantity", quantity.mention_id, quantity.kind, (quantity.span,)),
-                        BoundRole("changed_object", obj.mention_id, obj.kind, (obj.span,)),
+                        BoundRole(
+                            "delta_quantity",
+                            quantity.mention_id,
+                            quantity.kind,
+                            (quantity.span,),
+                        ),
+                        BoundRole(
+                            "changed_object", obj.mention_id, obj.kind, (obj.span,)
+                        ),
                         BoundRole("direction", direction, "direction", (cue_span,)),
                     )
-                    relations.append(BoundRelation(
-                        relation_id="",
-                        relation_type="unary_delta",
-                        roles=roles,
-                        evidence_spans=(cue_span, quantity.span, obj.span),
-                    ))
+                    relations.append(
+                        BoundRelation(
+                            relation_id="",
+                            relation_type="unary_delta",
+                            roles=roles,
+                            evidence_spans=(cue_span, quantity.span, obj.span),
+                        )
+                    )
 
     decrease_matches = list(_DECREASE_TO_FRACTION_RE.finditer(text))
     if len(decrease_matches) == 1:
         match = decrease_matches[0]
-        scale = next((m for m in mentions if m.kind == "quantity" and m.span.start == match.start("fraction")), None)
+        scale = next(
+            (
+                m
+                for m in mentions
+                if m.kind == "quantity" and m.span.start == match.start("fraction")
+            ),
+            None,
+        )
         state_match = next(
             (
                 item
@@ -821,8 +1010,11 @@ def _bound_relations(
         state = (
             next(
                 (
-                    m for m in mentions
-                    if m.kind == "object" and state_match is not None and m.span.start == state_match.start("state")
+                    m
+                    for m in mentions
+                    if m.kind == "object"
+                    and state_match is not None
+                    and m.span.start == state_match.start("state")
                 ),
                 None,
             )
@@ -853,23 +1045,44 @@ def _bound_relations(
                     "transition",
                     f"span:{match.start('transition')}:{match.end('transition')}",
                     "span",
-                    (SourceSpan(text[match.start("transition"):match.end("transition")], match.start("transition"), match.end("transition")),),
+                    (
+                        SourceSpan(
+                            text[match.start("transition") : match.end("transition")],
+                            match.start("transition"),
+                            match.end("transition"),
+                        ),
+                    ),
                 ),
             ]
             if base_unit_binding is not None:
                 unit = by_id.get(base_unit_binding.target_mention_id)
                 if unit is not None:
-                    roles.append(BoundRole("unit", unit.mention_id, unit.kind, (unit.span,)))
-            relations.append(BoundRelation(
-                relation_id="",
-                relation_type="decrease_to_fraction",
-                roles=tuple(roles),
-                evidence_spans=tuple(span for role in roles for span in role.evidence_spans),
-            ))
+                    roles.append(
+                        BoundRole("unit", unit.mention_id, unit.kind, (unit.span,))
+                    )
+            relations.append(
+                BoundRelation(
+                    relation_id="",
+                    relation_type="decrease_to_fraction",
+                    roles=tuple(roles),
+                    evidence_spans=tuple(
+                        span for role in roles for span in role.evidence_spans
+                    ),
+                )
+            )
 
     for match in _TRANSFER_RE.finditer(text):
+
         def at(group: str, kind: str) -> GroundedMention | None:
-            return next((m for m in mentions if m.kind == kind and m.span.start == match.start(group)), None)
+            return next(
+                (
+                    m
+                    for m in mentions
+                    if m.kind == kind and m.span.start == match.start(group)
+                ),
+                None,
+            )
+
         agent = at("agent", "actor")
         patient = at("patient", "actor")
         quantity = at("quantity", "quantity")
@@ -879,26 +1092,36 @@ def _bound_relations(
             roles = tuple(
                 BoundRole(name, mention.mention_id, mention.kind, (mention.span,))
                 for name, mention in (
-                    ("agent", agent), ("patient", patient),
-                    ("quantity", quantity), ("object", obj),
+                    ("agent", agent),
+                    ("patient", patient),
+                    ("quantity", quantity),
+                    ("object", obj),
                 )
             )
-            relations.append(BoundRelation(
-                "", "transfer", roles,
-                tuple(m.span for m in (agent, patient, quantity, obj)),
-            ))
+            relations.append(
+                BoundRelation(
+                    "",
+                    "transfer",
+                    roles,
+                    tuple(m.span for m in (agent, patient, quantity, obj)),
+                )
+            )
 
     relations.sort(key=lambda r: (r.evidence_spans[0].start, r.relation_type))
     return tuple(
         BoundRelation(
-            f"bound-rel-{index:04d}", relation.relation_type,
-            relation.roles, relation.evidence_spans,
+            f"bound-rel-{index:04d}",
+            relation.relation_type,
+            relation.roles,
+            relation.evidence_spans,
         )
         for index, relation in enumerate(relations)
     )
 
 
-def _bound_question_target(text: str, mentions: tuple[GroundedMention, ...]) -> BoundQuestionTarget | None:
+def _bound_question_target(
+    text: str, mentions: tuple[GroundedMention, ...]
+) -> BoundQuestionTarget | None:
     """Extract and bind the question target from the problem text.
 
     Priority Cascade Order:
@@ -922,12 +1145,17 @@ def _bound_question_target(text: str, mentions: tuple[GroundedMention, ...]) -> 
         entity_surface = decrease_delta.group("entity")
         entity = next(
             (
-                m for m in mentions
+                m
+                for m in mentions
                 if m.kind == "object" and m.surface.lower() == entity_surface.lower()
             ),
             None,
         )
-        span = SourceSpan(text[decrease_delta.start():decrease_delta.end()], decrease_delta.start(), decrease_delta.end())
+        span = SourceSpan(
+            text[decrease_delta.start() : decrease_delta.end()],
+            decrease_delta.start(),
+            decrease_delta.end(),
+        )
         return BoundQuestionTarget(
             "difference",
             entity_surface,
@@ -944,15 +1172,25 @@ def _bound_question_target(text: str, mentions: tuple[GroundedMention, ...]) -> 
             return None
         qmark = text.index("?")
         return BoundQuestionTarget(
-            "unknown", "?", None, "unresolved",
+            "unknown",
+            "?",
+            None,
+            "unresolved",
             (SourceSpan("?", qmark, qmark + 1),),
             target_operator="unknown",
             target_state="unknown",
             target_direction="unknown",
         )
-    entity = next((m for m in mentions if m.kind == "object" and m.span.start == question.start("entity")), None)
-    question_clause = text[question.start():]
-    prefix = text[max(0, question.start() - 32):question.end()].lower()
+    entity = next(
+        (
+            m
+            for m in mentions
+            if m.kind == "object" and m.span.start == question.start("entity")
+        ),
+        None,
+    )
+    question_clause = text[question.start() :]
+    prefix = text[max(0, question.start() - 32) : question.end()].lower()
     question_lower = question_clause.lower()
     if "more" in question.group(0).lower():
         target_type = "difference"
@@ -960,7 +1198,9 @@ def _bound_question_target(text: str, mentions: tuple[GroundedMention, ...]) -> 
         target_state = "delta"
         target_direction = "unknown"
         unknown_slot = "difference"
-    elif any(x in question_lower for x in ("were in", "was in", "started with", "originally")):
+    elif any(
+        x in question_lower for x in ("were in", "was in", "started with", "originally")
+    ):
         target_type = "count"
         target_operator = "count"
         target_state = "initial"
@@ -984,10 +1224,15 @@ def _bound_question_target(text: str, mentions: tuple[GroundedMention, ...]) -> 
         target_state = "current"
         target_direction = "unknown"
         unknown_slot = "count"
-    span = SourceSpan(text[question.start():question.end()], question.start(), question.end())
+    span = SourceSpan(
+        text[question.start() : question.end()], question.start(), question.end()
+    )
     return BoundQuestionTarget(
-        target_type, question.group("entity"),
-        entity.mention_id if entity else None, unknown_slot, (span,),
+        target_type,
+        question.group("entity"),
+        entity.mention_id if entity else None,
+        unknown_slot,
+        (span,),
         target_operator=target_operator,
         target_state=target_state,
         target_direction=target_direction,
@@ -1003,7 +1248,9 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
     builder = ProblemFrameBuilder()
     builder.set_problem_text(problem_text)
 
-    scalars = _filter_scalar_candidates(problem_text, extract_scalar_candidates(problem_text))
+    scalars = _filter_scalar_candidates(
+        problem_text, extract_scalar_candidates(problem_text)
+    )
     for scalar in scalars:
         builder.add_scalar(scalar)
 
@@ -1049,6 +1296,19 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
     unary_delta_proposals = _unary_delta_proposals(problem_text)
     for proposal in unary_delta_proposals:
         builder.add_proposal(proposal)
+        for span in proposal.evidence_spans:
+            surface = span.text
+            if surface in {"gained", "lost"}:
+                action_kind = "gain" if surface == "gained" else "loss"
+                direction = "increase" if surface == "gained" else "decrease"
+                cue = GroundedUnaryDeltaCue(
+                    cue_id=f"cue-{len(builder._unary_delta_cues):04d}",
+                    surface=surface,
+                    action_kind=action_kind,
+                    direction=direction,
+                    span=span,
+                )
+                builder.add_unary_delta_cue(cue)
 
     mentions = _extract_mentions(problem_text, tuple(grounded_quantities), units)
     bindings = _extract_bindings(problem_text, mentions)
@@ -1080,7 +1340,10 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
 
     initial_frame = builder.build()
 
-    from generate.problem_frame_contracts import assess_contracts, get_contract_family_id
+    from generate.problem_frame_contracts import (
+        assess_contracts,
+        get_contract_family_id,
+    )
     from generate.construction_affordances import make_proposal
 
     assessments = assess_contracts(initial_frame)
@@ -1100,7 +1363,6 @@ def build_problem_frame(problem_text: str) -> ProblemFrame:
             proposed_family_ids.add(family_id)
 
     return dataclasses.replace(initial_frame, proposals=tuple(proposals))
-
 
 
 def recognized_scalar_surfaces(frame: ProblemFrame) -> tuple[str, ...]:
