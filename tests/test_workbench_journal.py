@@ -10,6 +10,7 @@ from workbench import api as workbench_api
 from workbench import readers
 from workbench.api import MAX_CHAT_PROMPT_CHARS, WorkbenchApi
 from workbench.journal import TurnJournal, TurnJournalEntry
+from workbench.construction_evidence import ConstructionEvidence
 from workbench.schemas import (
     ChatTurnResult,
     CognitivePipelineEdge,
@@ -421,3 +422,33 @@ def test_unknown_turn_returns_404(tmp_path: Path) -> None:
 
     assert missing.status == 404
     assert invalid.status == 404
+
+
+def test_trace_construction_endpoint_delivers_persisted_evidence(
+    tmp_path: Path,
+) -> None:
+    journal = TurnJournal(tmp_path / "workbench_data")
+
+    evidence_payload = ConstructionEvidence(
+        schema_version="construction_evidence_v1",
+        turn_id=1,
+        status="recorded",
+        missing_reason=None,
+        problem_text="Lena has 3 red marbles.",
+        diagnostic_only=True,
+        serving_allowed=False,
+    )
+
+    entry = replace(_entry(1), construction_evidence=evidence_payload)
+    journal.append(entry)
+
+    api = WorkbenchApi(journal=journal)
+    response = _request(api, "GET", "/trace/1/construction")
+
+    assert response.status == 200
+    assert response.payload["ok"] is True
+    data = response.payload["data"]
+    assert data["schema_version"] == "construction_evidence_v1"
+    assert data["status"] == "recorded"
+    assert data["problem_text"] == "Lena has 3 red marbles."
+    assert data["diagnostic_only"] is True
