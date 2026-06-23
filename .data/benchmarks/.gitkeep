@@ -1,0 +1,3 @@
+# This directory is gitignored (see .gitignore: .data/benchmarks/).
+# Only this .gitkeep and manifest YAMLs under evals/generalization/manifests/ are committed.
+# Raw dataset files must never be committed to the repo.

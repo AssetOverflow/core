@@ -1,0 +1,19 @@
+dataset: SVAMP
+purpose: sealed_audit_not_training
+description: >
+  Simple Variations on Arithmetic Math word Problems. Designed specifically
+  to expose shallow heuristics in simple math word-problem solvers.
+  See arXiv:2103.07191.
+source: hf://ChilleD/SVAMP
+license: TODO_VERIFY_BEFORE_CACHE  # check Patel et al. license
+version: pinned_release_or_commit
+split: test
+sha256: TODO_AFTER_DOWNLOAD
+local_cache: .data/benchmarks/svamp/
+repo_policy: manifest_only
+inspection_policy: aggregate_reports_only
+mutation_policy: no_direct_pack_policy_operator_mutation
+smoke_fixture: null  # PR-2: add sealed audit slice
+notes: |
+  Specifically targets shallow heuristic solvers. Keep sealed.
+  Variation structure makes it a strong adversarial math lane.

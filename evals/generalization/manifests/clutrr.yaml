@@ -1,0 +1,20 @@
+dataset: CLUTRR
+purpose: sealed_audit_not_training
+description: >
+  Diagnostic Benchmark for Inductive Reasoning from Text. Kinship and
+  entity relation inference from short stories. Maps directly onto CORE's
+  relational reasoning work. See arXiv:1908.06177.
+source: hf://CLUTRR/v1  # confirm canonical HF path
+license: TODO_VERIFY_BEFORE_CACHE  # check Sinha et al. / McGill license
+version: pinned_release_or_commit
+split: test
+sha256: TODO_AFTER_DOWNLOAD
+local_cache: .data/benchmarks/clutrr/
+repo_policy: manifest_only
+inspection_policy: aggregate_reports_only
+mutation_policy: no_direct_pack_policy_operator_mutation
+smoke_fixture: null  # PR-2: sealed relational slice
+notes: |
+  Best alignment to CORE's relation/field work. Kinship graph inference
+  from stories; variable-length reasoning chains (k=2..10).
+  Keep sealed slice for hold-out relational audit.
