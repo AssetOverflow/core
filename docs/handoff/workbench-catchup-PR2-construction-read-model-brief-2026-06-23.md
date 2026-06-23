@@ -1,8 +1,8 @@
 # Workbench Catch-up PR-2 Brief — Construction Evidence Read Model
 
-**Target PR title:** `feat(workbench): expose construction evidence read model`  
-**Base:** fresh `origin/main` after the docs catch-up PR merges  
-**Scope:** backend read-only schemas + API endpoint only  
+**Target PR title:** `feat(workbench): expose construction evidence read model`
+**Base:** fresh `origin/main` after the docs catch-up PR merges
+**Scope:** backend read-only schemas + API endpoint only
 
 ## Goal
 

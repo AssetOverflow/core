@@ -1,9 +1,9 @@
 # Workbench Catch-up PR-4 Brief — Generalization Audit Governance Surface
 
-**Target PR title:** `feat(workbench): expose generalization audit summaries`  
-**Follow-up UI title:** `feat(workbench-ui): add generalization audit view`  
-**Base:** after construction read model/UI work unless explicitly parallelized  
-**Scope:** read-only benchmark governance summaries; no raw benchmark items  
+**Target PR title:** `feat(workbench): expose generalization audit summaries`
+**Follow-up UI title:** `feat(workbench-ui): add generalization audit view`
+**Base:** after construction read model/UI work unless explicitly parallelized
+**Scope:** read-only benchmark governance summaries; no raw benchmark items
 
 ## Goal
 

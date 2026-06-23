@@ -1,8 +1,8 @@
 # Workbench Catch-up PR-5 Brief — ProposalArtifact Frame + Demo Theater Proof Tour
 
-**Target PR title:** `feat(workbench-ui): add proposal artifact frame`  
-**Follow-up title:** `feat(workbench-ui): upgrade demo theater proof tour`  
-**Scope:** frontend shared proposal grammar and demo narrative surfaces  
+**Target PR title:** `feat(workbench-ui): add proposal artifact frame`
+**Follow-up title:** `feat(workbench-ui): upgrade demo theater proof tour`
+**Scope:** frontend shared proposal grammar and demo narrative surfaces
 
 ## Goal
 

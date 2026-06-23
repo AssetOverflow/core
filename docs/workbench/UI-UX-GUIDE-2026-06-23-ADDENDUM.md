@@ -1,7 +1,7 @@
 # CORE Workbench UI/UX Guide Addendum — Catch-up Baseline
 
-**Date:** 2026-06-23  
-**Status:** Addendum to `docs/workbench/UI-UX-GUIDE.md`  
+**Date:** 2026-06-23
+**Status:** Addendum to `docs/workbench/UI-UX-GUIDE.md`
 **Reason:** Workbench/UI must catch up to proposal-first construction, residual-gated practice, quantity-entity candidate operators, and generalization audit governance.
 
 ## 1. Authoritative posture

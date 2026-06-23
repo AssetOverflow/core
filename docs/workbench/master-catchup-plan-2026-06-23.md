@@ -1,8 +1,8 @@
 # Workbench/UI Master Catch-up Plan
 
-**Date:** 2026-06-23  
-**Status:** Master phased plan for Workbench/UI catch-up  
-**Scope:** Workbench UI/UX, backend read models, proposal surfaces, eval/governance surfaces, demo readiness  
+**Date:** 2026-06-23
+**Status:** Master phased plan for Workbench/UI catch-up
+**Scope:** Workbench UI/UX, backend read models, proposal surfaces, eval/governance surfaces, demo readiness
 
 ## 0. North Star
 

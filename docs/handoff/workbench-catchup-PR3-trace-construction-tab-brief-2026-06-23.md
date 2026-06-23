@@ -1,8 +1,8 @@
 # Workbench Catch-up PR-3 Brief — Trace Construction Tab
 
-**Target PR title:** `feat(workbench-ui): add Trace construction tab`  
-**Base:** after `feat(workbench): expose construction evidence read model`  
-**Scope:** frontend UI and client hooks only  
+**Target PR title:** `feat(workbench-ui): add Trace construction tab`
+**Base:** after `feat(workbench): expose construction evidence read model`
+**Scope:** frontend UI and client hooks only
 
 ## Goal
 
