@@ -40,18 +40,19 @@ function boolLabel(value: boolean): string {
   return value ? "true" : "false";
 }
 
-function listLabel(values: readonly string[]): string {
-  return values.length > 0 ? values.join(", ") : "none";
+function listLabel(values: readonly string[] | null | undefined): string {
+  return values && values.length > 0 ? values.join(", ") : "none";
 }
 
 function sourceSpanRows(evidence: PracticeEvidence): PracticeEvidenceSummaryRow[] {
   const rows: PracticeEvidenceSummaryRow[] = [];
-  const append = (prefix: string, spans: readonly PracticeSourceSpanView[]) => {
+  const append = (prefix: string, spans: readonly PracticeSourceSpanView[] | null | undefined) => {
+    if (!spans) return;
     spans.forEach((span, index) => {
       rows.push({ key: `${prefix}.${index + 1}`, value: practiceSourceSpanLabel(span) });
     });
   };
-  if (evidence.sealed_trace !== null) {
+  if (evidence.sealed_trace != null) {
     append("sealed_trace", evidence.sealed_trace.evidence_spans);
   }
   return rows;
@@ -105,11 +106,12 @@ function traceRefusalRows(refusal: PracticeTraceRefusalView): PracticeEvidenceSu
 }
 
 function detailSections(evidence: PracticeEvidence): PracticeEvidenceDetailSection[] {
+  const chain = evidence.chain ?? [];
   return [
     {
       title: "Evidence chain",
       emptyMessage: "No sealed practice chain cards recorded.",
-      items: evidence.chain.map((card, index) => ({
+      items: chain.map((card, index) => ({
         title: `card ${index + 1}: ${card.kind}`,
         rows: cardRows(card),
       })),
@@ -118,7 +120,7 @@ function detailSections(evidence: PracticeEvidence): PracticeEvidenceDetailSecti
       title: "Sealed trace",
       emptyMessage: "No sealed practice trace recorded.",
       items:
-        evidence.sealed_trace === null
+        evidence.sealed_trace == null
           ? []
           : [
               {
@@ -131,7 +133,7 @@ function detailSections(evidence: PracticeEvidence): PracticeEvidenceDetailSecti
       title: "Trace refusal",
       emptyMessage: "No practice trace refusal recorded.",
       items:
-        evidence.trace_refusal === null
+        evidence.trace_refusal == null
           ? []
           : [
               {
@@ -144,6 +146,11 @@ function detailSections(evidence: PracticeEvidence): PracticeEvidenceDetailSecti
 }
 
 export function practiceEvidencePanelModel(evidence: PracticeEvidence): PracticeEvidencePanelModel {
+  const chain = evidence.chain ?? [];
+  const sealedTrace = evidence.sealed_trace;
+  const traceRefusal = evidence.trace_refusal;
+  const sourceSpanCount = sealedTrace?.evidence_spans?.length ?? 0;
+
   return {
     status: evidence.status,
     emptyMessage: practiceEvidenceEmptyMessage(evidence),
@@ -161,15 +168,12 @@ export function practiceEvidencePanelModel(evidence: PracticeEvidence): Practice
       { key: "missing_reason", value: evidence.missing_reason ?? "none" },
     ],
     countRows: [
-      { key: "chain_cards", value: String(evidence.chain.length) },
-      { key: "sealed_trace", value: evidence.sealed_trace === null ? "0" : "1" },
-      { key: "trace_refusal", value: evidence.trace_refusal === null ? "0" : "1" },
-      {
-        key: "source_spans",
-        value: String(evidence.sealed_trace === null ? 0 : evidence.sealed_trace.evidence_spans.length),
-      },
+      { key: "chain_cards", value: String(chain.length) },
+      { key: "sealed_trace", value: sealedTrace == null ? "0" : "1" },
+      { key: "trace_refusal", value: traceRefusal == null ? "0" : "1" },
+      { key: "source_spans", value: String(sourceSpanCount) },
     ],
-    chainRows: evidence.chain.map((card) => ({
+    chainRows: chain.map((card) => ({
       key: card.kind,
       value: `${card.status} — ${listLabel(card.refs)}`,
     })),
