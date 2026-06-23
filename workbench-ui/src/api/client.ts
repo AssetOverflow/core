@@ -41,6 +41,8 @@ import type {
   MathRatifyResult,
   HealthStatus,
 } from "../types/api";
+import type { ConstructionEvidence } from "../types/constructionEvidence";
+
 
 export class WorkbenchApiError extends Error {
   constructor(
@@ -214,6 +216,13 @@ export async function fetchTraceBundle(turnId: number): Promise<EvidenceBundle> 
     `/trace/${encodeURIComponent(String(turnId))}/bundle`,
   );
 }
+
+export async function fetchTraceConstruction(turnId: number): Promise<ConstructionEvidence> {
+  return apiFetch<ConstructionEvidence>(
+    `/trace/${encodeURIComponent(String(turnId))}/construction`,
+  );
+}
+
 
 export async function fetchTour(): Promise<DeterminismTour> {
   return apiFetch<DeterminismTour>("/tour");

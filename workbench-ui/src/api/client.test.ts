@@ -8,6 +8,7 @@ import {
   fetchTracePipeline,
   fetchTraceTurn,
   fetchTraceTurns,
+  fetchTraceConstruction,
   runDemo,
   WorkbenchApiError,
 } from "./client";
@@ -192,6 +193,21 @@ describe("trace fetchers", () => {
     expect(fetchMock.mock.calls[0][0]).toBe("http://127.0.0.1:8765/trace/7/pipeline");
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     expect(init.method).toBeUndefined();
+  });
+
+  it("unwraps the /trace/:id/construction endpoint", async () => {
+    const evidence = {
+      schema_version: "construction_evidence_v1",
+      turn_id: 7,
+      status: "missing_evidence",
+    };
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ ok: true, generated_at: "now", data: evidence }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchTraceConstruction(7)).resolves.toEqual(evidence);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://127.0.0.1:8765/trace/7/construction");
   });
 });
 
