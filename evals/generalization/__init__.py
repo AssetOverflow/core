@@ -14,6 +14,13 @@ from evals.generalization.cache_verifier import (
     CacheVerificationReport,
     verify_local_generalization_cache,
 )
+from evals.generalization.item_schema import (
+    GENERALIZATION_AUDIT_RUNNER_POLICY_VERSION,
+    GeneralizationAuditItem,
+    GeneralizationAuditOutcome,
+    GeneralizationAuditReport,
+)
+from evals.generalization.audit_runner import run_generalization_audit
 
 __all__ = [
     "GeneralizationBenchmarkManifest",
@@ -24,4 +31,9 @@ __all__ = [
     "CacheVerificationRecord",
     "CacheVerificationReport",
     "verify_local_generalization_cache",
+    "GENERALIZATION_AUDIT_RUNNER_POLICY_VERSION",
+    "GeneralizationAuditItem",
+    "GeneralizationAuditOutcome",
+    "GeneralizationAuditReport",
+    "run_generalization_audit",
 ]
