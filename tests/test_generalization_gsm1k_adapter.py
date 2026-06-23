@@ -181,7 +181,9 @@ def test_does_not_download_or_write_cache(
 
 def test_repository_contains_no_committed_gsm1k_examples() -> None:
     """Check that the repository contains no committed GSM1K examples or dataset files."""
-    repo_root = Path(__file__).parent.parent.parent.parent
+    repo_root = Path(__file__).resolve().parents[1]
+    assert (repo_root / "evals" / "generalization").is_dir()
+    assert (repo_root / ".git").exists()
 
     try:
         result = subprocess.run(
