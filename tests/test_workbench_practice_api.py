@@ -120,4 +120,3 @@ def test_trace_practice_route_does_not_steal_construction_route() -> None:
     assert construction.payload["data"]["schema_version"] == "construction_evidence_v1"
     assert practice.status == 200
     assert practice.payload["data"]["schema_version"] == "practice_evidence_v1"
-}
