@@ -6,7 +6,10 @@ import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
 import { traceConstructionReproducer } from "./constructionEvidenceEndpoint";
-import { constructionEvidencePanelModel } from "./constructionEvidencePanelModel";
+import {
+  type ConstructionEvidenceDetailSection,
+  constructionEvidencePanelModel,
+} from "./constructionEvidencePanelModel";
 
 export interface ConstructionEvidencePanelProps {
   evidence?: ConstructionEvidence | null;
@@ -18,6 +21,36 @@ export interface ConstructionEvidencePanelProps {
 
 function rowValue(value: string) {
   return value;
+}
+
+function DetailSection({ section }: { section: ConstructionEvidenceDetailSection }) {
+  return (
+    <section className="grid gap-2 rounded-md border border-[var(--color-border-subtle)] p-3">
+      <h3 className="m-0 text-xs font-semibold uppercase text-[var(--color-text-secondary)]">
+        {section.title}
+      </h3>
+      {section.items.length === 0 ? (
+        <p className="m-0 text-sm text-[var(--color-text-secondary)]">{section.emptyMessage}</p>
+      ) : (
+        <div className="grid gap-3">
+          {section.items.map((item) => (
+            <article className="grid gap-2" key={item.title}>
+              <h4 className="m-0 font-mono text-xs text-[var(--color-text-primary)]">
+                {item.title}
+              </h4>
+              <MetadataTable
+                rows={item.rows.map((row) => ({
+                  key: row.key,
+                  value: row.value,
+                  mono: true,
+                }))}
+              />
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
 
 export function ConstructionEvidencePanel({
@@ -90,6 +123,31 @@ export function ConstructionEvidencePanel({
           }))}
         />
       ) : null}
+
+      <div className="grid gap-3" data-testid="construction-evidence-details">
+        {model.detailSections.map((section) => (
+          <DetailSection key={section.title} section={section} />
+        ))}
+      </div>
+
+      <section className="grid gap-2 rounded-md border border-[var(--color-border-subtle)] p-3">
+        <h3 className="m-0 text-xs font-semibold uppercase text-[var(--color-text-secondary)]">
+          Source span checks
+        </h3>
+        {model.sourceSpanRows.length > 0 ? (
+          <MetadataTable
+            rows={model.sourceSpanRows.map((row) => ({
+              key: row.key,
+              value: row.value,
+              mono: true,
+            }))}
+          />
+        ) : (
+          <p className="m-0 text-sm text-[var(--color-text-secondary)]">
+            No source spans recorded.
+          </p>
+        )}
+      </section>
 
       <div>
         <div className="mb-1 text-xs font-semibold text-[var(--color-text-secondary)]">

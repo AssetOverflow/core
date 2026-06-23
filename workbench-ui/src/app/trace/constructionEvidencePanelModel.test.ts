@@ -17,6 +17,91 @@ const missingEvidence: ConstructionEvidence = {
   serving_allowed: false,
 };
 
+function recordedEvidence(): ConstructionEvidence {
+  return {
+    ...missingEvidence,
+    status: "recorded",
+    missing_reason: null,
+    problem_text: "Lena has 3 marbles.",
+    proposals: [
+      {
+        family_id: "binding.quantity_entity",
+        relation_type: "quantity_entity",
+        candidate_organ: "quantity_entity_binding_candidate.v1",
+        status: "proposed",
+        evidence_spans: [{ start: 9, end: 10, text: "3" }],
+        role_obligations: [
+          {
+            role: "quantity",
+            required: true,
+            description: "source quantity mention",
+          },
+          {
+            role: "entity",
+            required: true,
+            description: "source entity mention",
+          },
+        ],
+        diagnostic_only: true,
+        serving_allowed: false,
+      },
+    ],
+    mentions: [
+      {
+        mention_id: "m_lena",
+        kind: "entity",
+        surface: "Lena",
+        span: { start: 0, end: 4, text: "Lena" },
+        fact_id: null,
+      },
+      {
+        mention_id: "m_bad",
+        kind: "entity",
+        surface: "Lena",
+        span: { start: 0, end: 4, text: "Lena!" },
+        fact_id: null,
+      },
+    ],
+    bindings: [
+      {
+        binding_type: "quantity_to_entity",
+        source_mention_id: "m_quantity",
+        target_mention_id: "m_lena",
+        evidence_spans: [{ start: 0, end: 10, text: "Lena has 3" }],
+      },
+    ],
+    bound_relations: [
+      {
+        relation_type: "quantity_entity",
+        roles: [
+          {
+            role: "entity",
+            target_id: "m_lena",
+            evidence_spans: [{ start: 0, end: 4, text: "Lena" }],
+          },
+          {
+            role: "quantity",
+            target_id: "m_quantity",
+            evidence_spans: [{ start: 9, end: 10, text: "3" }],
+          },
+        ],
+        evidence_spans: [{ start: 0, end: 10, text: "Lena has 3" }],
+      },
+    ],
+    contract_assessments: [
+      {
+        candidate_organ: "quantity_entity_binding_candidate.v1",
+        family_id: "binding.quantity_entity",
+        missing_bindings: ["entity"],
+        unresolved_hazards: ["ambiguous_quantity"],
+        runnable: false,
+        explanation: "missing entity",
+        evidence_spans: [{ start: 0, end: 4, text: "Lena!" }],
+      },
+    ],
+  };
+}
+
 describe("construction evidence panel model", () => {
   it("models missing evidence honestly", () => {
     const model = constructionEvidencePanelModel(missingEvidence);
@@ -38,27 +123,13 @@ describe("construction evidence panel model", () => {
       { key: "bound_relations", value: "0" },
       { key: "contract_assessments", value: "0" },
     ]);
+    expect(model.sourceSpanRows).toEqual([]);
+    expect(model.detailSections.find((section) => section.title === "Proposals")?.items).toEqual([]);
     expect(model.showRaw).toBe(false);
   });
 
   it("models recorded contract assessment blockers", () => {
-    const model = constructionEvidencePanelModel({
-      ...missingEvidence,
-      status: "recorded",
-      missing_reason: null,
-      problem_text: "Lena has 3 marbles.",
-      contract_assessments: [
-        {
-          candidate_organ: "quantity_entity_binding_candidate.v1",
-          family_id: "binding.quantity_entity",
-          missing_bindings: ["entity"],
-          unresolved_hazards: ["ambiguous_quantity"],
-          runnable: false,
-          explanation: "missing entity",
-          evidence_spans: [],
-        },
-      ],
-    });
+    const model = constructionEvidencePanelModel(recordedEvidence());
 
     expect(model.emptyMessage).toBe(null);
     expect(model.countRows.find((row) => row.key === "contract_assessments")?.value).toBe("1");
@@ -69,5 +140,50 @@ describe("construction evidence panel model", () => {
       },
     ]);
     expect(model.showRaw).toBe(true);
+  });
+
+  it("models proposals, mentions, bindings, bound relations, and exact span checks", () => {
+    const model = constructionEvidencePanelModel(recordedEvidence());
+
+    const proposals = model.detailSections.find((section) => section.title === "Proposals");
+    expect(proposals?.items[0]).toMatchObject({
+      title: "proposal 1: quantity_entity_binding_candidate.v1",
+      rows: expect.arrayContaining([
+        { key: "status", value: "proposed" },
+        { key: "diagnostic_only", value: "true" },
+        { key: "serving_allowed", value: "false" },
+        {
+          key: "authority",
+          value: "diagnostic proposal only; contract assessment determines runnable status",
+        },
+      ]),
+    });
+
+    const mentions = model.detailSections.find((section) => section.title === "Mentions");
+    expect(mentions?.items.map((item) => item.title)).toEqual([
+      "mention m_lena: Lena",
+      "mention m_bad: Lena",
+    ]);
+
+    const bindings = model.detailSections.find((section) => section.title === "Bindings");
+    expect(bindings?.items[0].rows).toContainEqual({
+      key: "target_mention_id",
+      value: "m_lena",
+    });
+
+    const relations = model.detailSections.find((section) => section.title === "Bound relations");
+    expect(relations?.items[0].rows).toContainEqual({
+      key: "roles",
+      value: "entity=m_lena, quantity=m_quantity",
+    });
+
+    expect(model.sourceSpanRows).toEqual(
+      expect.arrayContaining([
+        { key: "proposal 1.1", value: "9:10 3 — exact" },
+        { key: "mention m_lena", value: "0:4 Lena — exact" },
+        { key: "mention m_bad", value: "0:4 Lena! — inexact" },
+        { key: "contract_assessment 1.1", value: "0:4 Lena! — inexact" },
+      ]),
+    );
   });
 });
