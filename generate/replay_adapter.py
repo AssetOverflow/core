@@ -7,8 +7,10 @@ import json
 from dataclasses import dataclass
 from enum import Enum, unique
 
+from generate.candidate_operator import CandidateOperatorResult
 from generate.geometric_search_run import CandidateAttempt, GeometricSearchRun
 from generate.kernel_facts import SourceSpan
+from generate.run_attempt_binding import CandidateAttemptRunBinding
 
 CONTRACT_PROOF_REPLAY_POLICY_VERSION = "contract_proof_replay.v1"
 REPLAY_ADAPTER_POLICY_VERSION = CONTRACT_PROOF_REPLAY_POLICY_VERSION
@@ -299,6 +301,63 @@ def _refusal(
     )
 
 
+def _replay_input(
+    *,
+    replay_policy_version: str,
+    run: GeometricSearchRun,
+    attempt: CandidateAttempt,
+    candidate_digest: str,
+    candidate_reconstruction_digest: str,
+    candidate_organ: str,
+    contract_replay_target: str,
+    proof_obligation_refs: tuple[str, ...],
+    schema_versions: tuple[tuple[str, str], ...],
+) -> ReplayAdapterInput:
+    input_digest = _canonical_digest(
+        _input_payload(
+            replay_policy_version=replay_policy_version,
+            run_id=run.run_id,
+            run_policy_version=run.run_policy_version,
+            attempt_id=attempt.attempt_id,
+            attempt_index=attempt.attempt_index,
+            candidate_digest=candidate_digest,
+            candidate_reconstruction_digest=candidate_reconstruction_digest,
+            problem_frame_digest=run.problem_frame_digest,
+            original_contract_assessment_id=run.contract_assessment_id,
+            candidate_organ=candidate_organ,
+            residual_ids=run.residual_ids,
+            gate_decision_id=run.gate_decision_id,
+            budget_id=run.budget_id,
+            operator_set_id=run.operator_set_id,
+            operator_set_version=run.operator_set_version,
+            contract_replay_target=contract_replay_target,
+            proof_obligation_refs=proof_obligation_refs,
+            schema_versions=schema_versions,
+        )
+    )
+    return ReplayAdapterInput(
+        input_digest=input_digest,
+        replay_policy_version=replay_policy_version,
+        run_id=run.run_id,
+        run_policy_version=run.run_policy_version,
+        attempt_id=attempt.attempt_id,
+        attempt_index=attempt.attempt_index,
+        candidate_digest=candidate_digest,
+        candidate_reconstruction_digest=candidate_reconstruction_digest,
+        problem_frame_digest=run.problem_frame_digest,
+        original_contract_assessment_id=run.contract_assessment_id,
+        candidate_organ=candidate_organ,
+        residual_ids=run.residual_ids,
+        gate_decision_id=run.gate_decision_id,
+        budget_id=run.budget_id,
+        operator_set_id=run.operator_set_id,
+        operator_set_version=run.operator_set_version,
+        contract_replay_target=contract_replay_target,
+        proof_obligation_refs=proof_obligation_refs,
+        schema_versions=schema_versions,
+    )
+
+
 def build_replay_adapter_input(
     *,
     run: GeometricSearchRun,
@@ -436,45 +495,296 @@ def build_replay_adapter_input(
 
     assert isinstance(attempt_index, int)
     assert contract_replay_target is not None
-    input_digest = _canonical_digest(
-        _input_payload(
-            replay_policy_version=replay_policy_version,
-            run_id=run.run_id,
-            run_policy_version=run.run_policy_version,
-            attempt_id=attempt.attempt_id,
-            attempt_index=attempt_index,
-            candidate_digest=candidate_digest,
-            candidate_reconstruction_digest=candidate_reconstruction_digest,
-            problem_frame_digest=problem_frame_digest,
-            original_contract_assessment_id=original_contract_assessment_id,
-            candidate_organ=candidate_organ,
-            residual_ids=run.residual_ids,
-            gate_decision_id=run.gate_decision_id,
-            budget_id=run.budget_id,
-            operator_set_id=run.operator_set_id,
-            operator_set_version=run.operator_set_version,
-            contract_replay_target=contract_replay_target,
-            proof_obligation_refs=proof_obligation_refs,
-            schema_versions=schema_versions,
-        )
-    )
-    return ReplayAdapterInput(
-        input_digest=input_digest,
+    return _replay_input(
         replay_policy_version=replay_policy_version,
-        run_id=run.run_id,
-        run_policy_version=run.run_policy_version,
-        attempt_id=attempt.attempt_id,
-        attempt_index=attempt_index,
+        run=run,
+        attempt=attempt,
         candidate_digest=candidate_digest,
         candidate_reconstruction_digest=candidate_reconstruction_digest,
-        problem_frame_digest=problem_frame_digest,
-        original_contract_assessment_id=original_contract_assessment_id,
         candidate_organ=candidate_organ,
-        residual_ids=run.residual_ids,
-        gate_decision_id=run.gate_decision_id,
-        budget_id=run.budget_id,
-        operator_set_id=run.operator_set_id,
-        operator_set_version=run.operator_set_version,
+        contract_replay_target=contract_replay_target,
+        proof_obligation_refs=proof_obligation_refs,
+        schema_versions=schema_versions,
+    )
+
+
+def _bound_refusal(
+    *,
+    run: GeometricSearchRun | None,
+    binding: CandidateAttemptRunBinding | None,
+    result: CandidateOperatorResult | None,
+    replay_disposition: ReplayRefusalReason,
+    reason_code: str,
+    replay_policy_version: str = CONTRACT_PROOF_REPLAY_POLICY_VERSION,
+) -> ReplayAdapterRefusal:
+    return _refusal(
+        replay_policy_version=replay_policy_version,
+        input_digest=None,
+        run_id=run.run_id if isinstance(run, GeometricSearchRun) else None,
+        attempt_id=binding.candidate_attempt_id
+        if isinstance(binding, CandidateAttemptRunBinding)
+        else _text_or_none(_safe_getattr(result, "attempt_id")),
+        candidate_digest=binding.candidate_digest
+        if isinstance(binding, CandidateAttemptRunBinding)
+        else _text_or_none(_safe_getattr(result, "candidate_digest")),
+        replay_disposition=replay_disposition,
+        reason_codes=(reason_code,),
+    )
+
+
+def build_replay_adapter_input_from_binding(
+    *,
+    run: GeometricSearchRun,
+    binding: CandidateAttemptRunBinding,
+    candidate_operator_result: CandidateOperatorResult,
+    proof_obligation_refs: tuple[str, ...] = (),
+    schema_versions: tuple[tuple[str, str], ...] = (),
+    replay_policy_version: str = CONTRACT_PROOF_REPLAY_POLICY_VERSION,
+) -> ReplayAdapterInput | ReplayAdapterRefusal:
+    """Build replay input from external CandidateAttemptRunBinding evidence."""
+
+    if not isinstance(run, GeometricSearchRun):
+        return _bound_refusal(
+            run=None,
+            binding=None,
+            result=None,
+            replay_disposition=ReplayRefusalReason.INVALID_REPLAY_INPUT,
+            reason_code="invalid_run_type",
+            replay_policy_version=replay_policy_version,
+        )
+    if not isinstance(binding, CandidateAttemptRunBinding):
+        return _bound_refusal(
+            run=run,
+            binding=None,
+            result=None,
+            replay_disposition=ReplayRefusalReason.INVALID_REPLAY_INPUT,
+            reason_code="invalid_binding_type",
+            replay_policy_version=replay_policy_version,
+        )
+    if not isinstance(candidate_operator_result, CandidateOperatorResult):
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=None,
+            replay_disposition=ReplayRefusalReason.INVALID_REPLAY_INPUT,
+            reason_code="invalid_operator_result_type",
+            replay_policy_version=replay_policy_version,
+        )
+    if replay_policy_version != CONTRACT_PROOF_REPLAY_POLICY_VERSION:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.UNSUPPORTED_REPLAY_POLICY,
+            reason_code="unsupported_replay_policy_version",
+            replay_policy_version=replay_policy_version,
+        )
+    if proof_obligation_refs and not _valid_string_tuple(proof_obligation_refs):
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.INVALID_REPLAY_INPUT,
+            reason_code="invalid_proof_obligation_refs",
+        )
+    if not _valid_schema_versions(schema_versions):
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.UNSUPPORTED_SCHEMA_VERSION,
+            reason_code="unsupported_schema_version",
+        )
+
+    attempt = candidate_operator_result.candidate_attempt
+    reconstruction = candidate_operator_result.candidate_reconstruction
+
+    if binding.original_run_id != run.run_id:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_run_mismatch",
+        )
+    if binding.operator_result_id != candidate_operator_result.operator_result_id:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_result_mismatch",
+        )
+    if binding.run_attempt_membership != "structurally_bound":
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_not_structurally_bound",
+        )
+    if binding.reason_codes != ():
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_not_successful",
+        )
+    if not _nonempty_text(binding.candidate_attempt_ref):
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_missing_attempt_ref",
+        )
+    if candidate_operator_result.geometric_search_run_id != run.run_id:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="result_run_mismatch",
+        )
+    if binding.candidate_attempt_id != candidate_operator_result.attempt_id:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_result_mismatch",
+        )
+    if binding.candidate_attempt_id != attempt.attempt_id:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_attempt_mismatch",
+        )
+    if binding.attempt_index != candidate_operator_result.attempt_index:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_result_mismatch",
+        )
+    if binding.attempt_index != attempt.attempt_index:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_attempt_mismatch",
+        )
+    if binding.candidate_digest != candidate_operator_result.candidate_digest:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_result_mismatch",
+        )
+    if binding.candidate_digest != attempt.candidate_digest:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_attempt_mismatch",
+        )
+    if binding.candidate_reconstruction_digest != candidate_operator_result.candidate_reconstruction_digest:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_result_mismatch",
+        )
+    if binding.candidate_reconstruction_digest != reconstruction.candidate_reconstruction_digest:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_reconstruction_mismatch",
+        )
+    if attempt.input_digest != candidate_operator_result.input_digest:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="attempt_input_digest_mismatch",
+        )
+    if binding.evidence_spans != candidate_operator_result.evidence_spans:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="binding_evidence_mismatch",
+        )
+    if binding.evidence_spans != attempt.evidence_spans:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="attempt_evidence_mismatch",
+        )
+    if binding.evidence_spans != reconstruction.evidence_spans:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="reconstruction_evidence_mismatch",
+        )
+    if reconstruction.problem_frame_digest != run.problem_frame_digest:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="reconstruction_problem_frame_mismatch",
+        )
+    if reconstruction.original_contract_assessment_id != run.contract_assessment_id:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="reconstruction_assessment_mismatch",
+        )
+    if reconstruction.source_residual_id not in run.residual_ids:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.CANDIDATE_IDENTITY_MISMATCH,
+            reason_code="reconstruction_residual_mismatch",
+        )
+
+    contract_replay_target = _contract_replay_target(candidate_operator_result.candidate_organ)
+    if contract_replay_target is None:
+        return _bound_refusal(
+            run=run,
+            binding=binding,
+            result=candidate_operator_result,
+            replay_disposition=ReplayRefusalReason.INVALID_REPLAY_INPUT,
+            reason_code="unsupported_candidate_organ",
+        )
+
+    return _replay_input(
+        replay_policy_version=replay_policy_version,
+        run=run,
+        attempt=attempt,
+        candidate_digest=binding.candidate_digest,
+        candidate_reconstruction_digest=binding.candidate_reconstruction_digest,
+        candidate_organ=candidate_operator_result.candidate_organ,
         contract_replay_target=contract_replay_target,
         proof_obligation_refs=proof_obligation_refs,
         schema_versions=schema_versions,
@@ -677,9 +987,7 @@ def _result(
     }
     replay_result_id = _canonical_digest(result_payload)
     safe_explanation = explanation or (
-        "Replay adapter classified candidate as "
-        + replay_disposition.value
-        + "."
+        "Replay adapter classified candidate as " + replay_disposition.value + "."
     )
     return ReplayAdapterResult(
         replay_result_id=replay_result_id,
