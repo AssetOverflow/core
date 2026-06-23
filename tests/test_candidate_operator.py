@@ -1108,15 +1108,47 @@ def test_module_coupling_and_side_effect_guards() -> None:
         "time",
         "uuid4",
     }.isdisjoint(calls)
-    for upstream in (
+    allowed_records = {
+        "CandidateOperatorResult",
+        "CandidateReconstruction",
+        "CandidateOperatorRefusal",
+    }
+    forbidden_producers = {
+        "build_missing_role_candidate",
+        "candidate_operator_set_id",
+        "GroundedUnaryDeltaCue",
+    }
+    for downstream_path in (
         "generate/geometric_search_run.py",
         "generate/replay_adapter.py",
         "generate/sealed_practice_trace.py",
         "generate/search_gate.py",
         "generate/compute_budget.py",
         "generate/contract_residuals.py",
+        "generate/run_attempt_binding.py",
     ):
-        assert "candidate_operator" not in Path(upstream).read_text("utf-8")
+        ds_source = Path(downstream_path).read_text("utf-8")
+        ds_tree = ast.parse(ds_source)
+        ds_imported_names: set[str] = set()
+        ds_calls: set[str] = set()
+        for node in ast.walk(ds_tree):
+            if isinstance(node, ast.ImportFrom):
+                if node.module == "generate.candidate_operator":
+                    ds_imported_names.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name):
+                    ds_calls.add(node.func.id)
+                elif isinstance(node.func, ast.Attribute):
+                    ds_calls.add(node.func.attr)
+
+        assert ds_imported_names <= allowed_records, (
+            f"{downstream_path} imported forbidden candidate_operator records: "
+            f"{ds_imported_names - allowed_records}"
+        )
+        assert forbidden_producers.isdisjoint(ds_calls), (
+            f"{downstream_path} called forbidden candidate_operator producers: "
+            f"{ds_calls & forbidden_producers}"
+        )
 
 
 def test_no_filesystem_network_clock_random_or_environment_identity() -> None:

@@ -312,3 +312,116 @@ def test_refusal_is_not_partial_binding() -> None:
     assert isinstance(outcome, CandidateAttemptRunBindingRefusal)
     assert not hasattr(outcome, "binding_id")
     assert not hasattr(outcome, "candidate_attempt_ref")
+
+
+def test_module_coupling_and_side_effect_guards() -> None:
+    import ast
+    from pathlib import Path
+
+    path = Path("generate/run_attempt_binding.py")
+    source = path.read_text("utf-8")
+    tree = ast.parse(source)
+    imports: set[str] = set()
+    imported_names: set[str] = set()
+    calls: set[str] = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imports.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            imports.add(node.module or "")
+            imported_names.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name):
+                calls.add(node.func.id)
+            elif isinstance(node.func, ast.Attribute):
+                calls.add(node.func.attr)
+
+    assert imports <= {
+        "__future__",
+        "dataclasses",
+        "enum",
+        "hashlib",
+        "json",
+        "generate.candidate_operator",
+        "generate.geometric_search_run",
+        "generate.kernel_facts",
+    }
+
+    assert {
+        "build_missing_role_candidate",
+        "candidate_operator_set_id",
+        "GroundedUnaryDeltaCue",
+        "initialize_geometric_search_run",
+        "build_replay_adapter_input",
+        "build_replay_adapter_input_from_binding",
+        "classify_replay_result",
+        "build_practice_trace_input",
+        "build_bound_practice_trace_input",
+        "seal_practice_trace",
+        "seal_bound_practice_trace",
+    }.isdisjoint(imported_names)
+
+    assert {
+        "build_missing_role_candidate",
+        "candidate_operator_set_id",
+        "GroundedUnaryDeltaCue",
+        "initialize_geometric_search_run",
+        "build_replay_adapter_input",
+        "build_replay_adapter_input_from_binding",
+        "classify_replay_result",
+        "build_practice_trace_input",
+        "build_bound_practice_trace_input",
+        "seal_practice_trace",
+        "seal_bound_practice_trace",
+        "repair",
+        "serve",
+        "store",
+        "write",
+        "open",
+        "write_text",
+        "write_bytes",
+        "request",
+        "urlopen",
+        "sleep",
+        "time",
+        "uuid4",
+        "random",
+        "subprocess",
+    }.isdisjoint(calls)
+
+    forbidden_module_families = (
+        "runtime", "serving", "workbench", "teaching", "proposal", "pack", "policy", "identity", "eval"
+    )
+    for imp in imports:
+        assert not any(imp.startswith(family) for family in forbidden_module_families), f"Imported forbidden module family: {imp}"
+
+
+def test_no_filesystem_network_clock_random_or_environment_identity() -> None:
+    from pathlib import Path
+    source = Path("generate/run_attempt_binding.py").read_text("utf-8")
+    forbidden_fragments = (
+        "import os",
+        "from os",
+        "import pathlib",
+        "from pathlib",
+        "import random",
+        "from random",
+        "import time",
+        "from time",
+        "import datetime",
+        "from datetime",
+        "import uuid",
+        "from uuid",
+        "import socket",
+        "from socket",
+        "import subprocess",
+        "from subprocess",
+        "import requests",
+        "from requests",
+        "os.environ",
+        "getenv(",
+        "gethostname(",
+        "Path(",
+    )
+    assert not any(fragment in source for fragment in forbidden_fragments)
