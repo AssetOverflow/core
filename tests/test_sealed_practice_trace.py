@@ -404,6 +404,7 @@ def _expected_input_digest(
             "compute_budget_id": compute_budget_id,
             "geometric_search_run_id": geometric_search_run_id,
             "candidate_attempt_ids": list(candidate_attempt_ids),
+            "candidate_attempt_binding_ids": [],
             "replay_result_ids": list(replay_result_ids),
             "replay_refusal_ids": list(replay_refusal_ids),
             "schema_versions": [[name, version] for name, version in schema_versions],
@@ -426,6 +427,7 @@ def _expected_trace_id(
         trace_input.compute_budget_id,
         trace_input.geometric_search_run_id,
         *trace_input.candidate_attempt_ids,
+        *trace_input.candidate_attempt_binding_ids,
         *trace_input.replay_result_ids,
         *trace_input.replay_refusal_ids,
     )
@@ -441,6 +443,7 @@ def _expected_trace_id(
             "compute_budget_id": trace_input.compute_budget_id,
             "geometric_search_run_id": trace_input.geometric_search_run_id,
             "candidate_attempt_ids": list(trace_input.candidate_attempt_ids),
+            "candidate_attempt_binding_ids": list(trace_input.candidate_attempt_binding_ids),
             "replay_result_ids": list(trace_input.replay_result_ids),
             "replay_refusal_ids": list(trace_input.replay_refusal_ids),
             "upstream_identity_chain": list(identity_chain),
@@ -481,6 +484,8 @@ def test_public_api_exports_are_exact() -> None:
         "PracticeTraceOutcome",
         "build_practice_trace_input",
         "seal_practice_trace",
+        "build_bound_practice_trace_input",
+        "seal_bound_practice_trace",
     )
     assert SEALED_PRACTICE_TRACE_POLICY_VERSION == "sealed_practice_trace.v1"
     assert tuple(sealed_trace.__all__) == expected
@@ -1036,7 +1041,10 @@ def test_module_coupling_and_side_effect_guards() -> None:
         "project_contract_residuals",
         "determine",
         "build_replay_adapter_input",
+        "build_replay_adapter_input_from_binding",
         "classify_replay_result",
+        "build_missing_role_candidate",
+        "bind_candidate_attempt_to_run",
     }.isdisjoint(imported_names)
     assert {
         "decide_search_gate",
@@ -1045,6 +1053,10 @@ def test_module_coupling_and_side_effect_guards() -> None:
         "assess_contracts",
         "project_contract_residuals",
         "determine",
+        "build_missing_role_candidate",
+        "bind_candidate_attempt_to_run",
+        "build_replay_adapter_input_from_binding",
+        "classify_replay_result",
         "repair",
         "serve",
         "store",
