@@ -12,7 +12,8 @@ export function practiceEvidenceEmptyMessage(evidence: PracticeEvidence): string
   if (evidence.status === "missing_evidence") {
     return evidence.missing_reason ?? "No sealed practice evidence recorded for this turn.";
   }
-  return evidence.chain.length > 0 || evidence.sealed_trace !== null || evidence.trace_refusal !== null
+  const chain = evidence.chain ?? [];
+  return chain.length > 0 || evidence.sealed_trace != null || evidence.trace_refusal != null
     ? null
     : "No sealed practice evidence recorded for this turn.";
 }
