@@ -131,7 +131,7 @@ def _chain() -> tuple[ContractResidual, GeometricSearchRun, object]:
         gate_decision=gate,
         compute_budget=budget,
         operator_set_id=candidate_operator_set_id(),
-        operator_set_version="candidate_operators.v1",
+        operator_set_version="candidate_operators.v2",
     )
     assert isinstance(run, GeometricSearchRun)
     result = build_missing_role_candidate(

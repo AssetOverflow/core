@@ -237,7 +237,19 @@ def _expected_operator_set_id() -> str:
                 "budget_charge": {"candidates": 1, "steps": 1},
                 "depth": 1,
                 "max_parallelism": 1,
-            }
+            },
+            {
+                "operator_family": "residual_missing_relation",
+                "operator_name": "quantity_entity_binding_candidate",
+                "operator_version": "quantity_entity_binding_candidate.v1",
+                "allowed_residual_kinds": ["missing_relation"],
+                "allowed_residual_codes": ["local_binding_relation_unbound"],
+                "allowed_candidate_organs": ["quantity_entity_binding"],
+                "max_attempts_per_run": 1,
+                "budget_charge": {"candidates": 1, "steps": 1},
+                "depth": 1,
+                "max_parallelism": 1,
+            },
         ],
         "schema_versions": [],
         "policy_versions": [],
@@ -412,7 +424,7 @@ def test_public_api_exports_are_exact() -> None:
     import generate.candidate_operator as candidate_operator
 
     assert CANDIDATE_OPERATOR_POLICY_VERSION == "candidate_operator.v1"
-    assert CANDIDATE_OPERATOR_SET_VERSION == "candidate_operators.v1"
+    assert CANDIDATE_OPERATOR_SET_VERSION == "candidate_operators.v2"
     assert MISSING_ROLE_CANDIDATE_OPERATOR_NAME == "missing_role_candidate"
     assert MISSING_ROLE_CANDIDATE_OPERATOR_VERSION == "missing_role_candidate.v1"
     assert MISSING_ROLE_RESIDUAL_KIND == "missing_role"
@@ -426,9 +438,15 @@ def test_public_api_exports_are_exact() -> None:
         "MISSING_ROLE_RESIDUAL_KIND",
         "MISSING_ROLE_RESIDUAL_CODE",
         "MISSING_ROLE_CANDIDATE_ORGAN",
+        "QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME",
+        "QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION",
+        "QUANTITY_ENTITY_BINDING_RESIDUAL_KIND",
+        "QUANTITY_ENTITY_BINDING_RESIDUAL_CODE",
+        "QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN",
         "CandidateOperatorRefusalReason",
         "CandidateOperatorPolicy",
         "GroundedUnaryDeltaCue",
+        "GroundedQuantityEntityCue",
         "CandidateOperatorInput",
         "CandidateReconstruction",
         "CandidateOperatorResult",
@@ -436,6 +454,7 @@ def test_public_api_exports_are_exact() -> None:
         "CandidateOperatorOutcome",
         "candidate_operator_set_id",
         "build_missing_role_candidate",
+        "build_quantity_entity_binding_candidate",
     )
 
 
