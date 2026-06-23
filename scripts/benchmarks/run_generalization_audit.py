@@ -107,6 +107,8 @@ def main() -> None:
             if not record.license_ready or not record.checksum_ready:
                 print("Error: benchmark_manifest_unresolved", file=sys.stderr)
                 sys.exit(1)
+            print("Error: dataset_evaluator_unavailable", file=sys.stderr)
+            sys.exit(1)
 
         # Resolve local cache path
         if args.local_cache:
@@ -124,20 +126,12 @@ def main() -> None:
                 print(f"Error reading manifest: {exc}", file=sys.stderr)
                 sys.exit(1)
 
-        # Check existence if not in metadata-only mode
-        if not args.metadata_only and not cache_path.exists():
-            print(
-                f"Error: Cache path does not exist: {cache_path}",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-
-        # If metadata-only and cache doesn't exist, we can exit gracefully
-        if args.metadata_only and not cache_path.exists():
+        # Check existence since we are in metadata-only mode
+        if not cache_path.exists():
             print("Metadata-only validation passed (cache absent).")
             sys.exit(0)
 
-        # Load items
+        # Load items (metadata-only summary)
         adapter_fn = ADAPTERS[dataset_key]
         try:
             items = adapter_fn(
@@ -149,52 +143,22 @@ def main() -> None:
             print(f"Failed to load items: {exc}", file=sys.stderr)
             sys.exit(1)
 
-        # In PR-3, use a dummy evaluator for testing the adapter composition
-        def dummy_evaluator(
-            item: GeneralizationAuditItem,
-        ) -> GeneralizationAuditOutcome:
-            return GeneralizationAuditOutcome(
-                item_id=item.item_id,
-                disposition="correct",
-                residual_kinds=(),
-                candidate_attempt_count=1,
-                binding_failure_count=0,
-                replay_refusal_count=0,
-                sealed_trace_dispositions=("success",),
-                reason_codes=(),
-            )
-
-        try:
-            report = run_generalization_audit(
-                dataset=record.dataset,
-                split=args.split,
-                items=items,
-                evaluator=dummy_evaluator,
-            )
-        except Exception as exc:
-            print(f"Audit Failed: {exc}", file=sys.stderr)
-            sys.exit(1)
-
         if args.json:
-            print(json.dumps(asdict(report), indent=2, sort_keys=True))
+            summary = {
+                "dataset": record.dataset,
+                "split": args.split,
+                "n_items": len(items),
+                "local_cache": str(cache_path),
+                "metadata_only": True,
+            }
+            print(json.dumps(summary, indent=2, sort_keys=True))
         else:
-            print(
-                f"Generalization Audit Report (Policy: {report.policy_version})"
-            )
+            print("Generalization Adapter Summary (Metadata-only)")
             print("=" * 80)
-            print(f"Dataset:                  {report.dataset}")
-            print(f"Split:                    {report.split}")
-            print(f"Total Items:              {report.n_items}")
-            print(f"Correct:                  {report.correct}")
-            print(f"Wrong:                    {report.wrong}")
-            print(f"Refused:                  {report.refused}")
-            print(f"Unsupported:              {report.unsupported}")
-            print(f"Candidate Attempts:       {report.candidate_attempts}")
-            print(f"Binding Failures:         {report.binding_failures}")
-            print(f"Replay Refusals:          {report.replay_refusals}")
-            print(f"Sealed Trace Dispositions: {report.sealed_trace_dispositions}")
-            print(f"Dominant Residual Kinds:  {report.dominant_residual_kinds}")
-            print(f"Reason Codes:             {', '.join(report.reason_codes)}")
+            print(f"Dataset:     {record.dataset}")
+            print(f"Split:       {args.split}")
+            print(f"Total Items: {len(items)}")
+            print(f"Cache Path:  {cache_path}")
             print("=" * 80)
 
         sys.exit(0)

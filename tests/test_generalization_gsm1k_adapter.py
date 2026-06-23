@@ -8,8 +8,14 @@ import subprocess
 import sys
 from pathlib import Path
 import pytest
-from evals.generalization.adapters.gsm1k import load_gsm1k_items
 
+import evals.generalization.cache_verifier
+from evals.generalization.adapters.gsm1k import load_gsm1k_items
+from evals.generalization.cache_verifier import (
+    CacheVerificationRecord,
+    CacheVerificationReport,
+)
+from scripts.benchmarks.run_generalization_audit import main as cli_main
 
 
 def write_synthetic_jsonl(path: Path, records: list[dict]) -> None:
@@ -40,11 +46,18 @@ def test_loads_synthetic_jsonl_records(tmp_path: Path) -> None:
     assert items[0].prompt_ref == "gsm1k:test:q1"
     assert items[0].answer_kind == "numeric_text"
 
-    # Verify opaque prompt_ref and question/answer content only in metadata
-    assert items[0].prompt_ref == "gsm1k:test:q1"
+    # Verify opaque metadata
     metadata_dict = dict(items[0].metadata)
-    assert metadata_dict["question"] == "Alice has 2 apples."
-    assert metadata_dict["answer"] == "2"
+    assert "question" not in metadata_dict
+    assert "prompt" not in metadata_dict
+    assert "answer" not in metadata_dict
+    assert "grade" not in metadata_dict
+    assert "label" not in metadata_dict
+
+    assert "question_sha256" in metadata_dict
+    assert "answer_sha256" in metadata_dict
+    assert "question_length" in metadata_dict
+    assert metadata_dict["source_record_id"] == "q1"
 
 
 def test_loads_synthetic_json_records(tmp_path: Path) -> None:
@@ -255,4 +268,65 @@ def test_cli_local_adapter_works_with_temp_cache_and_metadata_only(
     report = json.loads(result.stdout)
     assert report["dataset"] == "GSM1K"
     assert report["n_items"] == 1
-    assert report["correct"] == 1
+    assert report["metadata_only"] is True
+    # The metadata-only path does not claim correct/wrong
+    assert "correct" not in report
+    assert "wrong" not in report
+
+
+def test_cli_real_gsm1k_without_evaluator_refuses(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The CLI refuses to run a full audit without an evaluator, failing with dataset_evaluator_unavailable."""
+    cache_dir = tmp_path / "gsm1k_cache"
+    cache_dir.mkdir()
+    records = [
+        {"question": "Alice has 2 apples.", "answer": "2", "id": "q1"},
+    ]
+    write_synthetic_jsonl(cache_dir / "test.jsonl", records)
+
+    # Monkeypatch verify_local_generalization_cache to report resolved gates
+    def mock_verify(*args: any, **kwargs: any) -> CacheVerificationReport:
+        record = CacheVerificationRecord(
+            dataset="GSM1K",
+            manifest_path="gsm1k.yaml",
+            local_cache=str(cache_dir),
+            exists=True,
+            license_ready=True,
+            checksum_ready=True,
+            runnable=True,
+            reason_codes=(),
+        )
+        return CacheVerificationReport(
+            policy_version="test.v1",
+            records=(record,),
+            all_runnable=True,
+            reason_codes=(),
+        )
+
+    monkeypatch.setattr(
+        evals.generalization.cache_verifier,
+        "verify_local_generalization_cache",
+        mock_verify,
+    )
+
+    # Setup sys.argv to run CLI without --metadata-only
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_generalization_audit.py",
+            "--dataset",
+            "gsm1k",
+            "--local-cache",
+            str(cache_dir),
+        ],
+    )
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli_main()
+    assert excinfo.value.code != 0
+    captured = capsys.readouterr()
+    assert "dataset_evaluator_unavailable" in captured.err

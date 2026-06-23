@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -124,17 +125,19 @@ def load_gsm1k_items(
         # Build stable opaque prompt reference
         prompt_ref = f"gsm1k:{split}:{item_id}"
 
-        # Setup metadata safely storing prompt/answer content out of aggregate report
+        q_sha256 = hashlib.sha256(str(question).encode("utf-8")).hexdigest()
+        a_sha256 = hashlib.sha256(str(answer).encode("utf-8")).hexdigest()
+
         metadata_list = [
             ("source_format", "jsonl" if is_jsonl else "json"),
-            ("question", str(question)),
-            ("answer", str(answer)),
+            ("source_index", str(idx)),
+            ("source_file_name", target_file.name),
+            ("source_record_id", item_id),
+            ("question_sha256", q_sha256),
+            ("answer_sha256", a_sha256),
+            ("question_length", str(len(str(question)))),
+            ("answer_kind", "numeric_text"),
         ]
-
-        if "grade" in rec:
-            metadata_list.append(("grade", str(rec["grade"])))
-        if "domain" in rec:
-            metadata_list.append(("domain", str(rec["domain"])))
 
         items.append(
             GeneralizationAuditItem(
