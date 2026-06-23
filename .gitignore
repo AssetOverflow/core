@@ -26,6 +26,10 @@ uv.lock
 reports/
 frontier_wave1.json
 
+# Benchmark local cache — manifests + fetch script only; benchmark data never committed
+# (extends ADR-0119.7 sealed-holdout discipline to generalization audits)
+.data/benchmarks/
+
 # Workbench UI browser-test artifacts
 workbench-ui/test-results/
 workbench-ui/playwright-report/

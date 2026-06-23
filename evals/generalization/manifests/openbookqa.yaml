@@ -1,0 +1,19 @@
+dataset: OpenBookQA
+purpose: sealed_audit_not_training
+description: >
+  Elementary open-book science QA: ~6,000 questions over 1,329 core
+  science facts. Requires combining a retrieved fact with broader
+  commonsense/world knowledge. See arXiv:1809.02789.
+source: hf://allenai/openbookqa
+license: TODO_VERIFY_BEFORE_CACHE  # HF reports unknown; verify upstream AllenAI terms before cache
+version: pinned_release_or_commit
+split: test
+sha256: TODO_AFTER_DOWNLOAD
+local_cache: .data/benchmarks/openbookqa/
+repo_policy: manifest_only
+inspection_policy: aggregate_reports_only
+mutation_policy: no_direct_pack_policy_operator_mutation
+smoke_fixture: null  # PR-2: small smoke slice
+notes: |
+  Evidence + commonsense audit. 5,957 questions, 1,329 core science facts.
+  Good probe for fact retrieval + inference composition in CORE.
