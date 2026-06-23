@@ -1,9 +1,11 @@
+import { useMemo } from "react";
 import type { ConstructionEvidence } from "../../types/constructionEvidence";
 import { MetadataTable } from "../../design/components/MetadataTable/MetadataTable";
 import { StableJsonViewer } from "../../design/components/StableJsonViewer";
 import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
+import { traceConstructionReproducer } from "./constructionEvidenceEndpoint";
 import { constructionEvidencePanelModel } from "./constructionEvidencePanelModel";
 
 export interface ConstructionEvidencePanelProps {
@@ -25,6 +27,12 @@ export function ConstructionEvidencePanel({
   turnId,
   errorMessage,
 }: ConstructionEvidencePanelProps) {
+  const reproducer = traceConstructionReproducer(turnId);
+  const rawJson = useMemo(
+    () => (evidence ? JSON.stringify(evidence, null, 2) : ""),
+    [evidence],
+  );
+
   if (isLoading) {
     return <LoadingState label="Loading construction evidence..." />;
   }
@@ -33,7 +41,7 @@ export function ConstructionEvidencePanel({
       <ErrorState
         whatFailed={errorMessage(error)}
         mutationStatus="No trace mutation occurred."
-        reproducer={`curl /trace/${turnId}/construction`}
+        reproducer={reproducer}
         retrySafety="Retry: safe"
       />
     );
@@ -42,7 +50,7 @@ export function ConstructionEvidencePanel({
     return (
       <EmptyState
         statement="No construction evidence recorded for this turn."
-        nextAction={{ kind: "cli", command: `curl /trace/${turnId}/construction` }}
+        nextAction={{ kind: "cli", command: reproducer }}
       />
     );
   }
@@ -94,7 +102,7 @@ export function ConstructionEvidencePanel({
 
       {model.showRaw ? (
         <div className="max-h-[28rem] overflow-auto rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2">
-          <StableJsonViewer source={JSON.stringify(evidence, null, 2)} />
+          <StableJsonViewer source={rawJson} />
         </div>
       ) : null}
     </section>
