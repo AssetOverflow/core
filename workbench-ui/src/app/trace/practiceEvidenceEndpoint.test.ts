@@ -32,7 +32,9 @@ describe("practice evidence endpoint helpers", () => {
   it("fetches practice evidence through an injected fetcher", async () => {
     const fetcher = vi.fn(<T,>(_path: string): Promise<T> => Promise.resolve(evidence as T));
 
-    await expect(fetchTracePracticeWith(7, fetcher)).resolves.toBe(evidence);
+    await expect(
+      fetchTracePracticeWith(7, fetcher as unknown as <T>(path: string) => Promise<T>),
+    ).resolves.toBe(evidence);
     expect(fetcher).toHaveBeenCalledWith("/trace/7/practice");
   });
 });
