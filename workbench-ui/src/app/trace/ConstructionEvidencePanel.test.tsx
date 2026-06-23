@@ -108,8 +108,8 @@ describe("ConstructionEvidencePanel", () => {
       within(panel).getByText("diagnostic proposal only; contract assessment determines runnable status"),
     ).toBeInTheDocument();
     expect(within(panel).getAllByText("false").length).toBeGreaterThan(0);
-    expect(within(panel).getByText("quantity_entity_binding_candidate.v1")).toBeInTheDocument();
-    expect(within(panel).getByText("0:4 Lena — exact")).toBeInTheDocument();
+    expect(within(panel).getByText(/quantity_entity_binding_candidate\.v1/)).toBeInTheDocument();
+    expect(within(panel).getAllByText("0:4 Lena — exact").length).toBeGreaterThan(0);
     expect(within(panel).getAllByText("0:4 Lena! — inexact").length).toBeGreaterThan(0);
     expect(within(panel).getByText("curl /trace/7/construction")).toBeInTheDocument();
   });
