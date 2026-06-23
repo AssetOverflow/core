@@ -139,35 +139,31 @@ describe("practice evidence panel model", () => {
       { key: "geometric_search_run", value: "recorded — gsr_1" },
       { key: "replay_results", value: "missing_evidence — none" },
     ]);
-    expect(model.authorityRows).toEqual(
-      expect.arrayContaining([
-        { key: "diagnostic_only", value: "true" },
-        { key: "serving_allowed", value: "false" },
-        { key: "mutation_allowed", value: "false" },
-        { key: "replay_execution_allowed", value: "false" },
-        { key: "replay_executed_by_workbench", value: "false" },
-      ]),
-    );
+    expect(model.authorityRows).toContainEqual({ key: "diagnostic_only", value: "true" });
+    expect(model.authorityRows).toContainEqual({ key: "serving_allowed", value: "false" });
+    expect(model.authorityRows).toContainEqual({ key: "mutation_allowed", value: "false" });
+    expect(model.authorityRows).toContainEqual({ key: "replay_execution_allowed", value: "false" });
+    expect(model.authorityRows).toContainEqual({
+      key: "replay_executed_by_workbench",
+      value: "false",
+    });
 
     const chain = model.detailSections.find((section) => section.title === "Evidence chain");
-    expect(chain?.items[1]).toMatchObject({
-      title: "card 2: geometric_search_run",
-      rows: expect.arrayContaining([
-        {
-          key: "authority",
-          value:
-            "identity card only; Workbench does not execute search, replay, operators, sealing, or mutation",
-        },
-      ]),
+    if (chain === undefined) throw new Error("missing Evidence chain section");
+    const geometricSearchCard = chain.items.find((item) => item.title === "card 2: geometric_search_run");
+    if (geometricSearchCard === undefined) throw new Error("missing geometric search card");
+    expect(geometricSearchCard.rows).toContainEqual({
+      key: "authority",
+      value:
+        "identity card only; Workbench does not execute search, replay, operators, sealing, or mutation",
     });
 
     const sealed = model.detailSections.find((section) => section.title === "Sealed trace");
-    expect(sealed?.items[0]?.rows ?? []).toEqual(
-      expect.arrayContaining([
-        { key: "geometric_search_run_id", value: "gsr_1" },
-        { key: "replay_refusal_ids", value: "rr_1" },
-      ]),
-    );
+    if (sealed === undefined) throw new Error("missing Sealed trace section");
+    const sealedTrace = sealed.items.find((item) => item.title === "spt_1");
+    if (sealedTrace === undefined) throw new Error("missing sealed trace item");
+    expect(sealedTrace.rows).toContainEqual({ key: "geometric_search_run_id", value: "gsr_1" });
+    expect(sealedTrace.rows).toContainEqual({ key: "replay_refusal_ids", value: "rr_1" });
     expect(model.sourceSpanRows).toEqual([
       { key: "sealed_trace.1", value: "0:20 Lena has 3 marbles. (sentence 0)" },
     ]);
@@ -181,12 +177,11 @@ describe("practice evidence panel model", () => {
     expect(model.chainRows).toEqual([{ key: "trace_refusal", value: "recorded — ptr_1" }]);
 
     const refusal = model.detailSections.find((section) => section.title === "Trace refusal");
-    expect(refusal?.items[0]?.rows ?? []).toEqual(
-      expect.arrayContaining([
-        { key: "trace_refusal_id", value: "ptr_1" },
-        { key: "reason_codes", value: "missing_residual" },
-        { key: "explanation", value: "no residual target" },
-      ]),
-    );
+    if (refusal === undefined) throw new Error("missing Trace refusal section");
+    const refusalItem = refusal.items.find((item) => item.title === "ptr_1");
+    if (refusalItem === undefined) throw new Error("missing trace refusal item");
+    expect(refusalItem.rows).toContainEqual({ key: "trace_refusal_id", value: "ptr_1" });
+    expect(refusalItem.rows).toContainEqual({ key: "reason_codes", value: "missing_residual" });
+    expect(refusalItem.rows).toContainEqual({ key: "explanation", value: "no residual target" });
   });
 });
