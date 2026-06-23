@@ -19,6 +19,7 @@ _CONTRACT_REPLAY_TARGET_ALLOWLIST: dict[str, str] = {
     "unary_delta_transition": "problem_frame_contracts.unary_delta",
     "fraction_decrease": "problem_frame_contracts.fraction_decrease",
     "percent_partition": "problem_frame_contracts.percent_partition",
+    "quantity_entity_binding": "problem_frame_contracts.quantity_entity",
 }
 
 VACUOUS_PROOF_DECLARATION: tuple[str, str] = (
