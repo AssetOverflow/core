@@ -61,6 +61,10 @@ export function PracticeEvidencePanel({
     () => (evidence ? JSON.stringify(evidence, null, 2) : ""),
     [evidence],
   );
+  const model = useMemo(
+    () => (evidence ? practiceEvidencePanelModel(evidence) : null),
+    [evidence],
+  );
 
   if (isLoading) {
     return <LoadingState label="Loading sealed practice evidence..." />;
@@ -75,7 +79,7 @@ export function PracticeEvidencePanel({
       />
     );
   }
-  if (!evidence) {
+  if (!evidence || model === null) {
     return (
       <EmptyState
         statement="No sealed practice evidence recorded for this turn."
@@ -84,7 +88,6 @@ export function PracticeEvidencePanel({
     );
   }
 
-  const model = practiceEvidencePanelModel(evidence);
   return (
     <section className="grid gap-3" data-testid="practice-evidence-panel">
       {model.emptyMessage ? (
