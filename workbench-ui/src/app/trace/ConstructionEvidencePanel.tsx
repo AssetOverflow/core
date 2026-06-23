@@ -1,0 +1,102 @@
+import type { ConstructionEvidence } from "../../types/constructionEvidence";
+import { MetadataTable } from "../../design/components/MetadataTable/MetadataTable";
+import { StableJsonViewer } from "../../design/components/StableJsonViewer";
+import { EmptyState } from "../../design/components/states/EmptyState";
+import { ErrorState } from "../../design/components/states/ErrorState";
+import { LoadingState } from "../../design/components/states/LoadingState";
+import { constructionEvidencePanelModel } from "./constructionEvidencePanelModel";
+
+export interface ConstructionEvidencePanelProps {
+  evidence?: ConstructionEvidence | null;
+  isLoading: boolean;
+  error: unknown;
+  turnId: number;
+  errorMessage: (error: unknown) => string;
+}
+
+function rowValue(value: string) {
+  return value;
+}
+
+export function ConstructionEvidencePanel({
+  evidence,
+  isLoading,
+  error,
+  turnId,
+  errorMessage,
+}: ConstructionEvidencePanelProps) {
+  if (isLoading) {
+    return <LoadingState label="Loading construction evidence..." />;
+  }
+  if (error) {
+    return (
+      <ErrorState
+        whatFailed={errorMessage(error)}
+        mutationStatus="No trace mutation occurred."
+        reproducer={`curl /trace/${turnId}/construction`}
+        retrySafety="Retry: safe"
+      />
+    );
+  }
+  if (!evidence) {
+    return (
+      <EmptyState
+        statement="No construction evidence recorded for this turn."
+        nextAction={{ kind: "cli", command: `curl /trace/${turnId}/construction` }}
+      />
+    );
+  }
+
+  const model = constructionEvidencePanelModel(evidence);
+  return (
+    <section className="grid gap-3" data-testid="construction-evidence-panel">
+      {model.emptyMessage ? (
+        <div className="rounded-md border border-[var(--color-state-warning-border)] bg-[var(--color-state-warning-bg)] p-3 text-sm text-[var(--color-state-warning-text)]">
+          <h3 className="m-0 text-xs font-semibold uppercase">{model.status}</h3>
+          <p className="m-0 mt-2">{model.emptyMessage}</p>
+        </div>
+      ) : null}
+
+      <div className="grid gap-3 xl:grid-cols-2">
+        <MetadataTable
+          rows={model.authorityRows.map((row) => ({
+            key: row.key,
+            value: rowValue(row.value),
+            mono: true,
+          }))}
+        />
+        <MetadataTable
+          rows={model.countRows.map((row) => ({
+            key: row.key,
+            value: rowValue(row.value),
+            mono: true,
+          }))}
+        />
+      </div>
+
+      {model.assessmentRows.length > 0 ? (
+        <MetadataTable
+          rows={model.assessmentRows.map((row) => ({
+            key: row.key,
+            value: row.value,
+          }))}
+        />
+      ) : null}
+
+      <div>
+        <div className="mb-1 text-xs font-semibold text-[var(--color-text-secondary)]">
+          reproducer
+        </div>
+        <code className="block overflow-auto rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2 font-mono text-xs text-[var(--color-text-primary)]">
+          {model.reproducer}
+        </code>
+      </div>
+
+      {model.showRaw ? (
+        <div className="max-h-[28rem] overflow-auto rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2">
+          <StableJsonViewer source={JSON.stringify(evidence, null, 2)} />
+        </div>
+      ) : null}
+    </section>
+  );
+}
