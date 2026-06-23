@@ -262,13 +262,13 @@ def test_cli_synthetic_smoke() -> None:
 
 
 def test_cli_real_dataset_refuses() -> None:
-    """Verify that requesting a real dataset fails with dataset_adapter_unavailable."""
+    """Verify that requesting a dataset with no adapter fails with dataset_adapter_unavailable."""
     result = subprocess.run(
         [
             sys.executable,
             "scripts/benchmarks/run_generalization_audit.py",
             "--dataset",
-            "gsm1k",
+            "asdiv",
         ],
         capture_output=True,
         text=True,

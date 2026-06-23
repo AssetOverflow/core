@@ -21,6 +21,7 @@ from evals.generalization.item_schema import (
     GeneralizationAuditReport,
 )
 from evals.generalization.audit_runner import run_generalization_audit
+from evals.generalization.adapters.gsm1k import load_gsm1k_items
 
 __all__ = [
     "GeneralizationBenchmarkManifest",
@@ -36,4 +37,5 @@ __all__ = [
     "GeneralizationAuditOutcome",
     "GeneralizationAuditReport",
     "run_generalization_audit",
+    "load_gsm1k_items",
 ]
