@@ -1,0 +1,19 @@
+dataset: ASDiv
+purpose: sealed_audit_not_training
+description: >
+  A Diverse Corpus for Evaluating and Developing English Math Word Problem
+  Solvers. 2,305 problems covering quantity, entity, rate, and other
+  problem types with more diverse language than GSM8K. See arXiv:2106.15772.
+source: hf://EleutherAI/asdiv
+license: TODO_VERIFY_BEFORE_CACHE  # check original Miao et al. license
+version: pinned_release_or_commit
+split: test
+sha256: TODO_AFTER_DOWNLOAD
+local_cache: .data/benchmarks/asdiv/
+repo_policy: manifest_only
+inspection_policy: aggregate_reports_only
+mutation_policy: no_direct_pack_policy_operator_mutation
+smoke_fixture: null  # PR-2: add small public smoke slice
+notes: |
+  Good lane for checking quantity/entity/rate generalization beyond
+  GSM8K phrasing. 2,305 problems total.

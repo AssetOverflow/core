@@ -1,0 +1,22 @@
+dataset: PARA-MAWPS
+purpose: sealed_audit_not_training
+description: >
+  Paraphrased, adversarial, and inverse variants of MAWPS-style math
+  word problems. Good perturbation/robustness check for CORE organs.
+  See arXiv:2306.13899.
+source: hf://Starscream-11813/ParaMAWPS
+license: CC-BY-NC-SA-4.0
+version: pinned_release_or_commit
+split: test
+sha256: TODO_AFTER_DOWNLOAD
+local_cache: .data/benchmarks/para_mawps/
+repo_policy: manifest_only
+inspection_policy: aggregate_reports_only
+mutation_policy: no_direct_pack_policy_operator_mutation
+smoke_fixture: null
+notes: |
+  Paraphrase + adversarial + inverse variant structure. Pull local cache
+  only at first; confirm HF dataset ID before fetch script in PR-2.
+  Also covers base MAWPS variants.
+  CC-BY-NC-SA-4.0; respect noncommercial/share-alike terms.
+  Local audit cache only unless license review authorizes committed smoke fixtures.

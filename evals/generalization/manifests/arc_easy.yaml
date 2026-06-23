@@ -1,0 +1,20 @@
+dataset: ARC-Easy
+purpose: sealed_audit_not_training
+description: >
+  AI2 Reasoning Challenge Easy partition. Grade-school science reasoning;
+  part of the 7,787-question ARC suite split into Easy and Challenge sets.
+  Good non-math generalization lane. See arXiv:1803.05457.
+source: hf://allenai/ai2_arc
+hf_config: ARC-Easy
+license: CC-BY-SA-4.0  # confirmed public domain science questions
+version: pinned_release_or_commit
+split: test
+sha256: TODO_AFTER_DOWNLOAD
+local_cache: .data/benchmarks/arc_easy/
+repo_policy: manifest_only
+inspection_policy: aggregate_reports_only
+mutation_policy: no_direct_pack_policy_operator_mutation
+smoke_fixture: null  # PR-2: small public smoke slice
+notes: |
+  Non-math science reasoning lane. Pairs with arc_challenge for a
+  difficulty-stratified view. License is CC-BY-SA-4.0.

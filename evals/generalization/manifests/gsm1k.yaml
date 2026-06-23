@@ -1,0 +1,19 @@
+dataset: GSM1K
+purpose: sealed_audit_not_training
+description: >
+  Direct generalization check for GSM8K overfit. Commissioned to mirror
+  GSM8K style and complexity while reducing contamination risk.
+  ~1,000 problems. See arXiv:2405.00332.
+source: hf://openai/gsm1k
+license: TODO_VERIFY_BEFORE_CACHE  # likely MIT or CC-BY; confirm on HuggingFace
+version: pinned_release_or_commit  # TODO: pin after first pull
+split: test
+sha256: TODO_AFTER_DOWNLOAD
+local_cache: .data/benchmarks/gsm1k/
+repo_policy: manifest_only
+inspection_policy: aggregate_reports_only
+mutation_policy: no_direct_pack_policy_operator_mutation
+smoke_fixture: null  # PR-2: add tiny public smoke slice
+notes: |
+  Best first pull. Directly audits GSM8K-style generalization.
+  Do not inspect sealed examples during organ development.
