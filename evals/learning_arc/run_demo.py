@@ -177,7 +177,8 @@ def _scene1_cold_session(
     rt = ChatRuntime(config=cfg, engine_state_path=engine_state_dir)
     response = rt.chat(_DEMO_PROMPT)
 
-    candidates_file = engine_state_dir / "discovery_candidates.jsonl"
+    from engine_state import EngineStateStore
+    candidates_file = EngineStateStore(engine_state_dir)._resolve_dir() / "discovery_candidates.jsonl"
     candidates_persisted = (
         len(candidates_file.read_text(encoding="utf-8").splitlines())
         if candidates_file.exists()
@@ -213,7 +214,8 @@ def _scene2_checkpoint_enrichment(
         "not by the operator.  Sub-questions enumerate candidate "
         "chains the engine identified through corpus decomposition.",
     )
-    candidates_file = engine_state_dir / "discovery_candidates.jsonl"
+    from engine_state import EngineStateStore
+    candidates_file = EngineStateStore(engine_state_dir)._resolve_dir() / "discovery_candidates.jsonl"
     if not candidates_file.exists():
         raise RuntimeError("engine state has no discovery_candidates.jsonl — S1 did not persist")
     lines = [l for l in candidates_file.read_text(encoding="utf-8").splitlines() if l.strip()]
