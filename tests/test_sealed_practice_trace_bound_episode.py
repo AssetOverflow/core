@@ -643,6 +643,86 @@ def test_invalid_schema_versions_refuse() -> None:
     assert "invalid_schema_versions" in outcome.reason_codes
 
 
+def test_build_bound_refuses_invalid_binding_type_without_exception() -> None:
+    run, result, _binding = _chain()
+    outcome = build_bound_practice_trace_input(
+        problem_frame_digest=run.problem_frame_digest,
+        original_contract_assessment_id=run.contract_assessment_id,
+        residual_ids=run.residual_ids,
+        search_gate_decision_id=run.gate_decision_id,
+        compute_budget_id=run.budget_id,
+        run=run,
+        bindings=(object(),),
+        candidate_operator_results=(result,),
+    )
+    assert isinstance(outcome, PracticeTraceRefusal)
+    assert "invalid_binding_type" in outcome.reason_codes
+
+
+def test_build_bound_refuses_invalid_operator_result_type_without_exception() -> None:
+    run, _result, binding = _chain()
+    outcome = build_bound_practice_trace_input(
+        problem_frame_digest=run.problem_frame_digest,
+        original_contract_assessment_id=run.contract_assessment_id,
+        residual_ids=run.residual_ids,
+        search_gate_decision_id=run.gate_decision_id,
+        compute_budget_id=run.budget_id,
+        run=run,
+        bindings=(binding,),
+        candidate_operator_results=(object(),),
+    )
+    assert isinstance(outcome, PracticeTraceRefusal)
+    assert "invalid_candidate_operator_result_type" in outcome.reason_codes
+
+
+def test_build_bound_refuses_non_tuple_bindings_without_exception() -> None:
+    run, result, _binding = _chain()
+    outcome = build_bound_practice_trace_input(
+        problem_frame_digest=run.problem_frame_digest,
+        original_contract_assessment_id=run.contract_assessment_id,
+        residual_ids=run.residual_ids,
+        search_gate_decision_id=run.gate_decision_id,
+        compute_budget_id=run.budget_id,
+        run=run,
+        bindings=object(),  # type: ignore[arg-type]
+        candidate_operator_results=(result,),
+    )
+    assert isinstance(outcome, PracticeTraceRefusal)
+    assert "invalid_binding_type" in outcome.reason_codes
+
+
+def test_seal_bound_refuses_binding_result_count_mismatch_without_exception() -> None:
+    run, result, binding = _chain()
+    replay = _bound_replay_result(run, result, binding)
+    trace_input = _build_bound_trace_input(run, result, binding, replay_results=(replay,))
+    assert isinstance(trace_input, PracticeTraceInput)
+    outcome = seal_bound_practice_trace(
+        trace_input,
+        run=run,
+        bindings=(binding,),
+        candidate_operator_results=(),
+        replay_results=(replay,),
+    )
+    assert isinstance(outcome, PracticeTraceRefusal)
+    assert "binding_result_count_mismatch" in outcome.reason_codes
+
+
+def test_seal_bound_refuses_invalid_binding_type_without_exception() -> None:
+    run, result, binding = _chain()
+    replay = _bound_replay_result(run, result, binding)
+    trace_input = _build_bound_trace_input(run, result, binding, replay_results=(replay,))
+    assert isinstance(trace_input, PracticeTraceInput)
+    outcome = seal_bound_practice_trace(
+        trace_input,
+        run=run,
+        bindings=(object(),),
+        candidate_operator_results=(result,),
+        replay_results=(replay,),
+    )
+    assert isinstance(outcome, PracticeTraceRefusal)
+    assert "invalid_binding_type" in outcome.reason_codes
+
+
 def test_bound_module_does_not_call_upstream_producers() -> None:
     path = Path("generate/sealed_practice_trace.py")
     source = path.read_text("utf-8")

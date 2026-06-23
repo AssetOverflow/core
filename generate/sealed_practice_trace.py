@@ -798,6 +798,22 @@ def _valid_binding_record(binding: object) -> bool:
     return all(hasattr(binding, name) for name in required)
 
 
+_BOUND_STRUCTURAL_REASON_CODES = frozenset(
+    {
+        "invalid_run_type",
+        "invalid_binding_type",
+        "invalid_candidate_operator_result_type",
+        "invalid_replay_result_type",
+        "invalid_replay_refusal_type",
+        "binding_result_count_mismatch",
+    }
+)
+
+
+def _has_bound_structural_failure(reasons: list[str]) -> bool:
+    return any(reason in _BOUND_STRUCTURAL_REASON_CODES for reason in reasons)
+
+
 def _valid_operator_result_record(operator_result: object) -> bool:
     required = (
         "operator_result_id",
@@ -1009,8 +1025,16 @@ def build_bound_practice_trace_input(
     if not _sha256_text(geometric_search_run_id):
         reasons.append("invalid_geometric_search_run_id")
 
-    if len(bindings) != len(candidate_operator_results):
-        reasons.append("binding_result_count_mismatch")
+    if isinstance(bindings, tuple) and isinstance(candidate_operator_results, tuple):
+        if len(bindings) != len(candidate_operator_results):
+            reasons.append("binding_result_count_mismatch")
+
+    if _has_bound_structural_failure(reasons):
+        return _refusal(
+            input_digest=None,
+            disposition=_failure_disposition(reasons),
+            reason_codes=tuple(dict.fromkeys(reasons)),
+        )
 
     if not reasons and isinstance(run, GeometricSearchRun):
         reasons.extend(
@@ -1158,6 +1182,13 @@ def seal_bound_practice_trace(
     if replay_refusal_ids != trace_input.replay_refusal_ids:
         reasons.append("replay_refusal_ids_mismatch")
 
+    if _has_bound_structural_failure(reasons):
+        return _refusal(
+            input_digest=trace_input.input_digest,
+            disposition=_failure_disposition(reasons),
+            reason_codes=tuple(dict.fromkeys(reasons)),
+        )
+
     binding_ids = tuple(binding.binding_id for binding in bindings)
     attempt_ids = tuple(binding.candidate_attempt_id for binding in bindings)
     if binding_ids != trace_input.candidate_attempt_binding_ids:
@@ -1178,24 +1209,29 @@ def seal_bound_practice_trace(
         )
         if len(bindings) != len(candidate_operator_results):
             reasons.append("binding_result_count_mismatch")
-        for binding, operator_result in zip(bindings, candidate_operator_results, strict=True):
+        elif not reasons:
+            for binding, operator_result in zip(
+                bindings,
+                candidate_operator_results,
+                strict=True,
+            ):
+                reasons.extend(
+                    _validate_bound_binding_pair(
+                        run=run,
+                        binding=binding,
+                        operator_result=operator_result,
+                    )
+                )
             reasons.extend(
-                _validate_bound_binding_pair(
+                _validate_bound_replay_bindings(
                     run=run,
-                    binding=binding,
-                    operator_result=operator_result,
+                    bindings=bindings,
+                    replay_results=replay_results,
+                    replay_refusals=replay_refusals,
                 )
             )
-        reasons.extend(
-            _validate_bound_replay_bindings(
-                run=run,
-                bindings=bindings,
-                replay_results=replay_results,
-                replay_refusals=replay_refusals,
-            )
-        )
-        if bindings and not replay_results and not replay_refusals:
-            reasons.append("missing_replay_records")
+            if bindings and not replay_results and not replay_refusals:
+                reasons.append("missing_replay_records")
 
     if reasons:
         return _refusal(
