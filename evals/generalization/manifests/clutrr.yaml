@@ -13,7 +13,7 @@ local_cache: .data/benchmarks/clutrr/
 repo_policy: manifest_only
 inspection_policy: aggregate_reports_only
 mutation_policy: no_direct_pack_policy_operator_mutation
-smoke_fixture: null  # PR-2: sealed relational slice
+smoke_fixture: null  # PR-2: tiny public smoke slice only where license-permissive
 notes: |
   Best alignment to CORE's relation/field work. Kinship graph inference
   from stories; variable-length reasoning chains (k=2..10).
