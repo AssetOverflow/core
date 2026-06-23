@@ -60,6 +60,7 @@ class TurnJournalEntry:
     pipeline_record: CognitivePipelineRecord | dict[str, Any] | None = None
     field_evidence: FieldEvidence | dict[str, Any] | None = None
     construction_evidence: ConstructionEvidence | dict[str, Any] | None = None
+    practice_evidence: dict[str, Any] | None = None
     trace_integrity: TraceIntegrity | None = None
     journal_digest: str = ""
 
@@ -102,6 +103,7 @@ class TurnJournalEntry:
             pipeline_record=to_data(result.pipeline_record),
             field_evidence=to_data(result.field_evidence),
             construction_evidence=to_data(result.construction_evidence),
+            practice_evidence=to_data(getattr(result, "practice_evidence", None)),
             trace_integrity=_trace_integrity_for_hash(result.trace_hash),
         )
 
