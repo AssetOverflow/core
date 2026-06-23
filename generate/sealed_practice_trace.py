@@ -44,15 +44,6 @@ _SEALED_DISPOSITIONS = frozenset(
     }
 )
 
-_TRACE_REFUSAL_DISPOSITIONS = frozenset(
-    {
-        PracticeDisposition.TRACE_INVALID_INPUT,
-        PracticeDisposition.TRACE_IDENTITY_MISMATCH,
-        PracticeDisposition.TRACE_POLICY_UNSUPPORTED,
-        PracticeDisposition.TRACE_UPSTREAM_INCOMPLETE,
-    }
-)
-
 _ORIGINAL_REFUSAL_RUN_DISPOSITIONS = frozenset(
     {
         SearchRunDisposition.BLOCKED_BY_GATE,
@@ -172,8 +163,6 @@ def _version_pairs_payload(
 def _valid_version_pairs(value: object) -> bool:
     if not isinstance(value, tuple):
         return False
-    if not value:
-        return True
     names: list[str] = []
     for entry in value:
         if not isinstance(entry, tuple) or len(entry) != 2:
@@ -182,9 +171,7 @@ def _valid_version_pairs(value: object) -> bool:
         if not _nonempty_text(name) or not _nonempty_text(version):
             return False
         names.append(name)
-    if len(names) != len(set(names)):
-        return False
-    return names == sorted(names)
+    return len(names) == len(set(names)) and names == sorted(names)
 
 
 def _input_digest_payload(
@@ -327,6 +314,16 @@ def _validate_run_bindings(
     return reasons
 
 
+def _validate_replay_record_identity(
+    record: ReplayAdapterResult | ReplayAdapterRefusal,
+) -> str | None:
+    if isinstance(record, ReplayAdapterResult):
+        return None if _sha256_text(record.replay_result_id) else "invalid_replay_result_id"
+    if isinstance(record, ReplayAdapterRefusal):
+        return None if _sha256_text(record.replay_refusal_id) else "invalid_replay_refusal_id"
+    return "invalid_replay_record_type"
+
+
 def _validate_replay_bindings(
     *,
     run: GeometricSearchRun,
@@ -341,6 +338,9 @@ def _validate_replay_bindings(
     }
 
     for record in (*replay_results, *replay_refusals):
+        identity_reason = _validate_replay_record_identity(record)
+        if identity_reason is not None:
+            reasons.append(identity_reason)
         run_id = record.run_id
         attempt_id = record.attempt_id
         candidate_digest = record.candidate_digest
@@ -380,21 +380,17 @@ def _derive_disposition(
     if not replay_results and not replay_refusals:
         return None
 
-    closed_results = [
-        result
+    if any(
+        result.replay_disposition is ReplayDisposition.CONTRACT_AND_PROOF_CLOSED
         for result in replay_results
-        if result.replay_disposition is ReplayDisposition.CONTRACT_AND_PROOF_CLOSED
-    ]
-    if closed_results:
+    ):
         return PracticeDisposition.SEALED_CANDIDATE_REPLAY_CLOSED
 
-    proof_refused_results = [
-        result
-        for result in replay_results
-        if result.replay_disposition
+    if any(
+        result.replay_disposition
         is ReplayDisposition.CONTRACT_CLOSED_BUT_PROOF_REFUSED
-    ]
-    if proof_refused_results:
+        for result in replay_results
+    ):
         return PracticeDisposition.SEALED_CONTRACT_CLOSED_PROOF_REFUSED
 
     if replay_results and all(
@@ -421,7 +417,7 @@ def _upstream_identity_chain(
     replay_result_ids: tuple[str, ...],
     replay_refusal_ids: tuple[str, ...],
 ) -> tuple[str, ...]:
-    chain: list[str] = [
+    return (
         problem_frame_digest,
         original_contract_assessment_id,
         *residual_ids,
@@ -431,8 +427,35 @@ def _upstream_identity_chain(
         *candidate_attempt_ids,
         *replay_result_ids,
         *replay_refusal_ids,
-    ]
-    return tuple(chain)
+    )
+
+
+def _failure_disposition(reasons: list[str]) -> PracticeDisposition:
+    identity_mismatch_codes = {
+        "problem_frame_digest_run_mismatch",
+        "contract_assessment_id_run_mismatch",
+        "residual_ids_run_mismatch",
+        "gate_decision_id_run_mismatch",
+        "budget_id_run_mismatch",
+        "gate_decision_id_refusal_mismatch",
+        "budget_id_refusal_mismatch",
+        "geometric_search_run_id_mismatch",
+        "candidate_attempt_ids_mismatch",
+        "replay_run_id_mismatch",
+        "replay_orphan_attempt_id",
+        "replay_candidate_digest_mismatch",
+        "replay_result_ids_mismatch",
+        "replay_refusal_ids_mismatch",
+        "invalid_replay_result_id",
+        "invalid_replay_refusal_id",
+    }
+    if "unsupported_trace_policy_version" in reasons:
+        return PracticeDisposition.TRACE_POLICY_UNSUPPORTED
+    if any(reason in identity_mismatch_codes for reason in reasons):
+        return PracticeDisposition.TRACE_IDENTITY_MISMATCH
+    if "missing_replay_records" in reasons:
+        return PracticeDisposition.TRACE_UPSTREAM_INCOMPLETE
+    return PracticeDisposition.TRACE_INVALID_INPUT
 
 
 def build_practice_trace_input(
@@ -520,29 +543,10 @@ def build_practice_trace_input(
             )
         )
 
-    identity_mismatch_codes = {
-        "problem_frame_digest_run_mismatch",
-        "contract_assessment_id_run_mismatch",
-        "residual_ids_run_mismatch",
-        "gate_decision_id_run_mismatch",
-        "budget_id_run_mismatch",
-        "gate_decision_id_refusal_mismatch",
-        "budget_id_refusal_mismatch",
-        "replay_run_id_mismatch",
-        "replay_orphan_attempt_id",
-        "replay_candidate_digest_mismatch",
-    }
-
     if reasons:
-        if "unsupported_trace_policy_version" in reasons:
-            disposition = PracticeDisposition.TRACE_POLICY_UNSUPPORTED
-        elif any(code in identity_mismatch_codes for code in reasons):
-            disposition = PracticeDisposition.TRACE_IDENTITY_MISMATCH
-        else:
-            disposition = PracticeDisposition.TRACE_INVALID_INPUT
         return _refusal(
             input_digest=None,
-            disposition=disposition,
+            disposition=_failure_disposition(reasons),
             reason_codes=tuple(reasons),
         )
 
@@ -596,7 +600,6 @@ def seal_practice_trace(
             disposition=PracticeDisposition.TRACE_INVALID_INPUT,
             reason_codes=("invalid_trace_input_type",),
         )
-
     if trace_input.trace_policy_version != SEALED_PRACTICE_TRACE_POLICY_VERSION:
         return _refusal(
             input_digest=trace_input.input_digest,
@@ -604,7 +607,6 @@ def seal_practice_trace(
             disposition=PracticeDisposition.TRACE_POLICY_UNSUPPORTED,
             reason_codes=("unsupported_trace_policy_version",),
         )
-
     if not _valid_spans(evidence_spans):
         return _refusal(
             input_digest=trace_input.input_digest,
@@ -650,33 +652,10 @@ def seal_practice_trace(
         if run.candidate_attempts and not replay_results and not replay_refusals:
             reasons.append("missing_replay_records")
 
-    identity_mismatch_codes = {
-        "problem_frame_digest_run_mismatch",
-        "contract_assessment_id_run_mismatch",
-        "residual_ids_run_mismatch",
-        "gate_decision_id_run_mismatch",
-        "budget_id_run_mismatch",
-        "gate_decision_id_refusal_mismatch",
-        "budget_id_refusal_mismatch",
-        "geometric_search_run_id_mismatch",
-        "candidate_attempt_ids_mismatch",
-        "replay_run_id_mismatch",
-        "replay_orphan_attempt_id",
-        "replay_candidate_digest_mismatch",
-        "replay_result_ids_mismatch",
-        "replay_refusal_ids_mismatch",
-    }
-
     if reasons:
-        if any(code in identity_mismatch_codes for code in reasons):
-            disposition = PracticeDisposition.TRACE_IDENTITY_MISMATCH
-        elif "missing_replay_records" in reasons:
-            disposition = PracticeDisposition.TRACE_UPSTREAM_INCOMPLETE
-        else:
-            disposition = PracticeDisposition.TRACE_INVALID_INPUT
         return _refusal(
             input_digest=trace_input.input_digest,
-            disposition=disposition,
+            disposition=_failure_disposition(reasons),
             reason_codes=tuple(reasons),
         )
 
@@ -727,7 +706,6 @@ def seal_practice_trace(
         replay_refusal_ids=trace_input.replay_refusal_ids,
     )
     trace_records = identity_chain
-
     trace_id = _canonical_digest(
         _trace_id_payload(
             trace_policy_version=trace_input.trace_policy_version,
