@@ -18,7 +18,7 @@ from generate.kernel_facts import SourceSpan
 from generate.search_gate import SearchGateDecision, SearchGateStatus
 
 CANDIDATE_OPERATOR_POLICY_VERSION = "candidate_operator.v1"
-CANDIDATE_OPERATOR_SET_VERSION = "candidate_operators.v1"
+CANDIDATE_OPERATOR_SET_VERSION = "candidate_operators.v2"
 
 MISSING_ROLE_CANDIDATE_OPERATOR_NAME = "missing_role_candidate"
 MISSING_ROLE_CANDIDATE_OPERATOR_VERSION = "missing_role_candidate.v1"
@@ -26,6 +26,12 @@ MISSING_ROLE_CANDIDATE_OPERATOR_VERSION = "missing_role_candidate.v1"
 MISSING_ROLE_RESIDUAL_KIND = "missing_role"
 MISSING_ROLE_RESIDUAL_CODE = "direction_unbound"
 MISSING_ROLE_CANDIDATE_ORGAN = "unary_delta_transition"
+
+QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME = "quantity_entity_binding_candidate"
+QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION = "quantity_entity_binding_candidate.v1"
+QUANTITY_ENTITY_BINDING_RESIDUAL_KIND = "missing_relation"
+QUANTITY_ENTITY_BINDING_RESIDUAL_CODE = "local_binding_relation_unbound"
+QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN = "quantity_entity_binding"
 
 _OPERATOR_FAMILY = "residual_missing_role"
 _SUPPORTED_DIRECTIONS = frozenset({"increase", "decrease"})
@@ -75,6 +81,13 @@ class CandidateOperatorRefusalReason(str, Enum):
     MALFORMED_EVIDENCE_SPAN = "malformed_evidence_span"
     INVALID_OPERATOR_INPUT = "invalid_operator_input"
     UNSUPPORTED_SCHEMA_VERSION = "unsupported_schema_version"
+    INVALID_QUANTITY_ENTITY_CUE_TYPE = "invalid_quantity_entity_cue_type"
+    QUANTITY_ENTITY_CUE_COUNT_MISMATCH = "quantity_entity_cue_count_mismatch"
+    EMPTY_QUANTITY_MENTION_ID = "empty_quantity_mention_id"
+    EMPTY_ENTITY_MENTION_ID = "empty_entity_mention_id"
+    EMPTY_QUANTITY_KIND = "empty_quantity_kind"
+    EMPTY_UNIT_MENTION_ID = "empty_unit_mention_id"
+    MISSING_EVIDENCE_SPANS = "missing_evidence_spans"
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,10 +124,36 @@ MISSING_ROLE_OPERATOR_POLICY = CandidateOperatorPolicy(
 )
 
 
+QUANTITY_ENTITY_BINDING_OPERATOR_POLICY = CandidateOperatorPolicy(
+    operator_policy_version=CANDIDATE_OPERATOR_POLICY_VERSION,
+    operator_family="residual_missing_relation",
+    operator_name=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME,
+    operator_version=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION,
+    allowed_residual_kinds=(QUANTITY_ENTITY_BINDING_RESIDUAL_KIND,),
+    allowed_residual_codes=(QUANTITY_ENTITY_BINDING_RESIDUAL_CODE,),
+    allowed_candidate_organs=(QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,),
+    max_attempts_per_run=1,
+    budget_charge=_FIXED_BUDGET_CHARGE,
+    depth=_OPERATOR_DEPTH,
+    max_parallelism=_OPERATOR_MAX_PARALLELISM,
+    determinism_requirements=_DETERMINISM_REQUIREMENTS,
+    forbidden_authority_paths=_FORBIDDEN_AUTHORITY_PATHS,
+)
+
+
 @dataclass(frozen=True, slots=True)
 class GroundedUnaryDeltaCue:
     direction: str
     evidence_spans: tuple[SourceSpan, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class GroundedQuantityEntityCue:
+    quantity_mention_id: str
+    entity_mention_id: str
+    quantity_kind: str
+    evidence_spans: tuple[SourceSpan, ...]
+    unit_mention_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -300,7 +339,28 @@ def _operator_set_table_payload() -> dict[str, object]:
                 },
                 "depth": MISSING_ROLE_OPERATOR_POLICY.depth,
                 "max_parallelism": MISSING_ROLE_OPERATOR_POLICY.max_parallelism,
-            }
+            },
+            {
+                "operator_family": QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.operator_family,
+                "operator_name": QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.operator_name,
+                "operator_version": QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.operator_version,
+                "allowed_residual_kinds": list(
+                    QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.allowed_residual_kinds
+                ),
+                "allowed_residual_codes": list(
+                    QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.allowed_residual_codes
+                ),
+                "allowed_candidate_organs": list(
+                    QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.allowed_candidate_organs
+                ),
+                "max_attempts_per_run": QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.max_attempts_per_run,
+                "budget_charge": {
+                    "candidates": QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.budget_charge.candidates,
+                    "steps": QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.budget_charge.steps,
+                },
+                "depth": QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.depth,
+                "max_parallelism": QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.max_parallelism,
+            },
         ],
         "schema_versions": [],
         "policy_versions": [],
@@ -320,6 +380,22 @@ def _candidate_payload(direction: str) -> tuple[tuple[str, str], ...]:
         ("relation_type", "state_change.unary_delta"),
         ("role", "direction"),
         ("source", "GroundedUnaryDeltaCue.direction"),
+    )
+
+
+def _quantity_entity_binding_candidate_payload(
+    cue: GroundedQuantityEntityCue,
+) -> tuple[tuple[str, str], ...]:
+    return (
+        ("binding_type", "quantity_entity"),
+        ("candidate_organ", QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN),
+        ("entity_mention_id", cue.entity_mention_id),
+        ("kind", "mention_binding"),
+        ("quantity_kind", cue.quantity_kind),
+        ("quantity_mention_id", cue.quantity_mention_id),
+        ("relation_type", "quantity_entity"),
+        ("source", "GroundedQuantityEntityCue"),
+        ("unit_mention_id", cue.unit_mention_id or ""),
     )
 
 
@@ -925,6 +1001,400 @@ def build_missing_role_candidate(
     )
 
 
+def build_quantity_entity_binding_candidate(
+    *,
+    residual: object,
+    search_gate: SearchGateDecision,
+    compute_budget: ComputeBudgetDecision,
+    run: GeometricSearchRun,
+    problem_frame_digest: str,
+    original_contract_assessment_id: str,
+    grounded_quantity_entity_cues: tuple[GroundedQuantityEntityCue, ...],
+    attempt_index: int = 0,
+    schema_versions: tuple[tuple[str, str], ...] = (),
+    policy_versions: tuple[tuple[str, str], ...] = (),
+    explanation: str = "",
+) -> CandidateOperatorOutcome:
+    """Construct one quantity-entity binding candidate or return a typed refusal."""
+
+    operator_set_id = candidate_operator_set_id()
+    reasons: list[str] = []
+
+    residual_id = _safe_getattr(residual, "residual_id")
+    residual_kind = _enum_value(_safe_getattr(residual, "residual_kind"))
+    residual_code = _safe_getattr(residual, "residual_code")
+    candidate_organ = _safe_getattr(residual, "candidate_organ")
+    residual_spans = _safe_getattr(residual, "evidence_spans")
+
+    gate_id = _safe_getattr(search_gate, "decision_id")
+    gate_status = _safe_getattr(search_gate, "status")
+    gate_reason = _safe_getattr(search_gate, "reason_code")
+    gate_residual_ids = _safe_getattr(search_gate, "residual_ids")
+    gate_candidate_organ = _safe_getattr(search_gate, "candidate_organ")
+
+    budget_id = _safe_getattr(compute_budget, "budget_id")
+    budget_status = _safe_getattr(compute_budget, "status")
+    budget_reason = _safe_getattr(compute_budget, "reason_code")
+    budget_gate_id = _safe_getattr(compute_budget, "gate_decision_id")
+    max_candidates = _safe_getattr(compute_budget, "max_candidates")
+    max_depth = _safe_getattr(compute_budget, "max_depth")
+    max_steps = _safe_getattr(compute_budget, "max_steps")
+    max_parallelism = _safe_getattr(compute_budget, "max_parallelism")
+
+    run_id = _safe_getattr(run, "run_id")
+    run_gate_id = _safe_getattr(run, "gate_decision_id")
+    run_budget_id = _safe_getattr(run, "budget_id")
+    run_operator_set_id = _safe_getattr(run, "operator_set_id")
+    run_operator_set_version = _safe_getattr(run, "operator_set_version")
+    run_problem_frame_digest = _safe_getattr(run, "problem_frame_digest")
+    run_assessment_id = _safe_getattr(run, "contract_assessment_id")
+    run_residual_ids = _safe_getattr(run, "residual_ids")
+
+    if not _valid_residual_record(residual):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    if not isinstance(search_gate, SearchGateDecision):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    if not isinstance(compute_budget, ComputeBudgetDecision):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    if not isinstance(run, GeometricSearchRun):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+
+    if not _nonempty_text(residual_id):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    if residual_kind != QUANTITY_ENTITY_BINDING_RESIDUAL_KIND:
+        reasons.append(CandidateOperatorRefusalReason.UNSUPPORTED_RESIDUAL_KIND.value)
+    if residual_code != QUANTITY_ENTITY_BINDING_RESIDUAL_CODE:
+        reasons.append(CandidateOperatorRefusalReason.UNSUPPORTED_RESIDUAL_CODE.value)
+    if candidate_organ != QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN:
+        reasons.append(CandidateOperatorRefusalReason.UNSUPPORTED_CANDIDATE_ORGAN.value)
+    if not _valid_spans(residual_spans):
+        reasons.append(CandidateOperatorRefusalReason.MALFORMED_EVIDENCE_SPAN.value)
+
+    if gate_status is not SearchGateStatus.ELIGIBLE:
+        reasons.append(CandidateOperatorRefusalReason.INELIGIBLE_SEARCH_GATE.value)
+    if gate_reason != "eligible_missing_relation":
+        reasons.append(CandidateOperatorRefusalReason.INELIGIBLE_SEARCH_GATE.value)
+    if gate_candidate_organ != QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN:
+        reasons.append(CandidateOperatorRefusalReason.UNSUPPORTED_CANDIDATE_ORGAN.value)
+
+    if budget_status is not ComputeBudgetStatus.BUDGET_ALLOWED:
+        reasons.append(CandidateOperatorRefusalReason.NON_ALLOWED_BUDGET.value)
+    if budget_reason != "budget_allowed_missing_relation":
+        reasons.append(CandidateOperatorRefusalReason.NON_ALLOWED_BUDGET.value)
+
+    if not _nonempty_text(budget_gate_id) or not _nonempty_text(gate_id):
+        reasons.append(CandidateOperatorRefusalReason.GATE_BUDGET_MISMATCH.value)
+    elif budget_gate_id != gate_id:
+        reasons.append(CandidateOperatorRefusalReason.GATE_BUDGET_MISMATCH.value)
+
+    if not _nonempty_text(run_gate_id) or not _nonempty_text(gate_id):
+        reasons.append(CandidateOperatorRefusalReason.RUN_GATE_MISMATCH.value)
+    elif run_gate_id != gate_id:
+        reasons.append(CandidateOperatorRefusalReason.RUN_GATE_MISMATCH.value)
+
+    if not _nonempty_text(run_budget_id) or not _nonempty_text(budget_id):
+        reasons.append(CandidateOperatorRefusalReason.RUN_BUDGET_MISMATCH.value)
+    elif run_budget_id != budget_id:
+        reasons.append(CandidateOperatorRefusalReason.RUN_BUDGET_MISMATCH.value)
+
+    if run_operator_set_id != operator_set_id:
+        reasons.append(CandidateOperatorRefusalReason.OPERATOR_SET_MISMATCH.value)
+    if run_operator_set_version != CANDIDATE_OPERATOR_SET_VERSION:
+        reasons.append(CandidateOperatorRefusalReason.OPERATOR_SET_MISMATCH.value)
+
+    if type(attempt_index) is not int or attempt_index < 0:
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    elif attempt_index != 0:
+        reasons.append(CandidateOperatorRefusalReason.ATTEMPT_INDEX_EXCEEDS_BUDGET.value)
+        
+    if type(max_candidates) is not int:
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    elif max_candidates < 1:
+        reasons.append(CandidateOperatorRefusalReason.BUDGET_CHARGE_EXCEEDS_BUDGET.value)
+
+    if attempt_index >= QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.max_attempts_per_run:
+        reasons.append(
+            CandidateOperatorRefusalReason.ATTEMPT_INDEX_EXCEEDS_OPERATOR_POLICY.value
+        )
+
+    if type(max_depth) is not int or type(max_steps) is not int:
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    else:
+        charge = QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.budget_charge
+        if charge.candidates > max_candidates:
+            reasons.append(
+                CandidateOperatorRefusalReason.BUDGET_CHARGE_EXCEEDS_BUDGET.value
+            )
+        if charge.steps > max_steps:
+            reasons.append(
+                CandidateOperatorRefusalReason.BUDGET_CHARGE_EXCEEDS_BUDGET.value
+            )
+        if QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.depth > max_depth:
+            reasons.append(
+                CandidateOperatorRefusalReason.BUDGET_CHARGE_EXCEEDS_BUDGET.value
+            )
+
+    if type(max_parallelism) is not int or max_parallelism != 1:
+        reasons.append(CandidateOperatorRefusalReason.NON_SERIAL_BUDGET.value)
+
+    if not _valid_version_pairs(schema_versions):
+        reasons.append(CandidateOperatorRefusalReason.UNSUPPORTED_SCHEMA_VERSION.value)
+    if not _valid_version_pairs(policy_versions):
+        reasons.append(CandidateOperatorRefusalReason.UNSUPPORTED_SCHEMA_VERSION.value)
+
+    if not _sha256_text(problem_frame_digest):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    if not _nonempty_text(original_contract_assessment_id):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    if not _sha256_text(run_id):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+
+    if (
+        isinstance(residual_id, str)
+        and isinstance(gate_residual_ids, tuple)
+        and residual_id not in gate_residual_ids
+    ):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    if (
+        isinstance(residual_id, str)
+        and isinstance(run_residual_ids, tuple)
+        and residual_id not in run_residual_ids
+    ):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    if (
+        isinstance(problem_frame_digest, str)
+        and isinstance(run_problem_frame_digest, str)
+        and problem_frame_digest != run_problem_frame_digest
+    ):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+    if (
+        isinstance(original_contract_assessment_id, str)
+        and isinstance(run_assessment_id, str)
+        and original_contract_assessment_id != run_assessment_id
+    ):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_OPERATOR_INPUT.value)
+
+    if not isinstance(grounded_quantity_entity_cues, tuple):
+        reasons.append(CandidateOperatorRefusalReason.INVALID_QUANTITY_ENTITY_CUE_TYPE.value)
+    elif len(grounded_quantity_entity_cues) == 0:
+        reasons.append(CandidateOperatorRefusalReason.MISSING_TYPED_CUE.value)
+    elif len(grounded_quantity_entity_cues) > 1:
+        reasons.append(CandidateOperatorRefusalReason.QUANTITY_ENTITY_CUE_COUNT_MISMATCH.value)
+
+    cue: GroundedQuantityEntityCue | None = None
+    if isinstance(grounded_quantity_entity_cues, tuple) and len(grounded_quantity_entity_cues) == 1:
+        cue = grounded_quantity_entity_cues[0]
+        if not isinstance(cue, GroundedQuantityEntityCue):
+            reasons.append(CandidateOperatorRefusalReason.INVALID_QUANTITY_ENTITY_CUE_TYPE.value)
+        else:
+            if not _nonempty_text(cue.quantity_mention_id):
+                reasons.append(CandidateOperatorRefusalReason.EMPTY_QUANTITY_MENTION_ID.value)
+            if not _nonempty_text(cue.entity_mention_id):
+                reasons.append(CandidateOperatorRefusalReason.EMPTY_ENTITY_MENTION_ID.value)
+            if not _nonempty_text(cue.quantity_kind):
+                reasons.append(CandidateOperatorRefusalReason.EMPTY_QUANTITY_KIND.value)
+            if cue.unit_mention_id is not None and not _nonempty_text(cue.unit_mention_id):
+                reasons.append(CandidateOperatorRefusalReason.EMPTY_UNIT_MENTION_ID.value)
+
+            if not _valid_spans(cue.evidence_spans):
+                reasons.append(CandidateOperatorRefusalReason.MALFORMED_EVIDENCE_SPAN.value)
+            elif not cue.evidence_spans:
+                reasons.append(CandidateOperatorRefusalReason.MISSING_EVIDENCE_SPANS.value)
+            elif isinstance(residual_spans, tuple) and not _spans_grounded_in_residual(
+                cue.evidence_spans, residual_spans
+            ):
+                reasons.append(CandidateOperatorRefusalReason.MALFORMED_EVIDENCE_SPAN.value)
+
+    input_digest: str | None = None
+    if (
+        not reasons
+        and isinstance(residual_id, str)
+        and isinstance(run_id, str)
+        and isinstance(gate_id, str)
+        and isinstance(budget_id, str)
+        and type(attempt_index) is int
+    ):
+        input_digest = _canonical_digest(
+            _input_digest_payload(
+                operator_policy_version=CANDIDATE_OPERATOR_POLICY_VERSION,
+                operator_name=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME,
+                operator_version=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION,
+                problem_frame_digest=problem_frame_digest,
+                original_contract_assessment_id=original_contract_assessment_id,
+                residual_id=residual_id,
+                residual_kind=QUANTITY_ENTITY_BINDING_RESIDUAL_KIND,
+                residual_code=QUANTITY_ENTITY_BINDING_RESIDUAL_CODE,
+                candidate_organ=QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
+                search_gate_decision_id=gate_id,
+                compute_budget_id=budget_id,
+                geometric_search_run_id=run_id,
+                operator_set_id=operator_set_id,
+                operator_set_version=CANDIDATE_OPERATOR_SET_VERSION,
+                attempt_index=attempt_index,
+                schema_versions=schema_versions,
+                policy_versions=policy_versions,
+            )
+        )
+
+    if reasons:
+        operator_refusal_id = _canonical_digest(
+            _operator_refusal_id_payload(
+                operator_policy_version=CANDIDATE_OPERATOR_POLICY_VERSION,
+                input_digest=input_digest,
+                geometric_search_run_id=_text_or_none(run_id),
+                residual_id=_text_or_none(residual_id),
+                operator_name=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME,
+                reason_codes=tuple(dict.fromkeys(reasons)),
+            )
+        )
+        return CandidateOperatorRefusal(
+            operator_refusal_id=operator_refusal_id,
+            operator_policy_version=CANDIDATE_OPERATOR_POLICY_VERSION,
+            input_digest=input_digest,
+            geometric_search_run_id=_text_or_none(run_id),
+            residual_id=_text_or_none(residual_id),
+            operator_name=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME,
+            reason_codes=tuple(dict.fromkeys(reasons)),
+            explanation="Candidate operator refused: " + ", ".join(dict.fromkeys(reasons)) + ".",
+        )
+
+    assert cue is not None
+    assert input_digest is not None
+    assert isinstance(residual_id, str)
+    assert isinstance(run_id, str)
+
+    evidence_spans = cue.evidence_spans
+    payload = _quantity_entity_binding_candidate_payload(cue)
+    candidate_digest = _canonical_digest(
+        _candidate_digest_payload(
+            problem_frame_digest=problem_frame_digest,
+            candidate_organ=QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
+            candidate_payload=payload,
+            evidence_spans=evidence_spans,
+        )
+    )
+
+    attempt_id = _canonical_digest(
+        _attempt_id_payload(
+            attempt_index=attempt_index,
+            parent_attempt_id=None,
+            operator_id=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME,
+            operator_version=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION,
+            input_digest=input_digest,
+            candidate_digest=candidate_digest,
+            budget_charge=_FIXED_BUDGET_CHARGE,
+            depth=_OPERATOR_DEPTH,
+            step_index=attempt_index,
+            replay_status=CandidateReplayStatus.REPLAY_PENDING,
+            replay_blockers=(),
+            evidence_spans=evidence_spans,
+        )
+    )
+
+    candidate_reconstruction_digest = _canonical_digest(
+        _reconstruction_digest_payload(
+            geometric_search_run_id=run_id,
+            attempt_id=attempt_id,
+            attempt_index=attempt_index,
+            operator_set_id=operator_set_id,
+            operator_set_version=CANDIDATE_OPERATOR_SET_VERSION,
+            operator_name=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME,
+            operator_version=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION,
+            residual_id=residual_id,
+            residual_kind=QUANTITY_ENTITY_BINDING_RESIDUAL_KIND,
+            residual_code=QUANTITY_ENTITY_BINDING_RESIDUAL_CODE,
+            candidate_digest=candidate_digest,
+            evidence_spans=evidence_spans,
+            schema_versions=schema_versions,
+            policy_versions=policy_versions,
+        )
+    )
+
+    operator_provenance = (
+        ("operator_family", QUANTITY_ENTITY_BINDING_OPERATOR_POLICY.operator_family),
+        ("operator_name", QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME),
+        ("operator_version", QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION),
+        ("operator_set_id", operator_set_id),
+        ("operator_set_version", CANDIDATE_OPERATOR_SET_VERSION),
+    )
+
+    candidate_reconstruction = CandidateReconstruction(
+        candidate_digest=candidate_digest,
+        candidate_reconstruction_digest=candidate_reconstruction_digest,
+        candidate_organ=QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
+        candidate_payload=payload,
+        evidence_spans=evidence_spans,
+        operator_name=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME,
+        operator_version=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION,
+        operator_provenance=operator_provenance,
+        source_residual_id=residual_id,
+        problem_frame_digest=problem_frame_digest,
+        original_contract_assessment_id=original_contract_assessment_id,
+    )
+
+    candidate_attempt = CandidateAttempt(
+        attempt_id=attempt_id,
+        attempt_index=attempt_index,
+        parent_attempt_id=None,
+        operator_id=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME,
+        operator_version=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION,
+        input_digest=input_digest,
+        candidate_digest=candidate_digest,
+        budget_charge=_FIXED_BUDGET_CHARGE,
+        depth=_OPERATOR_DEPTH,
+        step_index=attempt_index,
+        replay_status=CandidateReplayStatus.REPLAY_PENDING,
+        replay_blockers=(),
+        evidence_spans=evidence_spans,
+        explanation="",
+    )
+
+    reason_codes: tuple[str, ...] = ()
+    operator_result_id = _canonical_digest(
+        _operator_result_id_payload(
+            operator_policy_version=CANDIDATE_OPERATOR_POLICY_VERSION,
+            input_digest=input_digest,
+            geometric_search_run_id=run_id,
+            attempt_id=attempt_id,
+            attempt_index=attempt_index,
+            candidate_digest=candidate_digest,
+            candidate_reconstruction_digest=candidate_reconstruction_digest,
+            candidate_organ=QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
+            operator_name=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME,
+            operator_version=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION,
+            reason_codes=reason_codes,
+            evidence_spans=evidence_spans,
+        )
+    )
+
+    safe_explanation = explanation or (
+        "Quantity-entity binding candidate constructed for residual "
+        + residual_id
+        + " linking "
+        + cue.quantity_mention_id
+        + " and "
+        + cue.entity_mention_id
+        + "."
+    )
+    return CandidateOperatorResult(
+        operator_result_id=operator_result_id,
+        operator_policy_version=CANDIDATE_OPERATOR_POLICY_VERSION,
+        input_digest=input_digest,
+        geometric_search_run_id=run_id,
+        attempt_id=attempt_id,
+        attempt_index=attempt_index,
+        candidate_digest=candidate_digest,
+        candidate_reconstruction_digest=candidate_reconstruction_digest,
+        candidate_organ=QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
+        operator_name=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME,
+        operator_version=QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION,
+        candidate_attempt=candidate_attempt,
+        candidate_reconstruction=candidate_reconstruction,
+        reason_codes=reason_codes,
+        evidence_spans=evidence_spans,
+        explanation=safe_explanation,
+    )
+
 __all__ = [
     "CANDIDATE_OPERATOR_POLICY_VERSION",
     "CANDIDATE_OPERATOR_SET_VERSION",
@@ -933,9 +1403,15 @@ __all__ = [
     "MISSING_ROLE_RESIDUAL_KIND",
     "MISSING_ROLE_RESIDUAL_CODE",
     "MISSING_ROLE_CANDIDATE_ORGAN",
+    "QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME",
+    "QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION",
+    "QUANTITY_ENTITY_BINDING_RESIDUAL_KIND",
+    "QUANTITY_ENTITY_BINDING_RESIDUAL_CODE",
+    "QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN",
     "CandidateOperatorRefusalReason",
     "CandidateOperatorPolicy",
     "GroundedUnaryDeltaCue",
+    "GroundedQuantityEntityCue",
     "CandidateOperatorInput",
     "CandidateReconstruction",
     "CandidateOperatorResult",
@@ -943,4 +1419,5 @@ __all__ = [
     "CandidateOperatorOutcome",
     "candidate_operator_set_id",
     "build_missing_role_candidate",
+    "build_quantity_entity_binding_candidate",
 ]
