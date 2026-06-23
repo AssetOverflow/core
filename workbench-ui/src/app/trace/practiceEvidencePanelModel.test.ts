@@ -162,7 +162,7 @@ describe("practice evidence panel model", () => {
     });
 
     const sealed = model.detailSections.find((section) => section.title === "Sealed trace");
-    expect(sealed?.items[0].rows).toEqual(
+    expect(sealed?.items[0]?.rows ?? []).toEqual(
       expect.arrayContaining([
         { key: "geometric_search_run_id", value: "gsr_1" },
         { key: "replay_refusal_ids", value: "rr_1" },
@@ -181,7 +181,7 @@ describe("practice evidence panel model", () => {
     expect(model.chainRows).toEqual([{ key: "trace_refusal", value: "recorded — ptr_1" }]);
 
     const refusal = model.detailSections.find((section) => section.title === "Trace refusal");
-    expect(refusal?.items[0].rows).toEqual(
+    expect(refusal?.items[0]?.rows ?? []).toEqual(
       expect.arrayContaining([
         { key: "trace_refusal_id", value: "ptr_1" },
         { key: "reason_codes", value: "missing_residual" },
