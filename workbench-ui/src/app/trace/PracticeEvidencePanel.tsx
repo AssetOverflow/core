@@ -19,6 +19,10 @@ export interface PracticeEvidencePanelProps {
   errorMessage: (error: unknown) => string;
 }
 
+function rowValue(value: string) {
+  return value;
+}
+
 function DetailSection({ section }: { section: PracticeEvidenceDetailSection }) {
   return (
     <section className="grid gap-2 rounded-md border border-[var(--color-border-subtle)] p-3">
@@ -37,7 +41,7 @@ function DetailSection({ section }: { section: PracticeEvidenceDetailSection }) 
               <MetadataTable
                 rows={item.rows.map((row) => ({
                   key: row.key,
-                  value: row.value,
+                  value: rowValue(row.value),
                   mono: true,
                 }))}
               />
@@ -61,10 +65,6 @@ export function PracticeEvidencePanel({
     () => (evidence ? JSON.stringify(evidence, null, 2) : ""),
     [evidence],
   );
-  const model = useMemo(
-    () => (evidence ? practiceEvidencePanelModel(evidence) : null),
-    [evidence],
-  );
 
   if (isLoading) {
     return <LoadingState label="Loading sealed practice evidence..." />;
@@ -79,7 +79,7 @@ export function PracticeEvidencePanel({
       />
     );
   }
-  if (!evidence || model === null) {
+  if (!evidence) {
     return (
       <EmptyState
         statement="No sealed practice evidence recorded for this turn."
@@ -88,6 +88,7 @@ export function PracticeEvidencePanel({
     );
   }
 
+  const model = practiceEvidencePanelModel(evidence);
   return (
     <section className="grid gap-3" data-testid="practice-evidence-panel">
       {model.emptyMessage ? (
@@ -101,14 +102,14 @@ export function PracticeEvidencePanel({
         <MetadataTable
           rows={model.authorityRows.map((row) => ({
             key: row.key,
-            value: row.value,
+            value: rowValue(row.value),
             mono: true,
           }))}
         />
         <MetadataTable
           rows={model.countRows.map((row) => ({
             key: row.key,
-            value: row.value,
+            value: rowValue(row.value),
             mono: true,
           }))}
         />
@@ -118,7 +119,7 @@ export function PracticeEvidencePanel({
         <MetadataTable
           rows={model.chainRows.map((row) => ({
             key: row.key,
-            value: row.value,
+            value: rowValue(row.value),
             mono: true,
           }))}
         />
@@ -138,7 +139,7 @@ export function PracticeEvidencePanel({
           <MetadataTable
             rows={model.sourceSpanRows.map((row) => ({
               key: row.key,
-              value: row.value,
+              value: rowValue(row.value),
               mono: true,
             }))}
           />
