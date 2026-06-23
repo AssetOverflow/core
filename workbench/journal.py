@@ -9,6 +9,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
+from workbench.construction_evidence import ConstructionEvidence
 from workbench.schemas import (
     ChatTurnResult,
     CognitivePipelineRecord,
@@ -58,6 +59,7 @@ class TurnJournalEntry:
     leeway_evidence: dict[str, Any] | None = None
     pipeline_record: CognitivePipelineRecord | dict[str, Any] | None = None
     field_evidence: FieldEvidence | dict[str, Any] | None = None
+    construction_evidence: ConstructionEvidence | dict[str, Any] | None = None
     trace_integrity: TraceIntegrity | None = None
     journal_digest: str = ""
 
@@ -99,6 +101,7 @@ class TurnJournalEntry:
             leeway_evidence=to_data(result.leeway_evidence),
             pipeline_record=to_data(result.pipeline_record),
             field_evidence=to_data(result.field_evidence),
+            construction_evidence=to_data(result.construction_evidence),
             trace_integrity=_trace_integrity_for_hash(result.trace_hash),
         )
 

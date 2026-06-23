@@ -8,7 +8,15 @@ import {
   useTracePipeline,
   useTraceTurn,
   useTraceTurns,
+  useTraceConstruction,
 } from "../../api/queries";
+import type { ConstructionEvidence } from "../../types/constructionEvidence";
+import {
+  CONSTRUCTION_AUTHORITY_DISCLOSURES,
+  assessmentBlockerSummary,
+  assessmentDisposition,
+  constructionEvidenceEmptyMessage,
+} from "./constructionEvidenceView";
 import { DigestBadge } from "../../design/components/DigestBadge/DigestBadge";
 import { FieldInvariantCard } from "../../design/components/FieldInvariantCard/FieldInvariantCard";
 import { DagViewer, type DagEdgeInput, type DagNodeInput } from "../../design/components/Dag";
@@ -50,6 +58,7 @@ const TRACE_TABS: readonly Tab[] = [
   { id: "pipeline", label: "Pipeline" },
   { id: "field", label: "Field" },
   { id: "bundle", label: "Bundle" },
+  { id: "construction", label: "Construction" },
   { id: "surfaces", label: "Surfaces" },
   { id: "grounding", label: "Grounding" },
   { id: "verdicts", label: "Verdicts" },
@@ -556,6 +565,120 @@ function BundleTab({
   );
 }
 
+function ConstructionTab({
+  evidence,
+  isLoading,
+  error,
+  turnId,
+}: {
+  evidence?: ConstructionEvidence | null;
+  isLoading: boolean;
+  error: unknown;
+  turnId: number;
+}) {
+  if (isLoading) {
+    return <LoadingState label="Loading construction evidence..." />;
+  }
+  if (error) {
+    return (
+      <ErrorState
+        whatFailed={errorMessage(error)}
+        mutationStatus="No trace mutation occurred."
+        reproducer={`curl /trace/${turnId}/construction`}
+        retrySafety="Retry: safe"
+      />
+    );
+  }
+  if (!evidence) {
+    return <LoadingState label="Loading construction evidence..." />;
+  }
+
+  const emptyMsg = constructionEvidenceEmptyMessage(evidence);
+  if (emptyMsg) {
+    return (
+      <section className="flex flex-col gap-3" data-testid="trace-construction">
+        <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3">
+          <p className="m-0 text-sm text-[var(--color-text-secondary)]">{emptyMsg}</p>
+        </div>
+        <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3">
+          <div className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">Disclosures</div>
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center rounded border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] px-1.5 py-0.5 font-mono text-[10px] uppercase text-[var(--color-text-secondary)]">Diagnostic Only</span>
+            <span className="inline-flex items-center rounded border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] px-1.5 py-0.5 font-mono text-[10px] uppercase text-[var(--color-text-secondary)]">Serving Disallowed</span>
+          </div>
+        </div>
+        <div>
+          <div className="mb-1 text-xs font-semibold text-[var(--color-text-secondary)]">
+            reproducer
+          </div>
+          <code className="block overflow-auto rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2 font-mono text-xs text-[var(--color-text-primary)]">
+            curl /trace/{turnId}/construction
+          </code>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="flex flex-col gap-3" data-testid="trace-construction">
+      <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3">
+        <div className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">Summary counts</div>
+        <ul className="m-0 list-disc pl-5 text-sm text-[var(--color-text-primary)] leading-6">
+          <li>Proposals: {evidence.proposals.length}</li>
+          <li>Mentions: {evidence.mentions.length}</li>
+          <li>Bindings: {evidence.bindings.length}</li>
+          <li>Bound relations: {evidence.bound_relations.length}</li>
+          <li>Contract assessments: {evidence.contract_assessments.length}</li>
+        </ul>
+      </div>
+
+      {evidence.contract_assessments.map((assessment, idx) => (
+        <div key={idx} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+              {assessment.candidate_organ}
+            </span>
+            <span className={`inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase ${
+              assessmentDisposition(assessment) === "runnable"
+                ? "border-[var(--color-state-success-border)] bg-[var(--color-state-success-bg)] text-[var(--color-state-success-text)]"
+                : "border-[var(--color-state-warning-border)] bg-[var(--color-state-warning-bg)] text-[var(--color-state-warning-text)]"
+            }`}>
+              {assessmentDisposition(assessment)}
+            </span>
+          </div>
+          <p className="m-0 mt-2 text-xs text-[var(--color-text-secondary)]">
+            <span className="font-semibold text-[var(--color-text-primary)]">Blockers:</span> {assessmentBlockerSummary(assessment)}
+          </p>
+          <p className="m-0 mt-1 text-xs text-[var(--color-text-secondary)]">
+            <span className="font-semibold text-[var(--color-text-primary)]">Explanation:</span> {assessment.explanation}
+          </p>
+        </div>
+      ))}
+
+      <div className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-3">
+        <div className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">Disclosures</div>
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex items-center rounded border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] px-1.5 py-0.5 font-mono text-[10px] uppercase text-[var(--color-text-secondary)]">Diagnostic Only</span>
+          <span className="inline-flex items-center rounded border border-[var(--color-border-subtle)] bg-[var(--color-surface-raised)] px-1.5 py-0.5 font-mono text-[10px] uppercase text-[var(--color-text-secondary)]">Serving Disallowed</span>
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-1 text-xs font-semibold text-[var(--color-text-secondary)]">
+          reproducer
+        </div>
+        <code className="block overflow-auto rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2 font-mono text-xs text-[var(--color-text-primary)]">
+          curl /trace/{turnId}/construction
+        </code>
+      </div>
+      <div className="max-h-[28rem] overflow-auto rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] p-2">
+        <StableJsonViewer source={JSON.stringify(evidence, null, 2)} />
+      </div>
+    </section>
+  );
+}
+
+
 function TraceRow({
   turn,
   selected,
@@ -729,6 +852,9 @@ function TraceDetail({
   bundle,
   bundleLoading,
   bundleError,
+  constructionEvidence,
+  constructionLoading,
+  constructionError,
 }: {
   turn: TurnJournalEntry;
   pipelineRecord?: CognitivePipelineRecord | null;
@@ -740,6 +866,9 @@ function TraceDetail({
   bundle?: EvidenceBundle | null;
   bundleLoading: boolean;
   bundleError: unknown;
+  constructionEvidence?: ConstructionEvidence | null;
+  constructionLoading: boolean;
+  constructionError: unknown;
 }) {
   const [activeTab, setActiveTab] = useState("pipeline");
   return (
@@ -778,6 +907,14 @@ function TraceDetail({
             turnId={turn.turn_id}
           />
         ) : null}
+        {activeTab === "construction" ? (
+          <ConstructionTab
+            evidence={constructionEvidence}
+            isLoading={constructionLoading}
+            error={constructionError}
+            turnId={turn.turn_id}
+          />
+        ) : null}
         {activeTab === "surfaces" ? <SurfacesTab turn={turn} /> : null}
         {activeTab === "grounding" ? <GroundingTab turn={turn} /> : null}
         {activeTab === "verdicts" ? <VerdictsTab turn={turn} /> : null}
@@ -800,6 +937,7 @@ export function TraceRoute() {
   const pipelineQuery = useTracePipeline(selectedTurnId);
   const fieldQuery = useTraceField(selectedTurnId);
   const bundleQuery = useTraceBundle(selectedTurnId);
+  const constructionQuery = useTraceConstruction(selectedTurnId);
 
   const turns = turnsQuery.data ?? [];
   const filteredTurns = useMemo(() => {
@@ -916,6 +1054,9 @@ export function TraceRoute() {
               bundle={bundleQuery.data}
               bundleLoading={bundleQuery.isLoading}
               bundleError={bundleQuery.isError ? bundleQuery.error : null}
+              constructionEvidence={constructionQuery.data}
+              constructionLoading={constructionQuery.isLoading}
+              constructionError={constructionQuery.isError ? constructionQuery.error : null}
             />
           ) : null}
         </section>

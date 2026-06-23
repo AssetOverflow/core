@@ -7,6 +7,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Literal
 
+from workbench.construction_evidence import ConstructionEvidence
+
+
 
 ErrorCode = Literal[
     "bad_request",
@@ -332,6 +335,7 @@ class ChatTurnResult:
     leeway_evidence: LeewayEvidence | None = None
     pipeline_record: CognitivePipelineRecord | None = None
     field_evidence: FieldEvidence | None = None
+    construction_evidence: ConstructionEvidence | None = None
     turn_id: int | None = None
 
 
@@ -369,6 +373,7 @@ class TurnJournalEntrySchema:
     leeway_evidence: LeewayEvidence | None = None
     pipeline_record: CognitivePipelineRecord | None = None
     field_evidence: FieldEvidence | None = None
+    construction_evidence: ConstructionEvidence | None = None
 
 
 @dataclass(frozen=True, slots=True)
