@@ -724,27 +724,87 @@ def test_seal_bound_refuses_invalid_binding_type_without_exception() -> None:
 
 
 def test_bound_module_does_not_call_upstream_producers() -> None:
+    # sealed_practice_trace consumes already-produced evidence.
+    # It does not produce candidates, bind attempts, build replay input, classify replay,
+    # or execute sealing side effects beyond constructing immutable records.
     path = Path("generate/sealed_practice_trace.py")
     source = path.read_text("utf-8")
     tree = ast.parse(source)
+    imports: set[str] = set()
     imported_names: set[str] = set()
     calls: set[str] = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom):
+        if isinstance(node, ast.Import):
+            imports.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            imports.add(node.module or "")
             imported_names.update(alias.name for alias in node.names)
         elif isinstance(node, ast.Call):
             if isinstance(node.func, ast.Name):
                 calls.add(node.func.id)
             elif isinstance(node.func, ast.Attribute):
                 calls.add(node.func.attr)
-    forbidden = {
+
+    # Allowed record imports and standard library / upstream modules
+    assert imports <= {
+        "__future__",
+        "dataclasses",
+        "enum",
+        "hashlib",
+        "json",
+        "generate.geometric_search_run",
+        "generate.kernel_facts",
+        "generate.replay_adapter",
+        "generate.candidate_operator",
+        "generate.run_attempt_binding",
+    }
+
+    # Forbidden authority modules
+    forbidden_module_families = (
+        "runtime", "serving", "workbench", "teaching", "proposal", "pack", "policy", "identity"
+    )
+    for imp in imports:
+        assert not any(imp.startswith(family) for family in forbidden_module_families), f"Imported forbidden module family: {imp}"
+
+    # Forbidden imports/calls
+    forbidden_imports = {
         "build_missing_role_candidate",
+        "candidate_operator_set_id",
+        "GroundedUnaryDeltaCue",
         "bind_candidate_attempt_to_run",
+        "build_replay_adapter_input",
         "build_replay_adapter_input_from_binding",
         "classify_replay_result",
+        "initialize_geometric_search_run",
     }
-    assert forbidden.isdisjoint(imported_names)
-    assert forbidden.isdisjoint(calls)
+    assert forbidden_imports.isdisjoint(imported_names)
+    assert forbidden_imports.isdisjoint(calls)
+
+    # Allowed imported names from generate module family must be record types/enums only
+    allowed_imported_names = {
+        "CandidateOperatorResult",
+        "CandidateAttemptRunBinding",
+        "ReplayAdapterResult",
+        "ReplayAdapterRefusal",
+        "ReplayDisposition",
+        "GeometricSearchRun",
+        "SearchRunRefusal",
+        "SearchRunDisposition",
+        "SourceSpan",
+        # standard library imports and dataclass/enum decorators/helpers
+        "annotations",
+        "hashlib",
+        "json",
+        "dataclass",
+        "Enum",
+        "unique",
+    }
+    # Check that any imported name starting with generate or from a generate module is allowed
+    generate_imports = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("generate"):
+            generate_imports.update(alias.name for alias in node.names)
+    assert generate_imports <= allowed_imported_names, f"Imported names that are not allowed records: {generate_imports - allowed_imported_names}"
 
 
 def test_bound_dataclasses_have_no_forbidden_authority_fields() -> None:
