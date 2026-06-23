@@ -21,6 +21,10 @@ from core.epistemic_state import (
 from workbench import calibration, logos, readers
 from workbench.journal import DEFAULT_JOURNAL_DIR, TurnJournal, TurnJournalEntry
 from workbench.evidence_bundle import build_evidence_bundle
+from workbench.construction_endpoint import (
+    construction_evidence_response,
+    construction_turn_id_from_path,
+)
 from workbench.tour import determinism_tour
 from workbench.field_evidence import (
     field_evidence_from_journal_entry,
@@ -406,7 +410,10 @@ class WorkbenchApi:
                 return ApiResponse(
                     404, error("not_found", f"trace bundle not found: {turn_id}")
                 )
-            return ApiResponse(200, ok(build_evidence_bundle(entry)))
+        raw_construction_turn_id = construction_turn_id_from_path(path)
+        if method == "GET" and raw_construction_turn_id is not None:
+            response = construction_evidence_response(self._journal, raw_construction_turn_id)
+            return ApiResponse(response.status, response.payload)
         if method == "GET" and path.startswith("/trace/"):
             raw_turn_id = unquote(path.removeprefix("/trace/"))
             try:

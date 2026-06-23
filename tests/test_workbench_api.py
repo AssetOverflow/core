@@ -412,3 +412,38 @@ def test_invalid_content_length_does_not_crash_server() -> None:
 
     assert b"HTTP/1.0 400" in data or b"HTTP/1.1 400" in data
     assert b"application/json" in data
+
+
+def test_trace_construction_route() -> None:
+    # 1. Verify invalid turn ID returns 404
+    response = _request("GET", "/trace/not-an-int/construction")
+    assert response.status == 404
+    assert response.payload["ok"] is False
+    assert response.payload["error"]["code"] == "not_found"
+
+    # 2. Verify missing turn ID returns 404
+    response = _request("GET", "/trace/999999/construction")
+    assert response.status == 404
+    assert response.payload["ok"] is False
+    assert response.payload["error"]["code"] == "not_found"
+
+    # 3. Create a turn to ensure there is at least one turn
+    _request("POST", "/chat/turn", {"prompt": "What is truth?"})
+
+    # 4. Get active turns
+    turns_resp = _request("GET", "/trace/turns?limit=5")
+    assert turns_resp.status == 200
+    items = turns_resp.payload["data"]["items"]
+    assert len(items) > 0
+    turn_id = items[0]["turn_id"]
+
+    # 5. Query construction endpoint for the existing turn
+    response = _request("GET", f"/trace/{turn_id}/construction")
+    assert response.status == 200
+    assert response.payload["ok"] is True
+    data = response.payload["data"]
+    assert data["schema_version"] == "construction_evidence_v1"
+    assert data["turn_id"] == turn_id
+    assert data["status"] == "missing_evidence"
+    assert data["diagnostic_only"] is True
+    assert data["serving_allowed"] is False

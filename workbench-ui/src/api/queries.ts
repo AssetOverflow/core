@@ -35,6 +35,7 @@ import {
   fetchTracePipeline,
   fetchTraceField,
   fetchTraceBundle,
+  fetchTraceConstruction,
   fetchTour,
   fetchLivedLife,
   fetchTraceTurns,
@@ -90,6 +91,8 @@ import type {
   MathProposalDetail,
   MathRatifyResult,
 } from "../types/api";
+import type { ConstructionEvidence } from "../types/constructionEvidence";
+
 
 export { QueryClientProvider };
 
@@ -262,6 +265,17 @@ export function useTraceBundle(turnId?: number | null) {
     refetchOnWindowFocus: false,
   });
 }
+
+export function useTraceConstruction(turnId?: number | null) {
+  return useQuery<ConstructionEvidence, WorkbenchApiError>({
+    queryKey: ["api", "trace", "construction", turnId ?? null],
+    queryFn: () => fetchTraceConstruction(turnId as number),
+    enabled: typeof turnId === "number",
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
 
 export function useTour() {
   return useQuery<DeterminismTour, WorkbenchApiError>({

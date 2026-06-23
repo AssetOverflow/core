@@ -32,7 +32,9 @@ describe("construction evidence endpoint helpers", () => {
   it("fetches construction evidence through an injected fetcher", async () => {
     const fetcher = vi.fn(async () => evidence);
 
-    await expect(fetchTraceConstructionWith(7, fetcher)).resolves.toBe(evidence);
+    await expect(
+      fetchTraceConstructionWith(7, fetcher as unknown as <T>(path: string) => Promise<T>),
+    ).resolves.toBe(evidence);
     expect(fetcher).toHaveBeenCalledWith("/trace/7/construction");
   });
 

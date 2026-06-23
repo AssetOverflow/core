@@ -213,6 +213,31 @@ function stubTraceFetch(
           }),
       });
     }
+    const constructionMatch = path.match(/^\/trace\/(\d+)\/construction$/);
+    if (constructionMatch) {
+      const id = Number(constructionMatch[1]);
+      return Promise.resolve({
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            generated_at: "now",
+            data: {
+              schema_version: "construction_evidence_v1",
+              turn_id: id,
+              status: "missing_evidence",
+              missing_reason: "construction evidence was not persisted for this turn",
+              problem_text: null,
+              proposals: [],
+              mentions: [],
+              bindings: [],
+              bound_relations: [],
+              contract_assessments: [],
+              diagnostic_only: true,
+              serving_allowed: false,
+            },
+          }),
+      });
+    }
     const match = path.match(/^\/trace\/(\d+)$/);
     if (match) {
       return Promise.resolve({
