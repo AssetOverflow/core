@@ -96,3 +96,143 @@ def test_existing_construction_evidence_instance_round_trips() -> None:
         construction_evidence: ConstructionEvidence
 
     assert construction_evidence_from_journal_entry(EntryWithPayload(11, existing)) is existing
+
+
+def test_dict_deserialization_success() -> None:
+    payload = {
+        "schema_version": "construction_evidence_v1",
+        "turn_id": 12,
+        "status": "recorded",
+        "missing_reason": None,
+        "problem_text": "Lena has 3 red marbles.",
+        "proposals": [
+            {
+                "family_id": "fraction_decrease",
+                "relation_type": "decrease",
+                "candidate_organ": "assess_fraction_decrease",
+                "status": "proposed",
+                "evidence_spans": [{"start": 9, "end": 10, "text": "3"}],
+                "role_obligations": [
+                    {"role": "quantity", "required": True, "description": "amount"}
+                ],
+                "diagnostic_only": True,
+                "serving_allowed": False,
+            }
+        ],
+        "mentions": [
+            {
+                "mention_id": "m1",
+                "kind": "quantity",
+                "surface": "3",
+                "span": {"start": 9, "end": 10, "text": "3"},
+                "fact_id": "f1",
+            }
+        ],
+        "bindings": [
+            {
+                "binding_type": "mention_binding",
+                "source_mention_id": "m1",
+                "target_mention_id": "m1",
+                "evidence_spans": [{"start": 9, "end": 10, "text": "3"}],
+            }
+        ],
+        "bound_relations": [
+            {
+                "relation_type": "decrease",
+                "roles": [
+                    {
+                        "role": "quantity",
+                        "target_id": "m1",
+                        "evidence_spans": [{"start": 9, "end": 10, "text": "3"}],
+                    }
+                ],
+                "evidence_spans": [{"start": 9, "end": 10, "text": "3"}],
+            }
+        ],
+        "contract_assessments": [
+            {
+                "candidate_organ": "assess_fraction_decrease",
+                "family_id": "fraction_decrease",
+                "missing_bindings": [],
+                "unresolved_hazards": [],
+                "runnable": True,
+                "explanation": "good to go",
+                "evidence_spans": [{"start": 9, "end": 10, "text": "3"}],
+            }
+        ],
+        "diagnostic_only": True,
+        "serving_allowed": False,
+    }
+
+    @dataclass(frozen=True, slots=True)
+    class EntryWithDict:
+        turn_id: int
+        construction_evidence: dict
+
+    evidence = construction_evidence_from_journal_entry(EntryWithDict(12, payload))
+
+    assert evidence.status == "recorded"
+    assert evidence.turn_id == 12
+    assert evidence.problem_text == "Lena has 3 red marbles."
+    assert len(evidence.proposals) == 1
+    assert evidence.proposals[0].family_id == "fraction_decrease"
+    assert len(evidence.proposals[0].evidence_spans) == 1
+    assert evidence.proposals[0].evidence_spans[0].text == "3"
+    assert len(evidence.mentions) == 1
+    assert evidence.mentions[0].mention_id == "m1"
+    assert evidence.mentions[0].span.start == 9
+    assert len(evidence.bindings) == 1
+    assert evidence.bindings[0].binding_type == "mention_binding"
+    assert len(evidence.bound_relations) == 1
+    assert evidence.bound_relations[0].roles[0].target_id == "m1"
+    assert len(evidence.contract_assessments) == 1
+    assert evidence.contract_assessments[0].runnable is True
+
+
+def test_dict_deserialization_span_mismatch_refuses() -> None:
+    payload = {
+        "schema_version": "construction_evidence_v1",
+        "turn_id": 13,
+        "status": "recorded",
+        "missing_reason": None,
+        "problem_text": "Lena has 3 red marbles.",
+        "mentions": [
+            {
+                "mention_id": "m1",
+                "kind": "quantity",
+                "surface": "3",
+                "span": {"start": 9, "end": 10, "text": "wrong"},  # text mismatch!
+                "fact_id": "f1",
+            }
+        ],
+    }
+
+    @dataclass(frozen=True, slots=True)
+    class EntryWithDict:
+        turn_id: int
+        construction_evidence: dict
+
+    evidence = construction_evidence_from_journal_entry(EntryWithDict(13, payload))
+
+    assert evidence.status == "missing_evidence"
+    assert evidence.turn_id == 13
+    assert "exact span validation failed" in evidence.missing_reason
+
+
+def test_dict_deserialization_bad_schema_fails() -> None:
+    payload = {
+        "schema_version": "wrong_version_v2",
+        "turn_id": 14,
+        "status": "recorded",
+        "problem_text": "hello",
+    }
+
+    @dataclass(frozen=True, slots=True)
+    class EntryWithDict:
+        turn_id: int
+        construction_evidence: dict
+
+    evidence = construction_evidence_from_journal_entry(EntryWithDict(14, payload))
+
+    assert evidence.status == "missing_evidence"
+    assert "unsupported schema version" in evidence.missing_reason
