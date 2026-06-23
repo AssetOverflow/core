@@ -1001,33 +1001,6 @@ def build_missing_role_candidate(
     )
 
 
-__all__ = [
-    "CANDIDATE_OPERATOR_POLICY_VERSION",
-    "CANDIDATE_OPERATOR_SET_VERSION",
-    "MISSING_ROLE_CANDIDATE_OPERATOR_NAME",
-    "MISSING_ROLE_CANDIDATE_OPERATOR_VERSION",
-    "MISSING_ROLE_RESIDUAL_KIND",
-    "MISSING_ROLE_RESIDUAL_CODE",
-    "MISSING_ROLE_CANDIDATE_ORGAN",
-    "QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME",
-    "QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION",
-    "QUANTITY_ENTITY_BINDING_RESIDUAL_KIND",
-    "QUANTITY_ENTITY_BINDING_RESIDUAL_CODE",
-    "QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN",
-    "CandidateOperatorRefusalReason",
-    "CandidateOperatorPolicy",
-    "GroundedUnaryDeltaCue",
-    "GroundedQuantityEntityCue",
-    "CandidateOperatorInput",
-    "CandidateReconstruction",
-    "CandidateOperatorResult",
-    "CandidateOperatorRefusal",
-    "CandidateOperatorOutcome",
-    "candidate_operator_set_id",
-    "build_missing_role_candidate",
-    "build_quantity_entity_binding_candidate",
-]
-
 def build_quantity_entity_binding_candidate(
     *,
     residual: object,
@@ -1421,3 +1394,30 @@ def build_quantity_entity_binding_candidate(
         evidence_spans=evidence_spans,
         explanation=safe_explanation,
     )
+
+__all__ = [
+    "CANDIDATE_OPERATOR_POLICY_VERSION",
+    "CANDIDATE_OPERATOR_SET_VERSION",
+    "MISSING_ROLE_CANDIDATE_OPERATOR_NAME",
+    "MISSING_ROLE_CANDIDATE_OPERATOR_VERSION",
+    "MISSING_ROLE_RESIDUAL_KIND",
+    "MISSING_ROLE_RESIDUAL_CODE",
+    "MISSING_ROLE_CANDIDATE_ORGAN",
+    "QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_NAME",
+    "QUANTITY_ENTITY_BINDING_CANDIDATE_OPERATOR_VERSION",
+    "QUANTITY_ENTITY_BINDING_RESIDUAL_KIND",
+    "QUANTITY_ENTITY_BINDING_RESIDUAL_CODE",
+    "QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN",
+    "CandidateOperatorRefusalReason",
+    "CandidateOperatorPolicy",
+    "GroundedUnaryDeltaCue",
+    "GroundedQuantityEntityCue",
+    "CandidateOperatorInput",
+    "CandidateReconstruction",
+    "CandidateOperatorResult",
+    "CandidateOperatorRefusal",
+    "CandidateOperatorOutcome",
+    "candidate_operator_set_id",
+    "build_missing_role_candidate",
+    "build_quantity_entity_binding_candidate",
+]
