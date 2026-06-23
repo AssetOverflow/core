@@ -9,9 +9,10 @@ or grant serving authority.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Any, Literal
 
 PipelineEvidenceStatus = Literal["recorded", "missing_evidence"]
+CONSTRUCTION_EVIDENCE_ABSENT = "construction evidence was not persisted for this turn"
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,6 +139,39 @@ def missing_construction_evidence(turn_id: int, reason: str) -> ConstructionEvid
         contract_assessments=[],
         diagnostic_only=True,
         serving_allowed=False,
+    )
+
+
+def construction_evidence_from_journal_entry(entry: Any) -> ConstructionEvidence:
+    """Project persisted construction evidence from a journal entry if present.
+
+    Current turn journals do not yet persist a construction evidence payload. This
+    helper is deliberately fail-closed and returns a typed missing-evidence record
+    rather than reconstructing a ProblemFrame from prose. When a later PR starts
+    persisting `construction_evidence`, this function is the narrow projection
+    seam to extend.
+    """
+
+    turn_id = int(getattr(entry, "turn_id"))
+    payload = getattr(entry, "construction_evidence", None)
+    if payload is None:
+        return missing_construction_evidence(turn_id, CONSTRUCTION_EVIDENCE_ABSENT)
+
+    if isinstance(payload, ConstructionEvidence):
+        return payload
+
+    if not isinstance(payload, dict):
+        return missing_construction_evidence(
+            turn_id,
+            "construction evidence payload has unsupported shape",
+        )
+
+    # Future-compatible but conservative: do not attempt lossy coercion. The first
+    # persistence PR should replace this with explicit field-by-field projection and
+    # exact-span validation tests.
+    return missing_construction_evidence(
+        turn_id,
+        "construction evidence payload projection is not yet admitted",
     )
 
 
