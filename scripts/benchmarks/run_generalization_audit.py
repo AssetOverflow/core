@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI script to run generalization audit (skeleton)."""
+"""CLI script to run generalization audit."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ repo_root = script_path.parent.parent.parent
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
+from evals.generalization.adapters.gsm1k import load_gsm1k_items  # noqa: E402
 from evals.generalization.audit_runner import run_generalization_audit  # noqa: E402
 from evals.generalization.item_schema import (  # noqa: E402
     GeneralizationAuditItem,
@@ -34,6 +35,21 @@ def main() -> None:
         "--split", type=str, default="test", help="Dataset split to audit."
     )
     parser.add_argument(
+        "--local-cache",
+        type=str,
+        help="Explicit path to local cache (overrides manifest).",
+    )
+    parser.add_argument(
+        "--max-items",
+        type=int,
+        help="Maximum number of items to load.",
+    )
+    parser.add_argument(
+        "--metadata-only",
+        action="store_true",
+        help="Run in metadata-only mode, bypassing gate failures.",
+    )
+    parser.add_argument(
         "--json", action="store_true", help="Print report in deterministic JSON format."
     )
 
@@ -46,10 +62,106 @@ def main() -> None:
         )
         sys.exit(1)
 
+    ADAPTERS = {
+        "gsm1k": load_gsm1k_items,
+    }
+
     if args.dataset:
-        # In PR-2, no real dataset adapters exist, so we fail with the required error code
-        print("Error: dataset_adapter_unavailable", file=sys.stderr)
-        sys.exit(1)
+        dataset_key = args.dataset.lower()
+        if dataset_key not in ADAPTERS:
+            print("Error: dataset_adapter_unavailable", file=sys.stderr)
+            sys.exit(1)
+
+        # 1. Run the verifier from #887 to check manifest gates
+        from evals.generalization.cache_verifier import (
+            verify_local_generalization_cache,
+        )
+
+        manifests_dir = repo_root / "evals" / "generalization" / "manifests"
+        try:
+            report = verify_local_generalization_cache(
+                repo_root=repo_root,
+                manifests_dir=manifests_dir,
+                require_present=False,
+            )
+        except Exception as exc:
+            print(f"Manifest validation failed: {exc}", file=sys.stderr)
+            sys.exit(1)
+
+        # Find the record for the dataset
+        record = None
+        for r in report.records:
+            if r.dataset.lower() == dataset_key:
+                record = r
+                break
+
+        if not record:
+            print(
+                f"Error: dataset_adapter_unavailable (no manifest for {args.dataset})",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        # Fail closed on unresolved gates unless in metadata-only mode
+        if not args.metadata_only:
+            if not record.license_ready or not record.checksum_ready:
+                print("Error: benchmark_manifest_unresolved", file=sys.stderr)
+                sys.exit(1)
+            print("Error: dataset_evaluator_unavailable", file=sys.stderr)
+            sys.exit(1)
+
+        # Resolve local cache path
+        if args.local_cache:
+            cache_path = Path(args.local_cache)
+        else:
+            from evals.generalization.manifest_schema import (
+                load_and_validate_manifest,
+            )
+
+            manifest_path = manifests_dir / f"{dataset_key}.yaml"
+            try:
+                manifest = load_and_validate_manifest(manifest_path)
+                cache_path = repo_root / manifest.local_cache
+            except Exception as exc:
+                print(f"Error reading manifest: {exc}", file=sys.stderr)
+                sys.exit(1)
+
+        # Check existence since we are in metadata-only mode
+        if not cache_path.exists():
+            print("Metadata-only validation passed (cache absent).")
+            sys.exit(0)
+
+        # Load items (metadata-only summary)
+        adapter_fn = ADAPTERS[dataset_key]
+        try:
+            items = adapter_fn(
+                local_cache=cache_path,
+                split=args.split,
+                max_items=args.max_items,
+            )
+        except Exception as exc:
+            print(f"Failed to load items: {exc}", file=sys.stderr)
+            sys.exit(1)
+
+        if args.json:
+            summary = {
+                "dataset": record.dataset,
+                "split": args.split,
+                "n_items": len(items),
+                "local_cache": str(cache_path),
+                "metadata_only": True,
+            }
+            print(json.dumps(summary, indent=2, sort_keys=True))
+        else:
+            print("Generalization Adapter Summary (Metadata-only)")
+            print("=" * 80)
+            print(f"Dataset:     {record.dataset}")
+            print(f"Split:       {args.split}")
+            print(f"Total Items: {len(items)}")
+            print(f"Cache Path:  {cache_path}")
+            print("=" * 80)
+
+        sys.exit(0)
 
     if args.synthetic_smoke:
         # Generate synthetic items and run smoke audit
