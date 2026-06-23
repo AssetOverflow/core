@@ -28,7 +28,7 @@ from generate.geometric_search_run import (
 from generate.kernel_facts import SourceSpan
 from generate.search_gate import SearchGateDecision, SearchGateStatus
 from generate.run_attempt_binding import bind_candidate_attempt_to_run
-from generate.replay_adapter import build_replay_adapter_input_from_binding, ReplayAdapterRefusal
+from generate.replay_adapter import build_replay_adapter_input_from_binding, ReplayAdapterRefusal, ReplayAdapterInput
 
 
 def _digest(payload: dict[str, object]) -> str:
@@ -336,8 +336,9 @@ def test_spine_compatibility() -> None:
         binding=bound_attempt,
         candidate_operator_result=outcome,
     )
-    assert isinstance(adapter_input, ReplayAdapterRefusal)
-    assert any("contract_replay_unavailable" in rc or "operator_replay_unavailable" in rc or "unsupported_candidate_organ" in rc for rc in adapter_input.reason_codes)
+    assert isinstance(adapter_input, ReplayAdapterInput)
+    assert adapter_input.candidate_organ == "quantity_entity_binding"
+    assert adapter_input.contract_replay_target == "problem_frame_contracts.quantity_entity"
 
 
 # Refusal tests

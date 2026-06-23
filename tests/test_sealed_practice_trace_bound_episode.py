@@ -11,6 +11,9 @@ from generate.candidate_operator import (
     GroundedUnaryDeltaCue,
     build_missing_role_candidate,
     candidate_operator_set_id,
+    GroundedQuantityEntityCue,
+    build_quantity_entity_binding_candidate,
+    QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
 )
 from generate.compute_budget import ComputeBudgetDecision, ComputeBudgetStatus
 from generate.contract_residuals import ContractResidual, ResidualKind, ResidualSourceAxis
@@ -839,5 +842,189 @@ def test_bound_dataclasses_have_no_forbidden_authority_fields() -> None:
         assert forbidden.isdisjoint(
             {field.name for field in dataclasses.fields(record_type)}
         )
+
+
+def _quantity_entity_chain() -> tuple[
+    GeometricSearchRun,
+    CandidateOperatorResult,
+    CandidateAttemptRunBinding,
+]:
+    span = SourceSpan(text="5 apples", start=10, end=18, sentence_index=0)
+    # residual
+    payload = {
+        "candidate_organ": QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
+        "residual_kind": ResidualKind.MISSING_RELATION.value,
+        "residual_code": "local_binding_relation_unbound",
+        "evidence_spans": [_span_payload(span)],
+    }
+    residual_id = _digest(payload)
+    residual = ContractResidual(
+        residual_id=residual_id,
+        candidate_organ=QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
+        family_id="state_change.quantity_entity",
+        residual_kind=ResidualKind.MISSING_RELATION,
+        residual_code="local_binding_relation_unbound",
+        source_axis=ResidualSourceAxis.ROLE,
+        evidence_spans=(span,),
+        explanation="residual prose",
+    )
+
+    # gate
+    gate_payload = {
+        "policy_version": "search_gate.v1",
+        "input_digest": "a" * 64,
+        "residual_ids": [residual.residual_id],
+        "candidate_organ": residual.candidate_organ,
+        "status": SearchGateStatus.ELIGIBLE.value,
+        "reason_code": "eligible_missing_relation",
+        "evidence_spans": [_span_payload(span)],
+    }
+    gate = SearchGateDecision(
+        decision_id=_digest(gate_payload),
+        policy_version="search_gate.v1",
+        input_digest="a" * 64,
+        residual_ids=(residual.residual_id,),
+        candidate_organ=residual.candidate_organ,
+        status=SearchGateStatus.ELIGIBLE,
+        reason_code="eligible_missing_relation",
+        evidence_spans=(span,),
+        explanation="gate prose",
+    )
+
+    # budget
+    budget_payload = {
+        "policy_version": "compute_budget.v1",
+        "gate_decision_id": gate.decision_id,
+        "gate_policy_version": gate.policy_version,
+        "gate_input_digest": gate.input_digest,
+        "status": ComputeBudgetStatus.BUDGET_ALLOWED.value,
+        "reason_code": "budget_allowed_missing_relation",
+        "max_candidates": 5,
+        "max_depth": 2,
+        "max_steps": 10,
+        "max_parallelism": 1,
+        "evidence_spans": [_span_payload(span)],
+    }
+    budget = ComputeBudgetDecision(
+        budget_id=_digest(budget_payload),
+        policy_version="compute_budget.v1",
+        gate_decision_id=gate.decision_id,
+        gate_policy_version=gate.policy_version,
+        gate_input_digest=gate.input_digest,
+        status=ComputeBudgetStatus.BUDGET_ALLOWED,
+        reason_code="budget_allowed_missing_relation",
+        max_candidates=5,
+        max_depth=2,
+        max_steps=10,
+        max_wallclock_ms=None,
+        max_parallelism=1,
+        evidence_spans=(span,),
+        explanation="budget prose",
+    )
+
+    # run
+    run = initialize_geometric_search_run(
+        problem_frame_digest="f" * 64,
+        contract_assessment_id="assessment-a",
+        residual_ids=(residual.residual_id,),
+        gate_decision=gate,
+        compute_budget=budget,
+        operator_set_id=candidate_operator_set_id(),
+        operator_set_version="candidate_operators.v2",
+    )
+    assert isinstance(run, GeometricSearchRun)
+
+    # cue
+    cue = GroundedQuantityEntityCue(
+        quantity_mention_id="q1",
+        entity_mention_id="e1",
+        quantity_kind="count",
+        evidence_spans=(span,),
+        unit_mention_id=None,
+    )
+
+    # result
+    result = build_quantity_entity_binding_candidate(
+        residual=residual,
+        search_gate=gate,
+        compute_budget=budget,
+        run=run,
+        problem_frame_digest=run.problem_frame_digest,
+        original_contract_assessment_id=run.contract_assessment_id,
+        grounded_quantity_entity_cues=(cue,),
+    )
+    assert isinstance(result, CandidateOperatorResult)
+
+    # binding
+    binding = bind_candidate_attempt_to_run(
+        original_run=run,
+        candidate_operator_result=result,
+    )
+    assert isinstance(binding, CandidateAttemptRunBinding)
+
+    return run, result, binding
+
+
+def test_quantity_entity_sealed_episode_success() -> None:
+    run, result, binding = _quantity_entity_chain()
+
+    # build_replay_adapter_input_from_binding with vacuous proof
+    replay_input = build_replay_adapter_input_from_binding(
+        run=run,
+        binding=binding,
+        candidate_operator_result=result,
+        schema_versions=(VACUOUS_PROOF_DECLARATION,),
+    )
+    assert isinstance(replay_input, ReplayAdapterInput)
+
+    # classify_replay_result
+    replay_result = classify_replay_result(
+        replay_input,
+        contract_replay_assessment_id="contract-replay-quantity-entity-closed",
+        contract_closed=True,
+    )
+    assert isinstance(replay_result, ReplayAdapterResult)
+
+    # build_bound_practice_trace_input
+    trace_input = _build_bound_trace_input(
+        run,
+        result,
+        binding,
+        replay_results=(replay_result,),
+    )
+    assert isinstance(trace_input, PracticeTraceInput)
+
+    # seal_bound_practice_trace
+    trace = _seal_bound(
+        trace_input,
+        run,
+        result,
+        binding,
+        replay_results=(replay_result,),
+    )
+    assert isinstance(trace, SealedPracticeTrace)
+
+    # Required assertions
+    assert trace.candidate_attempt_ids == (binding.candidate_attempt_id,)
+    assert trace.candidate_attempt_binding_ids == (binding.binding_id,)
+    assert trace.replay_result_ids == (replay_result.replay_result_id,)
+    assert trace.replay_refusal_ids == ()
+    assert trace.practice_disposition == PracticeDisposition.SEALED_CANDIDATE_REPLAY_CLOSED
+    assert run.candidate_attempts == ()
+
+    # Assert trace remains diagnostic-only
+    assert not hasattr(trace, "answer")
+    assert not hasattr(trace, "final_answer")
+    assert not hasattr(trace, "served_output")
+    assert not hasattr(trace, "proof")
+    assert not hasattr(trace, "verdict")
+    assert not hasattr(trace, "score")
+    assert not hasattr(trace, "rank")
+    assert not hasattr(trace, "selected")
+    assert not hasattr(trace, "best")
+    assert not hasattr(trace, "serving_allowed")
+    assert not hasattr(trace, "runnable")
+    assert not hasattr(trace, "mutation")
+    assert not hasattr(trace, "promotion")
 
 

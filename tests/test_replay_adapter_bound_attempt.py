@@ -9,6 +9,9 @@ from generate.candidate_operator import (
     GroundedUnaryDeltaCue,
     build_missing_role_candidate,
     candidate_operator_set_id,
+    GroundedQuantityEntityCue,
+    build_quantity_entity_binding_candidate,
+    QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
 )
 from generate.compute_budget import ComputeBudgetDecision, ComputeBudgetStatus
 from generate.contract_residuals import ContractResidual, ResidualKind, ResidualSourceAxis
@@ -20,6 +23,10 @@ from generate.replay_adapter import (
     ReplayAdapterRefusal,
     ReplayRefusalReason,
     build_replay_adapter_input_from_binding,
+    VACUOUS_PROOF_DECLARATION,
+    classify_replay_result,
+    ReplayAdapterResult,
+    ReplayDisposition,
 )
 from generate.run_attempt_binding import (
     CandidateAttemptRunBinding,
@@ -405,3 +412,216 @@ def test_unsupported_candidate_organ_refuses() -> None:
 
 def test_contract_policy_constant_is_preserved() -> None:
     assert CONTRACT_PROOF_REPLAY_POLICY_VERSION == "contract_proof_replay.v1"
+
+
+def _quantity_entity_chain() -> tuple[GeometricSearchRun, object, CandidateAttemptRunBinding]:
+    span = SourceSpan(text="5 apples", start=10, end=18, sentence_index=0)
+    # residual
+    payload = {
+        "candidate_organ": QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
+        "residual_kind": ResidualKind.MISSING_RELATION.value,
+        "residual_code": "local_binding_relation_unbound",
+        "evidence_spans": [_span_payload(span)],
+    }
+    residual_id = _digest(payload)
+    residual = ContractResidual(
+        residual_id=residual_id,
+        candidate_organ=QUANTITY_ENTITY_BINDING_CANDIDATE_ORGAN,
+        family_id="state_change.quantity_entity",
+        residual_kind=ResidualKind.MISSING_RELATION,
+        residual_code="local_binding_relation_unbound",
+        source_axis=ResidualSourceAxis.ROLE,
+        evidence_spans=(span,),
+        explanation="residual prose",
+    )
+
+    # gate
+    gate_payload = {
+        "policy_version": "search_gate.v1",
+        "input_digest": "a" * 64,
+        "residual_ids": [residual.residual_id],
+        "candidate_organ": residual.candidate_organ,
+        "status": SearchGateStatus.ELIGIBLE.value,
+        "reason_code": "eligible_missing_relation",
+        "evidence_spans": [_span_payload(span)],
+    }
+    gate = SearchGateDecision(
+        decision_id=_digest(gate_payload),
+        policy_version="search_gate.v1",
+        input_digest="a" * 64,
+        residual_ids=(residual.residual_id,),
+        candidate_organ=residual.candidate_organ,
+        status=SearchGateStatus.ELIGIBLE,
+        reason_code="eligible_missing_relation",
+        evidence_spans=(span,),
+        explanation="gate prose",
+    )
+
+    # budget
+    budget_payload = {
+        "policy_version": "compute_budget.v1",
+        "gate_decision_id": gate.decision_id,
+        "gate_policy_version": gate.policy_version,
+        "gate_input_digest": gate.input_digest,
+        "status": ComputeBudgetStatus.BUDGET_ALLOWED.value,
+        "reason_code": "budget_allowed_missing_relation",
+        "max_candidates": 5,
+        "max_depth": 2,
+        "max_steps": 10,
+        "max_parallelism": 1,
+        "evidence_spans": [_span_payload(span)],
+    }
+    budget = ComputeBudgetDecision(
+        budget_id=_digest(budget_payload),
+        policy_version="compute_budget.v1",
+        gate_decision_id=gate.decision_id,
+        gate_policy_version=gate.policy_version,
+        gate_input_digest=gate.input_digest,
+        status=ComputeBudgetStatus.BUDGET_ALLOWED,
+        reason_code="budget_allowed_missing_relation",
+        max_candidates=5,
+        max_depth=2,
+        max_steps=10,
+        max_wallclock_ms=None,
+        max_parallelism=1,
+        evidence_spans=(span,),
+        explanation="budget prose",
+    )
+
+    # run
+    run = initialize_geometric_search_run(
+        problem_frame_digest="f" * 64,
+        contract_assessment_id="assessment-a",
+        residual_ids=(residual.residual_id,),
+        gate_decision=gate,
+        compute_budget=budget,
+        operator_set_id=candidate_operator_set_id(),
+        operator_set_version="candidate_operators.v2",
+    )
+    assert isinstance(run, GeometricSearchRun)
+
+    # cue
+    cue = GroundedQuantityEntityCue(
+        quantity_mention_id="q1",
+        entity_mention_id="e1",
+        quantity_kind="count",
+        evidence_spans=(span,),
+        unit_mention_id=None,
+    )
+
+    # result
+    result = build_quantity_entity_binding_candidate(
+        residual=residual,
+        search_gate=gate,
+        compute_budget=budget,
+        run=run,
+        problem_frame_digest=run.problem_frame_digest,
+        original_contract_assessment_id=run.contract_assessment_id,
+        grounded_quantity_entity_cues=(cue,),
+    )
+    assert hasattr(result, "candidate_attempt")
+
+    # binding
+    binding = bind_candidate_attempt_to_run(
+        original_run=run,
+        candidate_operator_result=result,
+    )
+    assert isinstance(binding, CandidateAttemptRunBinding)
+
+    return run, result, binding
+
+
+def test_quantity_entity_binding_path_success() -> None:
+    run, result, binding = _quantity_entity_chain()
+    replay_input = _bound_input(run, result, binding)
+
+    assert isinstance(replay_input, ReplayAdapterInput)
+    assert replay_input.candidate_organ == "quantity_entity_binding"
+    assert replay_input.contract_replay_target == "problem_frame_contracts.quantity_entity"
+    assert replay_input.operator_set_version == "candidate_operators.v2"
+    assert replay_input.run_id == run.run_id
+    assert replay_input.attempt_id == binding.candidate_attempt_id
+    assert replay_input.candidate_digest == binding.candidate_digest
+    assert run.candidate_attempts == ()
+
+
+def test_quantity_entity_replay_classification_unavailable() -> None:
+    run, result, binding = _quantity_entity_chain()
+    replay_input = _bound_input(run, result, binding)
+    assert isinstance(replay_input, ReplayAdapterInput)
+
+    outcome = classify_replay_result(
+        replay_input,
+        contract_replay_assessment_id=None,
+        contract_closed=None,
+    )
+    assert isinstance(outcome, ReplayAdapterRefusal)
+    assert outcome.replay_disposition is ReplayRefusalReason.CONTRACT_REPLAY_UNAVAILABLE
+    assert outcome.reason_codes == ("contract_replay_unavailable",)
+
+
+def test_quantity_entity_replay_classification_refused() -> None:
+    run, result, binding = _quantity_entity_chain()
+    replay_input = _bound_input(run, result, binding)
+    assert isinstance(replay_input, ReplayAdapterInput)
+
+    outcome = classify_replay_result(
+        replay_input,
+        contract_replay_assessment_id="contract-replay-quantity-entity-1",
+        contract_closed=False,
+    )
+    assert isinstance(outcome, ReplayAdapterResult)
+    assert outcome.replay_disposition is ReplayDisposition.CONTRACT_REFUSED
+
+
+def test_quantity_entity_replay_classification_closed() -> None:
+    run, result, binding = _quantity_entity_chain()
+    replay_input = _bound_input(
+        run,
+        result,
+        binding,
+        schema_versions=(VACUOUS_PROOF_DECLARATION,),
+    )
+    assert isinstance(replay_input, ReplayAdapterInput)
+
+    outcome = classify_replay_result(
+        replay_input,
+        contract_replay_assessment_id="contract-replay-quantity-entity-closed",
+        contract_closed=True,
+    )
+    assert isinstance(outcome, ReplayAdapterResult)
+    assert outcome.replay_disposition is ReplayDisposition.CONTRACT_AND_PROOF_CLOSED
+    assert outcome.proof_replay_refs == ()
+
+
+def test_quantity_entity_replay_classification_proof_unavailable() -> None:
+    run, result, binding = _quantity_entity_chain()
+    # Build without VACUOUS_PROOF_DECLARATION
+    replay_input = _bound_input(
+        run,
+        result,
+        binding,
+        schema_versions=(("some_other_schema", "v1"),),
+    )
+    assert isinstance(replay_input, ReplayAdapterInput)
+
+    outcome = classify_replay_result(
+        replay_input,
+        contract_replay_assessment_id="contract-replay-quantity-entity-1",
+        contract_closed=True,
+    )
+    assert isinstance(outcome, ReplayAdapterRefusal)
+    assert outcome.replay_disposition is ReplayRefusalReason.PROOF_REPLAY_UNAVAILABLE
+    assert outcome.reason_codes == ("proof_replay_unavailable",)
+
+
+def test_quantity_entity_unsupported_organ_refuses() -> None:
+    run, result, binding = _quantity_entity_chain()
+    bad_result = replace(result, candidate_organ="unsupported_quantity_entity_variant")
+    _refused(
+        ReplayRefusalReason.INVALID_REPLAY_INPUT,
+        "unsupported_candidate_organ",
+        run=run,
+        result=bad_result,
+        binding=binding,
+    )
