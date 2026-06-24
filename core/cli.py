@@ -4134,6 +4134,42 @@ def cmd_bench(args: argparse.Namespace) -> int:
             write_report(report)
         return 0
 
+    if args.suite == "apple-uma":
+        from benchmarks.apple_uma_mechanical_sympathy import (
+            run_benchmark as run_apple_uma_benchmark,
+            write_reports as write_apple_uma_reports,
+        )
+        with _bench_stdout_guard(args.json):
+            uma_report = run_apple_uma_benchmark()
+        if args.report:
+            from benchmarks.apple_uma_mechanical_sympathy import write_json_report
+
+            report_path = Path(args.report)
+            write_json_report(uma_report, dest=report_path)
+            print(f"report written: {report_path}", file=sys.stderr)
+        elif getattr(args, "write_report", False):
+            json_path, md_path = write_apple_uma_reports(uma_report)
+            print(f"report written: {json_path}", file=sys.stderr)
+            print(f"summary written: {md_path}", file=sys.stderr)
+        if args.json:
+            print(json.dumps(uma_report, ensure_ascii=False, indent=2, sort_keys=True))
+        else:
+            machine = uma_report["machine"]
+            print(f"{uma_report['benchmark_name']}")
+            print(f"  platform: {machine['platform']}")
+            print(f"  using_rust: {machine['using_rust']}")
+            for name, track in uma_report["tracks"].items():
+                if track.get("skipped"):
+                    print(f"  [{name}] SKIPPED — {track.get('reason', 'n/a')}")
+                elif "timing" in track:
+                    print(f"  [{name}] p50={track['timing']['p50_ms']:.3f} ms")
+                elif name == "cl41_scalar_ops":
+                    for op in track["operations"]:
+                        print(
+                            f"  [{op['operation']}] p50={op['timing']['p50_ms']:.3f} ms"
+                        )
+        return 0
+
     if args.suite == "articulation":
         from benchmarks.articulation import (
             format_summary,
@@ -5031,8 +5067,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="run benchmark harness (determinism, latency, speedup, versor audit)",
         description="run benchmark harness",
     )
-    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer", "cost", "teaching-loop", "articulation", "all"],
+    bench.add_argument("--suite", choices=["determinism", "latency", "speedup", "versor", "convergence", "realizer", "cost", "teaching-loop", "articulation", "apple-uma", "all"],
                        help="run a specific benchmark suite")
+    bench.add_argument(
+        "--write-report",
+        action="store_true",
+        help="apple-uma suite: write evals/reports/apple_uma_mechanical_sympathy_latest.{json,md}",
+    )
     bench.add_argument("--runs", type=int, default=20, metavar="N", help="run count for determinism benchmark (also turns count for cost suite)")
     bench.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     bench.add_argument("--report", metavar="PATH", help="write JSON report to file")
