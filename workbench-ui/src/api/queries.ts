@@ -36,6 +36,7 @@ import {
   fetchTraceField,
   fetchTraceBundle,
   fetchTraceConstruction,
+  fetchTracePractice,
   fetchTour,
   fetchLivedLife,
   fetchTraceTurns,
@@ -92,6 +93,8 @@ import type {
   MathRatifyResult,
 } from "../types/api";
 import type { ConstructionEvidence } from "../types/constructionEvidence";
+import type { PracticeEvidence } from "../types/practiceEvidence";
+
 
 
 export { QueryClientProvider };
@@ -275,6 +278,17 @@ export function useTraceConstruction(turnId?: number | null) {
     refetchOnWindowFocus: false,
   });
 }
+
+export function useTracePractice(turnId?: number | null) {
+  return useQuery<PracticeEvidence, WorkbenchApiError>({
+    queryKey: ["api", "trace", "practice", turnId ?? null],
+    queryFn: () => fetchTracePractice(turnId as number),
+    enabled: typeof turnId === "number",
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
 
 
 export function useTour() {
