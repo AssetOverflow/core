@@ -26,6 +26,12 @@ import { LogosRoute } from "./logos/LogosRoute";
 import { VaultRoute, VAULT_ABSENCE_STATEMENT, VAULT_ABSENCE_ACTION } from "./vault/VaultRoute";
 import { CalibrationRoute } from "./calibration/CalibrationRoute";
 import { SettingsRoute } from "./settings/SettingsRoute";
+import {
+  AppleUmaReportRoute,
+  APPLE_UMA_LOADING,
+  APPLE_UMA_ABSENCE_STATEMENT,
+  APPLE_UMA_ABSENCE_ACTION,
+} from "./apple-uma/AppleUmaReportRoute";
 
 /**
  * ADR-0162 §6 route conformance — executable, not aspirational.
@@ -242,6 +248,15 @@ const MOUNT_ROUTES: MountRouteSpec[] = [
     emptyStatement:
       "No calibration evidence yet. The per-class arena ledger is populated by the sealed practice lane (ADR-0175).",
     emptyCommand: "core eval math-contemplation",
+  },
+  {
+    name: "Apple UMA",
+    element: <AppleUmaReportRoute />,
+    path: "/apple-uma",
+    initialEntry: "/apple-uma",
+    loadingLabel: APPLE_UMA_LOADING,
+    emptyStatement: APPLE_UMA_ABSENCE_STATEMENT,
+    emptyCommand: APPLE_UMA_ABSENCE_ACTION,
   },
 ];
 

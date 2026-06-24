@@ -4,6 +4,7 @@ import { EmptyState } from "../../design/components/states/EmptyState";
 import { ErrorState } from "../../design/components/states/ErrorState";
 import { LoadingState } from "../../design/components/states/LoadingState";
 import { Panel } from "../../design/components/Panel/Panel";
+import { type ReactNode } from "react";
 
 export const APPLE_UMA_LOADING = "Loading Apple UMA report...";
 export const APPLE_UMA_ABSENCE_STATEMENT = "No Apple UMA report projection available.";
@@ -111,7 +112,7 @@ function statusTone(kind: "good" | "warn" | "neutral") {
   return "border-[var(--color-border-subtle)] bg-[var(--color-surface-inset)] text-[var(--color-text-secondary)]";
 }
 
-function StatusPill({ children, kind = "neutral" }: { children: string; kind?: "good" | "warn" | "neutral" }) {
+function StatusPill({ children, kind = "neutral" }: { children: ReactNode; kind?: "good" | "warn" | "neutral" }) {
   return <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs ${statusTone(kind)}`}>{children}</span>;
 }
 
