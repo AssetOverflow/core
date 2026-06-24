@@ -4141,15 +4141,16 @@ def cmd_bench(args: argparse.Namespace) -> int:
         )
         with _bench_stdout_guard(args.json):
             uma_report = run_apple_uma_benchmark()
-        if getattr(args, "write_report", False) or args.report:
-            if args.report:
-                root = Path(args.report).parent
-                write_apple_uma_reports(uma_report, root=root)
-                print(f"report written: {args.report}", file=sys.stderr)
-            else:
-                json_path, md_path = write_apple_uma_reports(uma_report)
-                print(f"report written: {json_path}", file=sys.stderr)
-                print(f"summary written: {md_path}", file=sys.stderr)
+        if args.report:
+            from benchmarks.apple_uma_mechanical_sympathy import write_json_report
+
+            report_path = Path(args.report)
+            write_json_report(uma_report, dest=report_path)
+            print(f"report written: {report_path}", file=sys.stderr)
+        elif getattr(args, "write_report", False):
+            json_path, md_path = write_apple_uma_reports(uma_report)
+            print(f"report written: {json_path}", file=sys.stderr)
+            print(f"summary written: {md_path}", file=sys.stderr)
         if args.json:
             print(json.dumps(uma_report, ensure_ascii=False, indent=2, sort_keys=True))
         else:

@@ -1,8 +1,8 @@
 {
   "_metadata": {
     "note": "Non-hash metadata section; excluded from deterministic claim payloads.",
-    "report_path": "/Users/kaizenpro/Projects/core/evals/reports/apple_uma_mechanical_sympathy_latest.json",
-    "written_at_unix": 1782329051.9986272
+    "report_path": "evals/reports/apple_uma_mechanical_sympathy_latest.json",
+    "written_at_unix": 1782329239.704502
   },
   "benchmark_name": "CORE Apple Silicon UMA Mechanical Sympathy Benchmark",
   "benchmark_version": "1.0.0",
@@ -96,7 +96,7 @@
     },
     "machine": "arm64",
     "memory": {
-      "available_bytes": 4247093248,
+      "available_bytes": 4375969792,
       "source": "psutil.virtual_memory",
       "total_bytes": 17179869184
     },
@@ -109,24 +109,24 @@
   "tracks": {
     "array_codec_replay": {
       "decode_timing": {
-        "max_ms": 0.087833,
-        "mean_ms": 0.040115,
+        "max_ms": 0.035041,
+        "mean_ms": 0.023529,
         "measured_iterations": 50,
-        "min_ms": 0.036959,
-        "ops_per_sec": 24928.306,
-        "p50_ms": 0.038542,
-        "p95_ms": 0.044542,
+        "min_ms": 0.022875,
+        "ops_per_sec": 42500.381,
+        "p50_ms": 0.023,
+        "p95_ms": 0.025875,
         "warmup_iterations": 5
       },
       "dtype": "float32",
       "encode_timing": {
-        "max_ms": 0.015584,
-        "mean_ms": 0.015312,
+        "max_ms": 0.015417,
+        "mean_ms": 0.015281,
         "measured_iterations": 50,
-        "min_ms": 0.013791,
-        "ops_per_sec": 65309.705,
-        "p50_ms": 0.015375,
-        "p95_ms": 0.015583,
+        "min_ms": 0.015167,
+        "ops_per_sec": 65441.682,
+        "p50_ms": 0.015291,
+        "p95_ms": 0.015417,
         "warmup_iterations": 5
       },
       "encoded_bytes": 10924,
@@ -162,13 +162,13 @@
             32
           ],
           "timing": {
-            "max_ms": 1.534875,
-            "mean_ms": 1.378704,
+            "max_ms": 1.417042,
+            "mean_ms": 1.367876,
             "measured_iterations": 50,
-            "min_ms": 1.354083,
-            "ops_per_sec": 725.319,
-            "p50_ms": 1.365563,
-            "p95_ms": 1.433042,
+            "min_ms": 1.353834,
+            "ops_per_sec": 731.06,
+            "p50_ms": 1.359729,
+            "p95_ms": 1.407416,
             "warmup_iterations": 5
           }
         },
@@ -189,13 +189,13 @@
             32
           ],
           "timing": {
-            "max_ms": 39.863625,
-            "mean_ms": 4.150485,
+            "max_ms": 3.086375,
+            "mean_ms": 2.939975,
             "measured_iterations": 50,
-            "min_ms": 2.849542,
-            "ops_per_sec": 240.936,
-            "p50_ms": 2.881021,
-            "p95_ms": 5.586291,
+            "min_ms": 2.886917,
+            "ops_per_sec": 340.139,
+            "p50_ms": 2.926645,
+            "p95_ms": 3.044667,
             "warmup_iterations": 5
           }
         },
@@ -214,13 +214,13 @@
             32
           ],
           "timing": {
-            "max_ms": 9.633625,
-            "mean_ms": 3.313125,
+            "max_ms": 4.999417,
+            "mean_ms": 2.823273,
             "measured_iterations": 50,
-            "min_ms": 2.689583,
-            "ops_per_sec": 301.83,
-            "p50_ms": 2.716479,
-            "p95_ms": 5.592333,
+            "min_ms": 2.685958,
+            "ops_per_sec": 354.199,
+            "p50_ms": 2.7085,
+            "p95_ms": 3.641125,
             "warmup_iterations": 5
           }
         },
@@ -239,13 +239,13 @@
             32
           ],
           "timing": {
-            "max_ms": 0.569708,
-            "mean_ms": 0.534274,
+            "max_ms": 0.605458,
+            "mean_ms": 0.543464,
             "measured_iterations": 50,
-            "min_ms": 0.525417,
-            "ops_per_sec": 1871.699,
-            "p50_ms": 0.531354,
-            "p95_ms": 0.562083,
+            "min_ms": 0.530541,
+            "ops_per_sec": 1840.048,
+            "p50_ms": 0.536229,
+            "p95_ms": 0.598667,
             "warmup_iterations": 5
           }
         }
@@ -268,16 +268,16 @@
           "contiguous": true,
           "dtype": "float32",
           "result_deterministic": true,
-          "rows_per_sec": 1776009.18,
+          "rows_per_sec": 1840049.683,
           "rust_zero_copy_input_eligible": false,
           "timing": {
-            "max_ms": 0.146542,
-            "mean_ms": 0.072072,
+            "max_ms": 0.070416,
+            "mean_ms": 0.069563,
             "measured_iterations": 50,
-            "min_ms": 0.069291,
-            "ops_per_sec": 13875.072,
-            "p50_ms": 0.070208,
-            "p95_ms": 0.072666,
+            "min_ms": 0.069125,
+            "ops_per_sec": 14375.388,
+            "p50_ms": 0.0695,
+            "p95_ms": 0.070209,
             "warmup_iterations": 5
           },
           "top_k": 5,
@@ -303,16 +303,16 @@
           "contiguous": true,
           "dtype": "float32",
           "result_deterministic": true,
-          "rows_per_sec": 8883489.435,
+          "rows_per_sec": 8937898.275,
           "rust_zero_copy_input_eligible": false,
           "timing": {
-            "max_ms": 0.152416,
-            "mean_ms": 0.11527,
+            "max_ms": 0.151084,
+            "mean_ms": 0.114568,
             "measured_iterations": 50,
-            "min_ms": 0.111542,
-            "ops_per_sec": 8675.283,
-            "p50_ms": 0.113437,
-            "p95_ms": 0.128167,
+            "min_ms": 0.112583,
+            "ops_per_sec": 8728.416,
+            "p50_ms": 0.113542,
+            "p95_ms": 0.117292,
             "warmup_iterations": 5
           },
           "top_k": 5,
@@ -338,16 +338,16 @@
           "contiguous": true,
           "dtype": "float32",
           "result_deterministic": true,
-          "rows_per_sec": 14772738.586,
+          "rows_per_sec": 17482143.653,
           "rust_zero_copy_input_eligible": false,
           "timing": {
-            "max_ms": 0.648541,
-            "mean_ms": 0.554535,
+            "max_ms": 0.576834,
+            "mean_ms": 0.468592,
             "measured_iterations": 50,
-            "min_ms": 0.54,
-            "ops_per_sec": 1803.313,
-            "p50_ms": 0.544959,
-            "p95_ms": 0.608208,
+            "min_ms": 0.456166,
+            "ops_per_sec": 2134.051,
+            "p50_ms": 0.461208,
+            "p95_ms": 0.531042,
             "warmup_iterations": 5
           },
           "top_k": 5,
@@ -373,16 +373,16 @@
           "contiguous": true,
           "dtype": "float32",
           "result_deterministic": true,
-          "rows_per_sec": 17156750.778,
+          "rows_per_sec": 22937268.738,
           "rust_zero_copy_input_eligible": false,
           "timing": {
-            "max_ms": 4.390667,
-            "mean_ms": 3.819838,
+            "max_ms": 3.492375,
+            "mean_ms": 2.857184,
             "measured_iterations": 50,
-            "min_ms": 3.007459,
-            "ops_per_sec": 261.791,
-            "p50_ms": 3.808583,
-            "p95_ms": 4.3295,
+            "min_ms": 2.711583,
+            "ops_per_sec": 349.995,
+            "p50_ms": 2.783229,
+            "p95_ms": 3.422333,
             "warmup_iterations": 5
           },
           "top_k": 5,
@@ -422,13 +422,13 @@
       },
       "skipped": false,
       "timing": {
-        "max_ms": 0.497917,
-        "mean_ms": 0.171413,
+        "max_ms": 0.245625,
+        "mean_ms": 0.166753,
         "measured_iterations": 50,
-        "min_ms": 0.148041,
-        "ops_per_sec": 5833.878,
-        "p50_ms": 0.152709,
-        "p95_ms": 0.237083,
+        "min_ms": 0.149,
+        "ops_per_sec": 5996.886,
+        "p50_ms": 0.15325,
+        "p95_ms": 0.231166,
         "warmup_iterations": 5
       },
       "trace_hash_present": true,

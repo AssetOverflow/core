@@ -617,12 +617,12 @@ def track_array_codec_replay(
 
     encode_timing = _measure_timing(_encode, warmup=warmup, measured=measured)
 
+    payload = encode_array(arr)
+
     def _decode_only() -> np.ndarray:
-        payload = encode_array(arr)
         return decode_array(payload)
 
     decode_timing = _measure_timing(_decode_only, warmup=warmup, measured=measured)
-    payload = encode_array(arr)
     restored = decode_array(payload)
     encoded_bytes = len(payload["b64"])
     return {
@@ -673,22 +673,37 @@ def run_benchmark(
     }
 
 
+def _repo_relative_path(path: Path) -> str | None:
+    try:
+        return str(path.resolve().relative_to(PROJECT_ROOT.resolve()))
+    except ValueError:
+        return None
+
+
 def write_json_report(
     report: dict[str, Any],
     *,
     root: Path | None = None,
+    dest: Path | None = None,
     include_metadata: bool = True,
 ) -> Path:
-    base = root or PROJECT_ROOT / "evals" / "reports"
-    base.mkdir(parents=True, exist_ok=True)
+    if dest is not None:
+        path = dest
+        path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        base = root or PROJECT_ROOT / "evals" / "reports"
+        base.mkdir(parents=True, exist_ok=True)
+        path = base / REPORT_JSON_NAME
     out = dict(report)
     if include_metadata:
-        out["_metadata"] = {
+        metadata: dict[str, Any] = {
             "written_at_unix": time.time(),
-            "report_path": str(base / REPORT_JSON_NAME),
             "note": "Non-hash metadata section; excluded from deterministic claim payloads.",
         }
-    path = base / REPORT_JSON_NAME
+        rel = _repo_relative_path(path)
+        if rel is not None:
+            metadata["report_path"] = rel
+        out["_metadata"] = metadata
     path.write_text(
         json.dumps(out, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",

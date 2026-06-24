@@ -141,6 +141,8 @@ def test_report_writer_creates_json_under_evals_reports(
     assert path.parent == tmp_path
     loaded = json.loads(path.read_text(encoding="utf-8"))
     assert "_metadata" in loaded
+    if "report_path" in loaded["_metadata"]:
+        assert not loaded["_metadata"]["report_path"].startswith("/")
     assert loaded["benchmark_name"] == BENCHMARK_NAME
 
 

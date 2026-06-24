@@ -20,17 +20,17 @@ memory boundaries.  No token generation.  No approximate recall.
 
 ## 3. Exact CGA recall
 
-- N=128: p50=0.070 ms, rows/sec=1776009.18, zero-copy eligible=False
-- N=1024: p50=0.113 ms, rows/sec=8883489.435, zero-copy eligible=False
-- N=8192: p50=0.545 ms, rows/sec=14772738.586, zero-copy eligible=False
-- N=65536: p50=3.809 ms, rows/sec=17156750.778, zero-copy eligible=False
+- N=128: p50=0.070 ms, rows/sec=1840049.683, zero-copy eligible=False
+- N=1024: p50=0.114 ms, rows/sec=8937898.275, zero-copy eligible=False
+- N=8192: p50=0.461 ms, rows/sec=17482143.653, zero-copy eligible=False
+- N=65536: p50=2.783 ms, rows/sec=22937268.738, zero-copy eligible=False
 
 ## 4. Cl(4,1) scalar algebra
 
-- geometric_product: p50=1.366 ms, ops/sec=725.319
-- versor_apply: p50=2.881 ms, ops/sec=240.936
-- cga_inner: p50=2.716 ms, ops/sec=301.83
-- versor_condition: p50=0.531 ms, ops/sec=1871.699
+- geometric_product: p50=1.360 ms, ops/sec=731.06
+- versor_apply: p50=2.927 ms, ops/sec=340.139
+- cga_inner: p50=2.708 ms, ops/sec=354.199
+- versor_condition: p50=0.536 ms, ops/sec=1840.048
 
 ## 5. FrameVerdict TTFV
 
@@ -38,7 +38,7 @@ memory boundaries.  No token generation.  No approximate recall.
 
 ## 6. Deterministic replay/persistence
 
-- encode p50=0.015 ms, decode p50=0.039 ms, bytes=10924
+- encode p50=0.015 ms, decode p50=0.023 ms, bytes=10924
 
 ## 7. Copy / zero-copy truth table
 
