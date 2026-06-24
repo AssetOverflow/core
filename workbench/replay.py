@@ -55,6 +55,8 @@ CRITICAL_FIELDS = frozenset(
         "field_evidence",
         "checkpoint_emitted",
         "trace_integrity",
+        "construction_evidence",
+        "practice_evidence",
     }
 )
 # Wall-clock by nature, or derived over wall-clock bytes (journal_digest
