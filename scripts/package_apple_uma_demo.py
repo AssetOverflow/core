@@ -18,11 +18,14 @@ import subprocess
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+import sys
 from typing import Any
 
-from workbench.apple_uma_report import read_apple_uma_report
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from workbench.apple_uma_report import read_apple_uma_report
 DEFAULT_REPORT_JSON = REPO_ROOT / "evals" / "reports" / "apple_uma_mechanical_sympathy_latest.json"
 DEFAULT_REPORT_MD = REPO_ROOT / "evals" / "reports" / "apple_uma_mechanical_sympathy_latest.md"
 DEFAULT_OUT_ROOT = REPO_ROOT / "dist" / "apple-uma-demo"
