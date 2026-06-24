@@ -60,7 +60,7 @@ successful proof.
 ## 4. Current Route Map
 
 The route registry in `workbench-ui/src/app/routes.ts` is the source of truth.
-Current route count: 16.
+Current route count: 17.
 
 | Section | Route | Path | Shortcut | Purpose |
 |---|---|---|---|---|
@@ -79,6 +79,7 @@ Current route count: 16.
 | Discipline | Calibration | `/calibration` | Palette | Inspect practice-class reliability and license verdicts. |
 | Substrate | Packs | `/packs` | `⌘7` | Browse language/runtime pack metadata. |
 | Substrate | CORE-Logos | `/logos` | Palette | Inspect CORE-Logos pack identity and safety. |
+| Substrate | Apple UMA | `/apple-uma` | Palette | Inspect the Apple Silicon mechanical-sympathy benchmark report. |
 | Settings | Settings | `/settings` | `⌘0` | Manage local UI preferences; engine config remains CLI-only. |
 
 Pinned route shortcuts cover Chat through Settings. All routes are searchable in
@@ -101,6 +102,7 @@ the command palette.
 | Evals | Allowlisted eval lanes and wrong/correct/refused metrics are visible. |
 | Calibration | Practice classes show engine-owned Wilson floor and PROPOSE/SERVE license verdicts. |
 | Packs | Pack manifests, checksums, and determinism metadata are visible. |
+| Apple UMA | Committed mechanical-sympathy benchmark reports, track execution/parity status, and copy boundaries are visible. |
 | Settings | UI preferences are local-only; density mode is consumed by shell/design tokens; runtime status is read-only. |
 
 ## 6. What Each Route Does Not Prove
@@ -119,6 +121,7 @@ the command palette.
 | Evals | Does not run unsafe or sealed holdout lanes from the UI. |
 | Calibration | Does not mutate a license and does not claim serving wrong=0 from practice data. |
 | Packs | Does not apply pack mutation. |
+| Apple UMA | Does not execute benchmarks, mutate reports, or authorize serving. |
 | Settings | Does not edit engine configuration. |
 
 ## 7. Evidence Subjects And Address Grammar
