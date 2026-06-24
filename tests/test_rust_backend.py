@@ -54,9 +54,10 @@ def test_rust_versor_apply_matches_python_for_identity():
     identity[0] = 1.0
     F = _positive_unit_reflector(42)
 
+    F32 = np.asarray(F, dtype=np.float32)
     py_result = python_versor_apply(identity, F)
     rust_result = np.asarray(
-        core_rs.versor_apply_with_closure(identity, F), dtype=np.float32
+        core_rs.versor_apply_with_closure(identity, F32), dtype=np.float32
     )
 
     assert np.allclose(py_result, rust_result, atol=1e-4), (
@@ -70,9 +71,11 @@ def test_rust_versor_apply_matches_python_for_rotors():
         V = _random_rotor(seed)
         F = _positive_unit_reflector(seed + 500)
 
+        V32 = np.asarray(V, dtype=np.float32)
+        F32 = np.asarray(F, dtype=np.float32)
         py_result = python_versor_apply(V, F)
         rust_result = np.asarray(
-            core_rs.versor_apply_with_closure(V, F), dtype=np.float32
+            core_rs.versor_apply_with_closure(V32, F32), dtype=np.float32
         )
 
         assert np.allclose(py_result, rust_result, atol=1e-3), (
@@ -85,11 +88,12 @@ def test_rust_versor_apply_preserves_null_vectors():
     point = embed_point(np.array([1.0, 2.0, 3.0], dtype=np.float32))
     assert is_null(point)
 
-    V = _positive_unit_reflector(7)
+    V32 = np.asarray(_positive_unit_reflector(7), dtype=np.float32)
+    point32 = np.asarray(point, dtype=np.float32)
     rust_result = np.asarray(
-        core_rs.versor_apply_with_closure(V, point), dtype=np.float32
+        core_rs.versor_apply_with_closure(V32, point32), dtype=np.float32
     )
-    py_result = python_versor_apply(V, point)
+    py_result = python_versor_apply(V32, point32)
 
     py_is_null = is_null(py_result)
     rust_is_null = is_null(rust_result)
@@ -101,11 +105,11 @@ def test_rust_versor_apply_preserves_null_vectors():
 @skip_no_rust
 def test_rust_versor_apply_preserves_versor_condition():
     for seed in range(20):
-        V = _positive_unit_reflector(seed)
-        F = _positive_unit_reflector(seed + 1000)
+        V32 = np.asarray(_positive_unit_reflector(seed), dtype=np.float32)
+        F32 = np.asarray(_positive_unit_reflector(seed + 1000), dtype=np.float32)
 
         rust_result = np.asarray(
-            core_rs.versor_apply_with_closure(V, F), dtype=np.float32
+            core_rs.versor_apply_with_closure(V32, F32), dtype=np.float32
         )
         cond = versor_condition(rust_result)
         assert cond < 1e-4, f"seed={seed} condition={cond:.2e}"

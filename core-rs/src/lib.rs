@@ -28,15 +28,19 @@ use versor::{
     versor_condition_raw,
 };
 
-/// Geometric product in Cl(4,1). Accepts two numpy-compatible f32 arrays of length 32.
+/// Geometric product in Cl(4,1). Accepts two contiguous float32 arrays of length 32.
+///
+/// Inputs are read via ``PyReadonlyArray1`` zero-copy views into the NumPy
+/// buffer.  Wrong shape, dtype, or non-contiguous layout fails loudly — no
+/// silent coercion.
 #[pyfunction]
 fn geometric_product(
     py: Python<'_>,
-    a: &pyo3::types::PyAny,
-    b: &pyo3::types::PyAny,
+    a: numpy::PyReadonlyArray1<'_, f32>,
+    b: numpy::PyReadonlyArray1<'_, f32>,
 ) -> PyResult<PyObject> {
-    let a_slice = extract_f32_slice(a)?;
-    let b_slice = extract_f32_slice(b)?;
+    let a_slice = read_f32_cl41_mv(a)?;
+    let b_slice = read_f32_cl41_mv(b)?;
     let result = geometric_product_raw(&a_slice, &b_slice)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     f32_array_to_numpy(py, &result)
@@ -61,11 +65,11 @@ fn versor_apply(
 #[pyfunction]
 fn versor_apply_with_closure(
     py: Python<'_>,
-    v: &pyo3::types::PyAny,
-    f: &pyo3::types::PyAny,
+    v: numpy::PyReadonlyArray1<'_, f32>,
+    f: numpy::PyReadonlyArray1<'_, f32>,
 ) -> PyResult<PyObject> {
-    let v_slice = extract_f32_slice(v)?;
-    let f_slice = extract_f32_slice(f)?;
+    let v_slice = read_f32_cl41_mv(v)?;
+    let f_slice = read_f32_cl41_mv(f)?;
     let result = versor_apply_closed(&v_slice, &f_slice)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     f32_array_to_numpy(py, &result)
@@ -77,11 +81,11 @@ fn versor_apply_with_closure(
 #[pyfunction]
 fn versor_apply_with_closure_f64(
     py: Python<'_>,
-    v: &pyo3::types::PyAny,
-    f: &pyo3::types::PyAny,
+    v: numpy::PyReadonlyArray1<'_, f64>,
+    f: numpy::PyReadonlyArray1<'_, f64>,
 ) -> PyResult<PyObject> {
-    let v_slice = extract_f64_slice(v)?;
-    let f_slice = extract_f64_slice(f)?;
+    let v_slice = read_f64_cl41_mv(v)?;
+    let f_slice = read_f64_cl41_mv(f)?;
     let result = versor_apply_closed_f64(&v_slice, &f_slice)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     f64_array_to_numpy(py, &result)
@@ -89,8 +93,8 @@ fn versor_apply_with_closure_f64(
 
 /// ||F*reverse(F) - 1||_F. Returns scalar f32.
 #[pyfunction]
-fn versor_condition(f: &pyo3::types::PyAny) -> PyResult<f32> {
-    let f_slice = extract_f32_slice(f)?;
+fn versor_condition(f: numpy::PyReadonlyArray1<'_, f32>) -> PyResult<f32> {
+    let f_slice = read_f32_cl41_mv(f)?;
     versor_condition_raw(&f_slice).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
@@ -108,9 +112,12 @@ fn normalize_to_versor(
 
 /// Symmetric CGA inner product: 0.5 * scalar(X*Y + Y*X).
 #[pyfunction]
-fn cga_inner(x: &pyo3::types::PyAny, y: &pyo3::types::PyAny) -> PyResult<f32> {
-    let x_slice = extract_f32_slice(x)?;
-    let y_slice = extract_f32_slice(y)?;
+fn cga_inner(
+    x: numpy::PyReadonlyArray1<'_, f32>,
+    y: numpy::PyReadonlyArray1<'_, f32>,
+) -> PyResult<f32> {
+    let x_slice = read_f32_cl41_mv(x)?;
+    let y_slice = read_f32_cl41_mv(y)?;
     cga_inner_raw(&x_slice, &y_slice).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
@@ -251,6 +258,44 @@ fn diffusion_step<'py>(
     let arr = numpy::ndarray::Array2::from_shape_vec((n_nodes, 32), flat)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     Ok((numpy::IntoPyArray::into_pyarray_bound(arr, py), delta))
+}
+
+fn read_f32_cl41_mv(arr: numpy::PyReadonlyArray1<'_, f32>) -> PyResult<[f32; 32]> {
+    let len = arr.len()?;
+    if len != 32 {
+        return Err(PyValueError::new_err(format!(
+            "expected contiguous float32 array of length 32, got length {}",
+            len
+        )));
+    }
+    let slice = arr.as_slice().map_err(|e| {
+        PyValueError::new_err(format!(
+            "input must be C-contiguous float32 (32,): {}",
+            e
+        ))
+    })?;
+    let mut out = [0f32; 32];
+    out.copy_from_slice(slice);
+    Ok(out)
+}
+
+fn read_f64_cl41_mv(arr: numpy::PyReadonlyArray1<'_, f64>) -> PyResult<[f64; 32]> {
+    let len = arr.len()?;
+    if len != 32 {
+        return Err(PyValueError::new_err(format!(
+            "expected contiguous float64 array of length 32, got length {}",
+            len
+        )));
+    }
+    let slice = arr.as_slice().map_err(|e| {
+        PyValueError::new_err(format!(
+            "input must be C-contiguous float64 (32,): {}",
+            e
+        ))
+    })?;
+    let mut out = [0f64; 32];
+    out.copy_from_slice(slice);
+    Ok(out)
 }
 
 fn extract_f32_slice(obj: &pyo3::types::PyAny) -> PyResult<[f32; 32]> {
