@@ -9,8 +9,11 @@ import {
   useTraceTurn,
   useTraceTurns,
   useTraceConstruction,
+  useTracePractice,
 } from "../../api/queries";
 import type { ConstructionEvidence } from "../../types/constructionEvidence";
+import type { PracticeEvidence } from "../../types/practiceEvidence";
+import { PracticeEvidencePanel } from "./PracticeEvidencePanel";
 import {
   CONSTRUCTION_AUTHORITY_DISCLOSURES,
   assessmentBlockerSummary,
@@ -59,6 +62,7 @@ const TRACE_TABS: readonly Tab[] = [
   { id: "field", label: "Field" },
   { id: "bundle", label: "Bundle" },
   { id: "construction", label: "Construction" },
+  { id: "practice", label: "Practice" },
   { id: "surfaces", label: "Surfaces" },
   { id: "grounding", label: "Grounding" },
   { id: "verdicts", label: "Verdicts" },
@@ -855,6 +859,9 @@ function TraceDetail({
   constructionEvidence,
   constructionLoading,
   constructionError,
+  practiceEvidence,
+  practiceLoading,
+  practiceError,
 }: {
   turn: TurnJournalEntry;
   pipelineRecord?: CognitivePipelineRecord | null;
@@ -869,6 +876,9 @@ function TraceDetail({
   constructionEvidence?: ConstructionEvidence | null;
   constructionLoading: boolean;
   constructionError: unknown;
+  practiceEvidence?: PracticeEvidence | null;
+  practiceLoading: boolean;
+  practiceError: unknown;
 }) {
   const [activeTab, setActiveTab] = useState("pipeline");
   return (
@@ -915,6 +925,15 @@ function TraceDetail({
             turnId={turn.turn_id}
           />
         ) : null}
+        {activeTab === "practice" ? (
+          <PracticeEvidencePanel
+            evidence={practiceEvidence}
+            isLoading={practiceLoading}
+            error={practiceError}
+            turnId={turn.turn_id}
+            errorMessage={errorMessage}
+          />
+        ) : null}
         {activeTab === "surfaces" ? <SurfacesTab turn={turn} /> : null}
         {activeTab === "grounding" ? <GroundingTab turn={turn} /> : null}
         {activeTab === "verdicts" ? <VerdictsTab turn={turn} /> : null}
@@ -938,6 +957,7 @@ export function TraceRoute() {
   const fieldQuery = useTraceField(selectedTurnId);
   const bundleQuery = useTraceBundle(selectedTurnId);
   const constructionQuery = useTraceConstruction(selectedTurnId);
+  const practiceQuery = useTracePractice(selectedTurnId);
 
   const turns = turnsQuery.data ?? [];
   const filteredTurns = useMemo(() => {
@@ -1057,6 +1077,9 @@ export function TraceRoute() {
               constructionEvidence={constructionQuery.data}
               constructionLoading={constructionQuery.isLoading}
               constructionError={constructionQuery.isError ? constructionQuery.error : null}
+              practiceEvidence={practiceQuery.data}
+              practiceLoading={practiceQuery.isLoading}
+              practiceError={practiceQuery.isError ? practiceQuery.error : null}
             />
           ) : null}
         </section>
