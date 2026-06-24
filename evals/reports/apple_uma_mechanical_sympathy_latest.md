@@ -1,6 +1,6 @@
 # CORE Apple Silicon UMA Mechanical Sympathy Benchmark
 
-Version: 1.0.0
+Version: 1.0.1
 
 ## 1. What this measures
 
@@ -17,24 +17,35 @@ memory boundaries.  No token generation.  No approximate recall.
 - CORE_BACKEND: `(default python)`
 - core_rs import: False
 - using_rust(): False
+- Native status: `python_fallback`
+- diffusion_step eligible: False
+- vault_recall Rust zero-copy eligible: False
+
+- Activation hint: Python semantic fallback active; install core_rs and set CORE_BACKEND=rust for the native baseline report
+
+### Rust backend notes
+
+- Rust backend unavailable; report uses Python semantic fallback.
+- diffusion_step track skipped until CORE_BACKEND=rust and core_rs are active.
+
 
 ## 3. Exact CGA recall
 
-- N=128: p50=0.070 ms, rows/sec=1840049.683, zero-copy eligible=False
-- N=1024: p50=0.114 ms, rows/sec=8937898.275, zero-copy eligible=False
-- N=8192: p50=0.461 ms, rows/sec=17482143.653, zero-copy eligible=False
-- N=65536: p50=2.783 ms, rows/sec=22937268.738, zero-copy eligible=False
+- N=128: p50=0.071 ms, rows/sec=1774127.463, zero-copy eligible=False
+- N=1024: p50=0.115 ms, rows/sec=8765686.74, zero-copy eligible=False
+- N=8192: p50=0.459 ms, rows/sec=17346134.584, zero-copy eligible=False
+- N=65536: p50=3.299 ms, rows/sec=19851684.504, zero-copy eligible=False
 
 ## 4. Cl(4,1) scalar algebra
 
-- geometric_product: p50=1.360 ms, ops/sec=731.06
-- versor_apply: p50=2.927 ms, ops/sec=340.139
-- cga_inner: p50=2.708 ms, ops/sec=354.199
-- versor_condition: p50=0.536 ms, ops/sec=1840.048
+- geometric_product: p50=1.387 ms, ops/sec=716.233
+- versor_apply: p50=2.927 ms, ops/sec=340.636
+- cga_inner: p50=2.742 ms, ops/sec=350.245
+- versor_condition: p50=0.536 ms, ops/sec=1831.309
 
 ## 5. FrameVerdict TTFV
 
-- Verdict: entailed_true, p50=0.153 ms, producer=proof_chain.entail
+- Verdict: entailed_true, p50=0.151 ms, producer=proof_chain.entail
 
 ## 6. Deterministic replay/persistence
 

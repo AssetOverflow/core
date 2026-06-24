@@ -14,8 +14,10 @@ from benchmarks.apple_uma_mechanical_sympathy import (
     BENCHMARK_NAME,
     REPORT_JSON_NAME,
     build_claim_safety_audit,
+    build_copy_zero_copy_truth_table,
     deterministic_closed_frame,
     run_benchmark,
+    rust_backend_status,
     synthetic_matrix,
     track_array_codec_replay,
     track_frame_verdict_ttfv,
@@ -32,6 +34,7 @@ REQUIRED_TOP_LEVEL_KEYS = frozenset(
         "benchmark_name",
         "benchmark_version",
         "machine",
+        "backend_status",
         "tracks",
         "claim_safety_audit",
         "copy_zero_copy_truth_table",
@@ -76,6 +79,76 @@ def test_skipped_tracks_include_explicit_reasons(fast_bench_kwargs: dict[str, in
     if diffusion.get("skipped"):
         assert "reason" in diffusion
         assert diffusion["reason"]
+        assert diffusion.get("native_status") == "python_fallback"
+        assert "backend_status" in diffusion
+
+
+def test_backend_status_present_and_python_fallback(
+    fast_bench_kwargs: dict[str, int],
+) -> None:
+    with mock.patch.dict("os.environ", {}, clear=True):
+        report = run_benchmark(**fast_bench_kwargs)
+    status = report["backend_status"]
+    assert status["using_rust"] is False
+    assert status["native_status"] == "python_fallback"
+    assert status["diffusion_step_eligible"] is False
+    assert status["activation_hint"]
+    assert report["machine"]["backend_status"] == status
+    notes = report["claim_safety_audit"]["rust_backend_notes"]
+    assert notes
+    assert any("Python" in n or "diffusion_step" in n for n in notes)
+
+
+def test_rust_backend_status_requested_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CORE_BACKEND", "rust")
+    with mock.patch(
+        "benchmarks.apple_uma_mechanical_sympathy._core_rs_import_status",
+        return_value={"import_succeeded": False, "reason": "No module named 'core_rs'"},
+    ):
+        with mock.patch("algebra.backend.using_rust", return_value=False):
+            status = rust_backend_status()
+    assert status["native_status"] == "rust_requested_unavailable"
+    assert status["rust_backend_requested"] is True
+    assert status["core_rs_import_succeeded"] is False
+    assert status["activation_hint"]
+
+
+def test_rust_backend_status_active(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CORE_BACKEND", "rust")
+    with mock.patch(
+        "benchmarks.apple_uma_mechanical_sympathy._core_rs_import_status",
+        return_value={"import_succeeded": True},
+    ):
+        with mock.patch("algebra.backend.using_rust", return_value=True):
+            status = rust_backend_status()
+    assert status["native_status"] == "rust_active"
+    assert status["using_rust"] is True
+    assert status["diffusion_step_eligible"] is True
+    assert status["activation_hint"] is None
+
+
+def test_claim_safety_audit_rust_active_notes() -> None:
+    status = {
+        "rust_backend_requested": True,
+        "core_rs_import_succeeded": True,
+        "using_rust": True,
+        "native_status": "rust_active",
+    }
+    audit = build_claim_safety_audit(using_rust=True, backend_status=status)
+    assert audit["rust_backend_notes"]
+    assert any("Scalar" in n for n in audit["rust_backend_notes"])
+    assert audit["known_zero_copy_input_paths"]
+    assert any("vault_recall" in n for n in audit["known_zero_copy_input_paths"])
+    assert any("vault_recall" in n for n in audit["safe_claims"])
+
+
+def test_copy_truth_table_includes_rust_zero_copy_rows_when_active() -> None:
+    table = build_copy_zero_copy_truth_table(using_rust=True)
+    paths = {row["path"] for row in table}
+    assert "algebra.backend.vault_recall (Rust)" in paths
+    assert "algebra.backend.diffusion_step (Rust)" in paths
+    vault_row = next(r for r in table if r["path"] == "algebra.backend.vault_recall (Rust)")
+    assert vault_row["zero_copy_input"] == "yes (contiguous float32)"
 
 
 def test_deterministic_synthetic_sanity_checks_stable(
