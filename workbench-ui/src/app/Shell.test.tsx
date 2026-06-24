@@ -85,11 +85,11 @@ describe("Shell", () => {
     expect(document.querySelector('[data-density="compact"]')).toBeInTheDocument();
   });
 
-  it("LeftNav has exactly 16 items in section-grouped order", () => {
+  it("LeftNav has exactly 17 items in section-grouped order", () => {
     renderShell();
     const nav = document.querySelector('[data-region="leftnav"]')!;
     const links = nav.querySelectorAll("a");
-    expect(links).toHaveLength(16);
+    expect(links).toHaveLength(17);
     const labels = Array.from(links).map((l) => l.textContent);
     // Grouped by section (Converse → Cognition → Determinism → Evidence →
     // Discipline → Substrate → Settings), derived from the route registry.
@@ -109,6 +109,7 @@ describe("Shell", () => {
       "Calibration",
       "Packs",
       "CORE-Logos",
+      "Apple UMA",
       "Settings",
     ]);
   });
