@@ -35,7 +35,7 @@ REPORT_JSON_NAME = "apple_uma_mechanical_sympathy_latest.json"
 REPORT_MD_NAME = "apple_uma_mechanical_sympathy_latest.md"
 
 BENCHMARK_NAME = "CORE Apple Silicon UMA Mechanical Sympathy Benchmark"
-BENCHMARK_VERSION = "1.0.1"
+BENCHMARK_VERSION = "1.0.2"
 
 N_COMPONENTS = 32
 DEFAULT_WARMUP = 5
@@ -227,7 +227,8 @@ def rust_backend_status() -> dict[str, Any]:
         "activation_hint": activation_hint,
         "diffusion_step_eligible": using_rust,
         "vault_recall_rust_zero_copy_eligible": using_rust,
-        "scalar_rust_copy_paths_remain": using_rust,
+        "scalar_rust_zero_copy_input_eligible": using_rust,
+        "scalar_rust_output_allocations_remain": using_rust,
     }
 
 
@@ -299,8 +300,13 @@ def build_claim_safety_audit(
             "Native Rust backend active (CORE_BACKEND=rust and core_rs loaded)."
         )
         rust_backend_notes.append(
-            "Scalar Cl(4,1) Rust helpers still copy inputs via extract_f32_slice; "
-            "zero-copy scalar cleanup is future work (ADR-0235 Lane 2 / PR C)."
+            "Scalar Cl(4,1) Rust helpers (geometric_product, cga_inner, "
+            "versor_condition, versor_apply f64 closure) read contiguous "
+            "float32/float64 inputs via PyReadonlyArray1 zero-copy views."
+        )
+        rust_backend_notes.append(
+            "Scalar Rust outputs still allocate new NumPy arrays; "
+            "normalize_to_versor and unitize_expmap still use legacy copy paths."
         )
         rust_backend_notes.append(
             "Batch inputs for vault_recall and diffusion_step may be zero-copy "
@@ -341,15 +347,20 @@ def build_claim_safety_audit(
             "No ANN/approximate-search benchmark.",
         ],
         "known_copy_paths": [
-            "Scalar Cl(4,1) Rust helpers copy via extract_f32_slice list conversion "
-            "and allocate new NumPy outputs (geometric_product, versor_condition, cga_inner).",
-            "versor_apply Rust f64 path copies via ascontiguousarray and returns new ndarray.",
+            "Scalar Cl(4,1) Rust helpers allocate new NumPy outputs "
+            "(geometric_product, versor_apply, versor_condition).",
+            "versor_apply Python dispatch may copy via ascontiguousarray when inputs "
+            "are non-contiguous float64.",
+            "normalize_to_versor and unitize_expmap Rust paths still copy via extract_f32_slice.",
             "Python fallback paths mediate through NumPy/Python objects.",
             "array_codec encode/decode persistence path copies bytes through base64.",
             "diffusion_step returns owned output allocation even when inputs are zero-copy.",
         ],
         "known_zero_copy_input_paths": (
             [
+                "Rust geometric_product, cga_inner, versor_condition inputs when "
+                "contiguous float32 (32,).",
+                "Rust versor_apply_with_closure_f64 inputs when contiguous float64 (32,).",
                 "Rust vault_recall input when Rust backend enabled and matrix is contiguous float32.",
                 "Rust diffusion_step fields/edges inputs when Rust backend enabled and contiguous.",
             ]
@@ -360,7 +371,7 @@ def build_claim_safety_audit(
             "MLX kernel experiment requires separate ADR/parity lane.",
             "Metal kernel experiment requires separate ADR/parity lane.",
             "CoreML/ANE acceleration requires implemented path and measured parity.",
-            "Scalar Rust boundary zero-copy upgrades require focused parity tests.",
+            "normalize_to_versor and unitize_expmap scalar Rust copy boundary cleanup.",
             "Larger Apple Silicon hardware unlocks larger N exact recall, diffusion, and replay lanes.",
         ],
     }
@@ -370,27 +381,27 @@ def build_copy_zero_copy_truth_table(*, using_rust: bool) -> list[dict[str, str]
     rows = [
         {
             "path": "algebra.backend.geometric_product (Rust)",
-            "input": "copy via extract_f32_slice",
+            "input": "PyReadonlyArray1 zero-copy when contiguous float32 (32,)",
             "output": "new NumPy allocation",
-            "zero_copy_input": "no",
+            "zero_copy_input": "yes (contiguous float32)",
         },
         {
             "path": "algebra.backend.versor_condition (Rust)",
-            "input": "copy via extract_f32_slice",
+            "input": "PyReadonlyArray1 zero-copy when contiguous float32 (32,)",
             "output": "scalar",
-            "zero_copy_input": "no",
+            "zero_copy_input": "yes (contiguous float32)",
         },
         {
             "path": "algebra.backend.cga_inner (Rust)",
-            "input": "copy via extract_f32_slice",
+            "input": "PyReadonlyArray1 zero-copy when contiguous float32 (32,)",
             "output": "scalar",
-            "zero_copy_input": "no",
+            "zero_copy_input": "yes (contiguous float32)",
         },
         {
             "path": "algebra.backend.versor_apply (Rust f64 closure)",
-            "input": "ascontiguousarray copy",
+            "input": "PyReadonlyArray1 zero-copy when contiguous float64 (32,)",
             "output": "new NumPy allocation",
-            "zero_copy_input": "no",
+            "zero_copy_input": "yes (contiguous float64)",
         },
         {
             "path": "algebra.backend.vault_recall (Python)",
@@ -477,8 +488,8 @@ def track_cl41_scalar_ops(
     ]
 
     memory_note = (
-        "Rust scalar path copies through extract_f32_slice list conversion "
-        "and allocates new NumPy outputs."
+        "Rust scalar path reads contiguous float32/float64 inputs via "
+        "PyReadonlyArray1 zero-copy views; outputs still allocate new NumPy arrays."
         if using_rust
         else "Python path is the canonical semantic fallback."
     )

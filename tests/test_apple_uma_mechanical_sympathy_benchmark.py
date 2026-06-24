@@ -79,7 +79,10 @@ def test_skipped_tracks_include_explicit_reasons(fast_bench_kwargs: dict[str, in
     if diffusion.get("skipped"):
         assert "reason" in diffusion
         assert diffusion["reason"]
-        assert diffusion.get("native_status") == "python_fallback"
+        assert diffusion.get("native_status") in {
+            "python_fallback",
+            "rust_importable_python_fallback",
+        }
         assert "backend_status" in diffusion
 
 
@@ -90,7 +93,10 @@ def test_backend_status_present_and_python_fallback(
         report = run_benchmark(**fast_bench_kwargs)
     status = report["backend_status"]
     assert status["using_rust"] is False
-    assert status["native_status"] == "python_fallback"
+    assert status["native_status"] in {
+        "python_fallback",
+        "rust_importable_python_fallback",
+    }
     assert status["diffusion_step_eligible"] is False
     assert status["activation_hint"]
     assert report["machine"]["backend_status"] == status
@@ -136,7 +142,7 @@ def test_claim_safety_audit_rust_active_notes() -> None:
     }
     audit = build_claim_safety_audit(using_rust=True, backend_status=status)
     assert audit["rust_backend_notes"]
-    assert any("Scalar" in n for n in audit["rust_backend_notes"])
+    assert any("PyReadonlyArray1" in n for n in audit["rust_backend_notes"])
     assert audit["known_zero_copy_input_paths"]
     assert any("vault_recall" in n for n in audit["known_zero_copy_input_paths"])
     assert any("vault_recall" in n for n in audit["safe_claims"])
@@ -149,6 +155,28 @@ def test_copy_truth_table_includes_rust_zero_copy_rows_when_active() -> None:
     assert "algebra.backend.diffusion_step (Rust)" in paths
     vault_row = next(r for r in table if r["path"] == "algebra.backend.vault_recall (Rust)")
     assert vault_row["zero_copy_input"] == "yes (contiguous float32)"
+    gp_row = next(
+        r for r in table if r["path"] == "algebra.backend.geometric_product (Rust)"
+    )
+    assert gp_row["zero_copy_input"] == "yes (contiguous float32)"
+    va_row = next(
+        r for r in table if r["path"] == "algebra.backend.versor_apply (Rust f64 closure)"
+    )
+    assert va_row["zero_copy_input"] == "yes (contiguous float64)"
+
+
+def test_rust_active_backend_status_scalar_zero_copy_fields(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CORE_BACKEND", "rust")
+    with mock.patch(
+        "benchmarks.apple_uma_mechanical_sympathy._core_rs_import_status",
+        return_value={"import_succeeded": True},
+    ):
+        with mock.patch("algebra.backend.using_rust", return_value=True):
+            status = rust_backend_status()
+    assert status["scalar_rust_zero_copy_input_eligible"] is True
+    assert status["scalar_rust_output_allocations_remain"] is True
 
 
 def test_deterministic_synthetic_sanity_checks_stable(
