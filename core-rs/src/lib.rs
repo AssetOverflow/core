@@ -39,9 +39,9 @@ fn geometric_product(
     a: numpy::PyReadonlyArray1<'_, f32>,
     b: numpy::PyReadonlyArray1<'_, f32>,
 ) -> PyResult<PyObject> {
-    let a_slice = read_f32_cl41_mv(a)?;
-    let b_slice = read_f32_cl41_mv(b)?;
-    let result = geometric_product_raw(&a_slice, &b_slice)
+    let a_slice = read_f32_cl41_mv(&a)?;
+    let b_slice = read_f32_cl41_mv(&b)?;
+    let result = geometric_product_raw(a_slice, b_slice)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     f32_array_to_numpy(py, &result)
 }
@@ -68,9 +68,9 @@ fn versor_apply_with_closure(
     v: numpy::PyReadonlyArray1<'_, f32>,
     f: numpy::PyReadonlyArray1<'_, f32>,
 ) -> PyResult<PyObject> {
-    let v_slice = read_f32_cl41_mv(v)?;
-    let f_slice = read_f32_cl41_mv(f)?;
-    let result = versor_apply_closed(&v_slice, &f_slice)
+    let v_slice = read_f32_cl41_mv(&v)?;
+    let f_slice = read_f32_cl41_mv(&f)?;
+    let result = versor_apply_closed(v_slice, f_slice)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     f32_array_to_numpy(py, &result)
 }
@@ -84,9 +84,9 @@ fn versor_apply_with_closure_f64(
     v: numpy::PyReadonlyArray1<'_, f64>,
     f: numpy::PyReadonlyArray1<'_, f64>,
 ) -> PyResult<PyObject> {
-    let v_slice = read_f64_cl41_mv(v)?;
-    let f_slice = read_f64_cl41_mv(f)?;
-    let result = versor_apply_closed_f64(&v_slice, &f_slice)
+    let v_slice = read_f64_cl41_mv(&v)?;
+    let f_slice = read_f64_cl41_mv(&f)?;
+    let result = versor_apply_closed_f64(v_slice, f_slice)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     f64_array_to_numpy(py, &result)
 }
@@ -94,8 +94,8 @@ fn versor_apply_with_closure_f64(
 /// ||F*reverse(F) - 1||_F. Returns scalar f32.
 #[pyfunction]
 fn versor_condition(f: numpy::PyReadonlyArray1<'_, f32>) -> PyResult<f32> {
-    let f_slice = read_f32_cl41_mv(f)?;
-    versor_condition_raw(&f_slice).map_err(|e| PyValueError::new_err(e.to_string()))
+    let f_slice = read_f32_cl41_mv(&f)?;
+    versor_condition_raw(f_slice).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
 /// Project F onto versor manifold: F / sqrt(|F*rev(F)|).
@@ -116,9 +116,9 @@ fn cga_inner(
     x: numpy::PyReadonlyArray1<'_, f32>,
     y: numpy::PyReadonlyArray1<'_, f32>,
 ) -> PyResult<f32> {
-    let x_slice = read_f32_cl41_mv(x)?;
-    let y_slice = read_f32_cl41_mv(y)?;
-    cga_inner_raw(&x_slice, &y_slice).map_err(|e| PyValueError::new_err(e.to_string()))
+    let x_slice = read_f32_cl41_mv(&x)?;
+    let y_slice = read_f32_cl41_mv(&y)?;
+    cga_inner_raw(x_slice, y_slice).map_err(|e| PyValueError::new_err(e.to_string()))
 }
 
 /// Parallel top-k vault recall by CGA inner product (zero-copy).
@@ -260,7 +260,7 @@ fn diffusion_step<'py>(
     Ok((numpy::IntoPyArray::into_pyarray_bound(arr, py), delta))
 }
 
-fn read_f32_cl41_mv(arr: numpy::PyReadonlyArray1<'_, f32>) -> PyResult<[f32; 32]> {
+fn read_f32_cl41_mv<'a>(arr: &'a numpy::PyReadonlyArray1<'a, f32>) -> PyResult<&'a [f32; 32]> {
     let len = arr.len()?;
     if len != 32 {
         return Err(PyValueError::new_err(format!(
@@ -274,12 +274,12 @@ fn read_f32_cl41_mv(arr: numpy::PyReadonlyArray1<'_, f32>) -> PyResult<[f32; 32]
             e
         ))
     })?;
-    let mut out = [0f32; 32];
-    out.copy_from_slice(slice);
-    Ok(out)
+    slice.try_into().map_err(|_| {
+        PyValueError::new_err("expected contiguous float32 array of length 32")
+    })
 }
 
-fn read_f64_cl41_mv(arr: numpy::PyReadonlyArray1<'_, f64>) -> PyResult<[f64; 32]> {
+fn read_f64_cl41_mv<'a>(arr: &'a numpy::PyReadonlyArray1<'a, f64>) -> PyResult<&'a [f64; 32]> {
     let len = arr.len()?;
     if len != 32 {
         return Err(PyValueError::new_err(format!(
@@ -293,9 +293,9 @@ fn read_f64_cl41_mv(arr: numpy::PyReadonlyArray1<'_, f64>) -> PyResult<[f64; 32]
             e
         ))
     })?;
-    let mut out = [0f64; 32];
-    out.copy_from_slice(slice);
-    Ok(out)
+    slice.try_into().map_err(|_| {
+        PyValueError::new_err("expected contiguous float64 array of length 32")
+    })
 }
 
 fn extract_f32_slice(obj: &pyo3::types::PyAny) -> PyResult<[f32; 32]> {
