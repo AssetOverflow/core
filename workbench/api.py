@@ -25,6 +25,7 @@ from workbench.construction_endpoint import (
     construction_evidence_response,
     construction_turn_id_from_path,
 )
+from workbench.apple_uma_report import read_apple_uma_report
 from workbench.tour import determinism_tour
 from workbench.field_evidence import (
     field_evidence_from_journal_entry,
@@ -326,6 +327,8 @@ class WorkbenchApi:
                 return ApiResponse(400, error("bad_request", str(exc)))
         if method == "GET" and path == "/evals":
             return ApiResponse(200, ok({"lanes": readers.list_eval_lanes()}))
+        if method == "GET" and path == "/benchmarks/apple-uma/report":
+            return ApiResponse(200, ok(read_apple_uma_report()))
         if method == "GET" and path.startswith("/evals/"):
             lane = unquote(path.removeprefix("/evals/"))
             return ApiResponse(200, ok(readers.read_eval_lane(lane)))

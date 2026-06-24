@@ -38,7 +38,10 @@ def _sha256_file(path: Path) -> str:
 
 
 def _relative(path: Path) -> str:
-    return path.resolve().relative_to(REPO_ROOT.resolve()).as_posix()
+    try:
+        return path.resolve().relative_to(REPO_ROOT.resolve()).as_posix()
+    except ValueError:
+        return path.resolve().as_posix()
 
 
 def _require_mapping(value: object, label: str) -> dict[str, Any]:

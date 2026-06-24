@@ -447,3 +447,13 @@ def test_trace_construction_route() -> None:
     assert data["status"] == "missing_evidence"
     assert data["diagnostic_only"] is True
     assert data["serving_allowed"] is False
+
+def test_apple_uma_report_route_returns_read_only_projection() -> None:
+    response = _request("GET", "/benchmarks/apple-uma/report")
+    assert response.status == 200
+    data = response.payload["data"]
+    assert data["read_only"] is True
+    assert data["report_id"] == "apple_uma_mechanical_sympathy_latest"
+    assert "backend_status" in data
+    assert "mlx_exact_cga_recall" in data["tracks"]
+    assert any("No MLX semantic-backend" in item for item in data["non_claims"])
