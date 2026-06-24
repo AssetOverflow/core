@@ -1,0 +1,8 @@
+# CORE + builder-II local agent hints
+- temperature 0 everywhere
+- Read AGENTS.md, GROK.md, docs/runtime_contracts.md before edits
+- Proposals are SPECULATIVE until `builder verify` passes
+- Use skills: core-governed-coding, core-verify-loop, core-pre-edit-sweep, core-handoff
+- Slash: /explore /implement /review /verify /handoff /plan
+- Switch model: builder switch-model fast|primary (one model on M1 16GB)
+- versor_condition(F) < 1e-6 — refuse cosine/ANN/HNSW in vault
