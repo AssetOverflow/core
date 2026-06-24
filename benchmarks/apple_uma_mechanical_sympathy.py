@@ -368,7 +368,7 @@ def build_claim_safety_audit(
             else []
         ),
         "future_work": [
-            "MLX kernel experiment requires separate ADR/parity lane.",
+            "MLX exact CGA recall experiment is benchmark-only and parity-gated; MLX is not a semantic backend and is not serving-authorized.",
             "Metal kernel experiment requires separate ADR/parity lane.",
             "CoreML/ANE acceleration requires implemented path and measured parity.",
             "normalize_to_versor and unitize_expmap scalar Rust copy boundary cleanup.",
@@ -451,6 +451,14 @@ def build_copy_zero_copy_truth_table(*, using_rust: bool) -> list[dict[str, str]
                 "zero_copy_input": "n/a",
             },
         )
+    rows.append(
+        {
+            "path": "benchmarks.apple_uma_mlx_exact_recall",
+            "input": "NumPy contiguous float32 matrix/query copied into MLX arrays",
+            "output": "MLX score vector copied to NumPy for canonical stable top-k",
+            "zero_copy_input": "no",
+        }
+    )
     return rows
 
 
@@ -771,12 +779,15 @@ def run_benchmark(
     warmup: int = DEFAULT_WARMUP,
     measured: int = DEFAULT_MEASURED,
 ) -> dict[str, Any]:
+    from benchmarks.apple_uma_mlx_exact_recall import run_mlx_exact_recall_experiment
+
     machine = collect_machine_metadata()
     using_rust = bool(machine["using_rust"])
     backend_status = machine["backend_status"]
     tracks = {
         "cl41_scalar_ops": track_cl41_scalar_ops(warmup=warmup, measured=measured),
         "exact_cga_recall": track_exact_cga_recall(warmup=warmup, measured=measured),
+        "mlx_exact_cga_recall": run_mlx_exact_recall_experiment(warmup=warmup, measured=measured),
         "diffusion_step": track_diffusion_step(warmup=warmup, measured=measured),
         "frame_verdict_ttfv": track_frame_verdict_ttfv(warmup=warmup, measured=measured),
         "array_codec_replay": track_array_codec_replay(warmup=warmup, measured=measured),
@@ -895,7 +906,21 @@ def write_markdown_summary(
     if recall.get("large_n_probe", {}).get("included") is False:
         lines.append(f"- Large N probe: {recall['large_n_probe']['reason']}")
 
-    lines.extend(["", "## 4. Cl(4,1) scalar algebra", ""])
+    lines.extend(["", "## 4. MLX exact CGA recall", ""])
+    mlx_recall = tracks["mlx_exact_cga_recall"]
+    if mlx_recall.get("skipped"):
+        lines.append(f"- skipped: {mlx_recall.get('reason')}")
+    else:
+        for case in mlx_recall.get("cases", []):
+            lines.append(
+                f"- N={case['N']}: p50={case['timing']['p50_ms']:.3f} ms, "
+                f"rows/sec={case['rows_per_sec']}, "
+                f"parity={case['parity']['parity_pass']}"
+            )
+        lines.append("- copy-in: NumPy → MLX array")
+        lines.append("- copy-out: MLX scores → NumPy stable top-k")
+
+    lines.extend(["", "## 5. Cl(4,1) scalar algebra", ""])
     for op in tracks["cl41_scalar_ops"].get("operations", []):
         t = op["timing"]
         lines.append(
@@ -903,14 +928,14 @@ def write_markdown_summary(
             f"ops/sec={t['ops_per_sec']}"
         )
 
-    lines.extend(["", "## 5. FrameVerdict TTFV", ""])
+    lines.extend(["", "## 6. FrameVerdict TTFV", ""])
     fv = tracks["frame_verdict_ttfv"]
     lines.append(
         f"- Verdict: {fv['verdict']}, p50={fv['timing']['p50_ms']:.3f} ms, "
         f"producer={fv['proof_producer']}"
     )
 
-    lines.extend(["", "## 6. Deterministic replay/persistence", ""])
+    lines.extend(["", "## 7. Deterministic replay/persistence", ""])
     ac = tracks["array_codec_replay"]
     lines.append(
         f"- encode p50={ac['encode_timing']['p50_ms']:.3f} ms, "
@@ -918,7 +943,7 @@ def write_markdown_summary(
         f"bytes={ac['encoded_bytes']}"
     )
 
-    lines.extend(["", "## 7. Copy / zero-copy truth table", ""])
+    lines.extend(["", "## 8. Copy / zero-copy truth table", ""])
     lines.append("| Path | Input | Output | Zero-copy input |")
     lines.append("|---|---|---|---|")
     for row in truth:
@@ -929,19 +954,19 @@ def write_markdown_summary(
     lines.extend(
         [
             "",
-            "## 8. Why this matters for Apple Silicon",
+            "## 9. Why this matters for Apple Silicon",
             "",
             "CORE's deterministic workloads are contiguous-memory geometric operations",
             "and exact recall scans — structurally aligned with unified memory when",
             "native bindings avoid Python marshalling tax on hot paths.",
             "",
-            "## 9. What larger Apple Silicon hardware would unlock",
+            "## 10. What larger Apple Silicon hardware would unlock",
             "",
             "Larger unified memory enables higher-N exact recall validation, larger",
             "diffusion graphs, and expanded replay persistence lanes without swapping",
             "or fragmenting evidence buffers.",
             "",
-            "## 10. Explicit non-claims",
+            "## 11. Explicit non-claims",
             "",
         ]
     )

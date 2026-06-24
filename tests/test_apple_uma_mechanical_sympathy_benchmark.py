@@ -45,6 +45,7 @@ REQUIRED_TRACK_KEYS = frozenset(
     {
         "cl41_scalar_ops",
         "exact_cga_recall",
+        "mlx_exact_cga_recall",
         "diffusion_step",
         "frame_verdict_ttfv",
         "array_codec_replay",
