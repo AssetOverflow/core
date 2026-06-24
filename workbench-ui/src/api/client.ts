@@ -42,6 +42,8 @@ import type {
   HealthStatus,
 } from "../types/api";
 import type { ConstructionEvidence } from "../types/constructionEvidence";
+import type { PracticeEvidence } from "../types/practiceEvidence";
+
 
 
 export class WorkbenchApiError extends Error {
@@ -222,6 +224,13 @@ export async function fetchTraceConstruction(turnId: number): Promise<Constructi
     `/trace/${encodeURIComponent(String(turnId))}/construction`,
   );
 }
+
+export async function fetchTracePractice(turnId: number): Promise<PracticeEvidence> {
+  return apiFetch<PracticeEvidence>(
+    `/trace/${encodeURIComponent(String(turnId))}/practice`,
+  );
+}
+
 
 
 export async function fetchTour(): Promise<DeterminismTour> {
