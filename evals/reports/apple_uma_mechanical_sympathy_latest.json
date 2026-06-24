@@ -2,10 +2,21 @@
   "_metadata": {
     "note": "Non-hash metadata section; excluded from deterministic claim payloads.",
     "report_path": "evals/reports/apple_uma_mechanical_sympathy_latest.json",
-    "written_at_unix": 1782329239.704502
+    "written_at_unix": 1782330167.772608
+  },
+  "backend_status": {
+    "activation_hint": "Python semantic fallback active; install core_rs and set CORE_BACKEND=rust for the native baseline report",
+    "core_rs_import_succeeded": false,
+    "diffusion_step_eligible": false,
+    "native_status": "python_fallback",
+    "requested_backend": "(default python)",
+    "rust_backend_requested": false,
+    "scalar_rust_copy_paths_remain": false,
+    "using_rust": false,
+    "vault_recall_rust_zero_copy_eligible": false
   },
   "benchmark_name": "CORE Apple Silicon UMA Mechanical Sympathy Benchmark",
-  "benchmark_version": "1.0.0",
+  "benchmark_version": "1.0.1",
   "claim_safety_audit": {
     "future_work": [
       "MLX kernel experiment requires separate ADR/parity lane.",
@@ -22,6 +33,10 @@
       "diffusion_step returns owned output allocation even when inputs are zero-copy."
     ],
     "known_zero_copy_input_paths": [],
+    "rust_backend_notes": [
+      "Rust backend unavailable; report uses Python semantic fallback.",
+      "diffusion_step track skipped until CORE_BACKEND=rust and core_rs are active."
+    ],
     "safe_claims": [
       "array_codec is bit-exact deterministic persistence/replay support.",
       "FrameVerdict benchmark measures off-serving closed-world proof/verdict latency.",
@@ -90,13 +105,24 @@
   ],
   "machine": {
     "CORE_BACKEND": "",
+    "backend_status": {
+      "activation_hint": "Python semantic fallback active; install core_rs and set CORE_BACKEND=rust for the native baseline report",
+      "core_rs_import_succeeded": false,
+      "diffusion_step_eligible": false,
+      "native_status": "python_fallback",
+      "requested_backend": "(default python)",
+      "rust_backend_requested": false,
+      "scalar_rust_copy_paths_remain": false,
+      "using_rust": false,
+      "vault_recall_rust_zero_copy_eligible": false
+    },
     "core_rs": {
       "import_succeeded": false,
       "reason": "No module named 'core_rs'"
     },
     "machine": "arm64",
     "memory": {
-      "available_bytes": 4375969792,
+      "available_bytes": 4473192448,
       "source": "psutil.virtual_memory",
       "total_bytes": 17179869184
     },
@@ -109,24 +135,24 @@
   "tracks": {
     "array_codec_replay": {
       "decode_timing": {
-        "max_ms": 0.035041,
-        "mean_ms": 0.023529,
+        "max_ms": 0.025167,
+        "mean_ms": 0.023081,
         "measured_iterations": 50,
-        "min_ms": 0.022875,
-        "ops_per_sec": 42500.381,
+        "min_ms": 0.022916,
+        "ops_per_sec": 43326.204,
         "p50_ms": 0.023,
-        "p95_ms": 0.025875,
+        "p95_ms": 0.023208,
         "warmup_iterations": 5
       },
       "dtype": "float32",
       "encode_timing": {
-        "max_ms": 0.015417,
-        "mean_ms": 0.015281,
+        "max_ms": 0.017291,
+        "mean_ms": 0.015287,
         "measured_iterations": 50,
-        "min_ms": 0.015167,
-        "ops_per_sec": 65441.682,
-        "p50_ms": 0.015291,
-        "p95_ms": 0.015417,
+        "min_ms": 0.014042,
+        "ops_per_sec": 65413.257,
+        "p50_ms": 0.015292,
+        "p95_ms": 0.015458,
         "warmup_iterations": 5
       },
       "encoded_bytes": 10924,
@@ -162,13 +188,13 @@
             32
           ],
           "timing": {
-            "max_ms": 1.417042,
-            "mean_ms": 1.367876,
+            "max_ms": 1.497667,
+            "mean_ms": 1.396194,
             "measured_iterations": 50,
-            "min_ms": 1.353834,
-            "ops_per_sec": 731.06,
-            "p50_ms": 1.359729,
-            "p95_ms": 1.407416,
+            "min_ms": 1.379709,
+            "ops_per_sec": 716.233,
+            "p50_ms": 1.387396,
+            "p95_ms": 1.424292,
             "warmup_iterations": 5
           }
         },
@@ -189,13 +215,13 @@
             32
           ],
           "timing": {
-            "max_ms": 3.086375,
-            "mean_ms": 2.939975,
+            "max_ms": 3.028709,
+            "mean_ms": 2.935689,
             "measured_iterations": 50,
-            "min_ms": 2.886917,
-            "ops_per_sec": 340.139,
-            "p50_ms": 2.926645,
-            "p95_ms": 3.044667,
+            "min_ms": 2.88475,
+            "ops_per_sec": 340.636,
+            "p50_ms": 2.926646,
+            "p95_ms": 3.013958,
             "warmup_iterations": 5
           }
         },
@@ -214,13 +240,13 @@
             32
           ],
           "timing": {
-            "max_ms": 4.999417,
-            "mean_ms": 2.823273,
+            "max_ms": 5.186584,
+            "mean_ms": 2.855146,
             "measured_iterations": 50,
-            "min_ms": 2.685958,
-            "ops_per_sec": 354.199,
-            "p50_ms": 2.7085,
-            "p95_ms": 3.641125,
+            "min_ms": 2.724542,
+            "ops_per_sec": 350.245,
+            "p50_ms": 2.741645,
+            "p95_ms": 3.58975,
             "warmup_iterations": 5
           }
         },
@@ -239,13 +265,13 @@
             32
           ],
           "timing": {
-            "max_ms": 0.605458,
-            "mean_ms": 0.543464,
+            "max_ms": 0.602333,
+            "mean_ms": 0.546057,
             "measured_iterations": 50,
-            "min_ms": 0.530541,
-            "ops_per_sec": 1840.048,
-            "p50_ms": 0.536229,
-            "p95_ms": 0.598667,
+            "min_ms": 0.528708,
+            "ops_per_sec": 1831.309,
+            "p50_ms": 0.53575,
+            "p95_ms": 0.585375,
             "warmup_iterations": 5
           }
         }
@@ -254,7 +280,19 @@
       "track": "cl41_scalar_ops"
     },
     "diffusion_step": {
-      "reason": "Rust backend not enabled (set CORE_BACKEND=rust and install core_rs)",
+      "backend_status": {
+        "activation_hint": "Python semantic fallback active; install core_rs and set CORE_BACKEND=rust for the native baseline report",
+        "core_rs_import_succeeded": false,
+        "diffusion_step_eligible": false,
+        "native_status": "python_fallback",
+        "requested_backend": "(default python)",
+        "rust_backend_requested": false,
+        "scalar_rust_copy_paths_remain": false,
+        "using_rust": false,
+        "vault_recall_rust_zero_copy_eligible": false
+      },
+      "native_status": "python_fallback",
+      "reason": "Rust backend not enabled (set CORE_BACKEND=rust and install core_rs via `core rust build`)",
       "rust_available": false,
       "skipped": true,
       "track": "diffusion_step"
@@ -268,16 +306,16 @@
           "contiguous": true,
           "dtype": "float32",
           "result_deterministic": true,
-          "rows_per_sec": 1840049.683,
+          "rows_per_sec": 1774127.463,
           "rust_zero_copy_input_eligible": false,
           "timing": {
-            "max_ms": 0.070416,
-            "mean_ms": 0.069563,
+            "max_ms": 0.118,
+            "mean_ms": 0.072148,
             "measured_iterations": 50,
-            "min_ms": 0.069125,
-            "ops_per_sec": 14375.388,
-            "p50_ms": 0.0695,
-            "p95_ms": 0.070209,
+            "min_ms": 0.0705,
+            "ops_per_sec": 13860.371,
+            "p50_ms": 0.071,
+            "p95_ms": 0.073208,
             "warmup_iterations": 5
           },
           "top_k": 5,
@@ -303,16 +341,16 @@
           "contiguous": true,
           "dtype": "float32",
           "result_deterministic": true,
-          "rows_per_sec": 8937898.275,
+          "rows_per_sec": 8765686.74,
           "rust_zero_copy_input_eligible": false,
           "timing": {
-            "max_ms": 0.151084,
-            "mean_ms": 0.114568,
+            "max_ms": 0.197,
+            "mean_ms": 0.116819,
             "measured_iterations": 50,
-            "min_ms": 0.112583,
-            "ops_per_sec": 8728.416,
-            "p50_ms": 0.113542,
-            "p95_ms": 0.117292,
+            "min_ms": 0.113459,
+            "ops_per_sec": 8560.241,
+            "p50_ms": 0.114812,
+            "p95_ms": 0.118958,
             "warmup_iterations": 5
           },
           "top_k": 5,
@@ -338,16 +376,16 @@
           "contiguous": true,
           "dtype": "float32",
           "result_deterministic": true,
-          "rows_per_sec": 17482143.653,
+          "rows_per_sec": 17346134.584,
           "rust_zero_copy_input_eligible": false,
           "timing": {
-            "max_ms": 0.576834,
-            "mean_ms": 0.468592,
+            "max_ms": 0.603167,
+            "mean_ms": 0.472267,
             "measured_iterations": 50,
-            "min_ms": 0.456166,
-            "ops_per_sec": 2134.051,
-            "p50_ms": 0.461208,
-            "p95_ms": 0.531042,
+            "min_ms": 0.4565,
+            "ops_per_sec": 2117.448,
+            "p50_ms": 0.459,
+            "p95_ms": 0.558666,
             "warmup_iterations": 5
           },
           "top_k": 5,
@@ -373,16 +411,16 @@
           "contiguous": true,
           "dtype": "float32",
           "result_deterministic": true,
-          "rows_per_sec": 22937268.738,
+          "rows_per_sec": 19851684.504,
           "rust_zero_copy_input_eligible": false,
           "timing": {
-            "max_ms": 3.492375,
-            "mean_ms": 2.857184,
+            "max_ms": 3.369292,
+            "mean_ms": 3.301282,
             "measured_iterations": 50,
-            "min_ms": 2.711583,
-            "ops_per_sec": 349.995,
-            "p50_ms": 2.783229,
-            "p95_ms": 3.422333,
+            "min_ms": 3.264083,
+            "ops_per_sec": 302.913,
+            "p50_ms": 3.299208,
+            "p95_ms": 3.331209,
             "warmup_iterations": 5
           },
           "top_k": 5,
@@ -422,13 +460,13 @@
       },
       "skipped": false,
       "timing": {
-        "max_ms": 0.245625,
-        "mean_ms": 0.166753,
+        "max_ms": 0.447458,
+        "mean_ms": 0.169548,
         "measured_iterations": 50,
-        "min_ms": 0.149,
-        "ops_per_sec": 5996.886,
-        "p50_ms": 0.15325,
-        "p95_ms": 0.231166,
+        "min_ms": 0.148083,
+        "ops_per_sec": 5898.052,
+        "p50_ms": 0.151417,
+        "p95_ms": 0.224583,
         "warmup_iterations": 5
       },
       "trace_hash_present": true,

@@ -35,7 +35,7 @@ REPORT_JSON_NAME = "apple_uma_mechanical_sympathy_latest.json"
 REPORT_MD_NAME = "apple_uma_mechanical_sympathy_latest.md"
 
 BENCHMARK_NAME = "CORE Apple Silicon UMA Mechanical Sympathy Benchmark"
-BENCHMARK_VERSION = "1.0.0"
+BENCHMARK_VERSION = "1.0.1"
 
 N_COMPONENTS = 32
 DEFAULT_WARMUP = 5
@@ -182,10 +182,79 @@ def _core_rs_import_status() -> dict[str, Any]:
         return {"import_succeeded": False, "reason": str(exc)}
 
 
+_RUST_BACKEND_ALIASES = frozenset({"rust", "core_rs", "rs"})
+
+
+def rust_backend_status() -> dict[str, Any]:
+    """Summarize Rust backend availability for report consumers."""
+    from algebra import backend as alg_backend
+
+    requested_raw = os.environ.get("CORE_BACKEND", "").strip()
+    requested_norm = requested_raw.lower()
+    rust_requested = requested_norm in _RUST_BACKEND_ALIASES
+    core_rs_status = _core_rs_import_status()
+    import_succeeded = bool(core_rs_status.get("import_succeeded"))
+    using_rust = alg_backend.using_rust()
+
+    if using_rust:
+        native_status = "rust_active"
+        activation_hint = None
+    elif rust_requested and not import_succeeded:
+        native_status = "rust_requested_unavailable"
+        activation_hint = (
+            "CORE_BACKEND requests Rust but core_rs is not installed; "
+            "run `core rust build` then rerun with CORE_BACKEND=rust"
+        )
+    elif import_succeeded and not rust_requested:
+        native_status = "rust_importable_python_fallback"
+        activation_hint = (
+            "core_rs is importable but inactive; set CORE_BACKEND=rust to "
+            "activate the native baseline report"
+        )
+    else:
+        native_status = "python_fallback"
+        activation_hint = (
+            "Python semantic fallback active; install core_rs and set "
+            "CORE_BACKEND=rust for the native baseline report"
+        )
+
+    return {
+        "requested_backend": requested_raw or "(default python)",
+        "rust_backend_requested": rust_requested,
+        "core_rs_import_succeeded": import_succeeded,
+        "using_rust": using_rust,
+        "native_status": native_status,
+        "activation_hint": activation_hint,
+        "diffusion_step_eligible": using_rust,
+        "vault_recall_rust_zero_copy_eligible": using_rust,
+        "scalar_rust_copy_paths_remain": using_rust,
+    }
+
+
+def _diffusion_skip_reason(*, using_rust: bool, status: dict[str, Any]) -> str:
+    if using_rust:
+        return "unexpected: diffusion_step should not be skipped when using_rust()"
+    if status["rust_backend_requested"] and not status["core_rs_import_succeeded"]:
+        return (
+            "CORE_BACKEND requests Rust but core_rs is not installed "
+            "(run `core rust build`)"
+        )
+    if status["core_rs_import_succeeded"] and not status["rust_backend_requested"]:
+        return (
+            "core_rs is importable but CORE_BACKEND is not set to rust "
+            "(set CORE_BACKEND=rust)"
+        )
+    return (
+        "Rust backend not enabled (set CORE_BACKEND=rust and install core_rs "
+        "via `core rust build`)"
+    )
+
+
 def collect_machine_metadata() -> dict[str, Any]:
     from algebra import backend as alg_backend
 
     rs_status = _core_rs_import_status()
+    backend_status = rust_backend_status()
     return {
         "platform": platform.platform(),
         "os": platform.system(),
@@ -196,6 +265,7 @@ def collect_machine_metadata() -> dict[str, Any]:
         "CORE_BACKEND": os.environ.get("CORE_BACKEND", ""),
         "core_rs": rs_status,
         "using_rust": alg_backend.using_rust(),
+        "backend_status": backend_status,
     }
 
 
@@ -204,12 +274,18 @@ def collect_machine_metadata() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def build_claim_safety_audit(*, using_rust: bool) -> dict[str, list[str]]:
+def build_claim_safety_audit(
+    *,
+    using_rust: bool,
+    backend_status: dict[str, Any] | None = None,
+) -> dict[str, list[str]]:
+    status = backend_status or rust_backend_status()
     safe = [
         "array_codec is bit-exact deterministic persistence/replay support.",
         "FrameVerdict benchmark measures off-serving closed-world proof/verdict latency.",
         "Exact CGA recall via algebra.backend.vault_recall — no ANN or approximate search.",
     ]
+    rust_backend_notes: list[str] = []
     if using_rust:
         safe.append(
             "vault_recall Rust binding consumes contiguous (N, 32) float32 NumPy "
@@ -219,13 +295,42 @@ def build_claim_safety_audit(*, using_rust: bool) -> dict[str, list[str]]:
             "diffusion_step consumes contiguous input buffers via read-only views "
             "and returns owned output."
         )
+        rust_backend_notes.append(
+            "Native Rust backend active (CORE_BACKEND=rust and core_rs loaded)."
+        )
+        rust_backend_notes.append(
+            "Scalar Cl(4,1) Rust helpers still copy inputs via extract_f32_slice; "
+            "zero-copy scalar cleanup is future work (ADR-0235 Lane 2 / PR C)."
+        )
+        rust_backend_notes.append(
+            "Batch inputs for vault_recall and diffusion_step may be zero-copy "
+            "eligible when contiguous float32."
+        )
     else:
         safe.append(
             "Python vault_recall path uses vectorised exact scan when Rust is unavailable."
         )
+        if status["rust_backend_requested"] and not status["core_rs_import_succeeded"]:
+            rust_backend_notes.append(
+                "CORE_BACKEND requests Rust but core_rs is not installed; "
+                "report reflects Python fallback and skipped Rust-only tracks."
+            )
+        elif status["core_rs_import_succeeded"]:
+            rust_backend_notes.append(
+                "core_rs is importable but inactive; set CORE_BACKEND=rust for "
+                "native baseline measurements."
+            )
+        else:
+            rust_backend_notes.append(
+                "Rust backend unavailable; report uses Python semantic fallback."
+            )
+        rust_backend_notes.append(
+            "diffusion_step track skipped until CORE_BACKEND=rust and core_rs are active."
+        )
 
     return {
         "safe_claims": safe,
+        "rust_backend_notes": rust_backend_notes,
         "unsafe_claims_not_made": [
             "No CoreML acceleration claim.",
             "No Neural Engine acceleration claim.",
@@ -507,12 +612,15 @@ def track_diffusion_step(
     from algebra import backend as alg_backend
 
     requested, actual, using_rust = _backend_labels()
+    status = rust_backend_status()
     if not using_rust:
         return {
             "track": "diffusion_step",
             "skipped": True,
-            "reason": "Rust backend not enabled (set CORE_BACKEND=rust and install core_rs)",
-            "rust_available": False,
+            "reason": _diffusion_skip_reason(using_rust=using_rust, status=status),
+            "native_status": status["native_status"],
+            "rust_available": status["core_rs_import_succeeded"],
+            "backend_status": status,
         }
 
     n_nodes = 128
@@ -654,6 +762,7 @@ def run_benchmark(
 ) -> dict[str, Any]:
     machine = collect_machine_metadata()
     using_rust = bool(machine["using_rust"])
+    backend_status = machine["backend_status"]
     tracks = {
         "cl41_scalar_ops": track_cl41_scalar_ops(warmup=warmup, measured=measured),
         "exact_cga_recall": track_exact_cga_recall(warmup=warmup, measured=measured),
@@ -665,8 +774,12 @@ def run_benchmark(
         "benchmark_name": BENCHMARK_NAME,
         "benchmark_version": BENCHMARK_VERSION,
         "machine": machine,
+        "backend_status": backend_status,
         "tracks": tracks,
-        "claim_safety_audit": build_claim_safety_audit(using_rust=using_rust),
+        "claim_safety_audit": build_claim_safety_audit(
+            using_rust=using_rust,
+            backend_status=backend_status,
+        ),
         "copy_zero_copy_truth_table": build_copy_zero_copy_truth_table(
             using_rust=using_rust
         ),
@@ -719,6 +832,7 @@ def write_markdown_summary(
     base = root or PROJECT_ROOT / "evals" / "reports"
     base.mkdir(parents=True, exist_ok=True)
     machine = report["machine"]
+    backend_status = report.get("backend_status") or machine.get("backend_status", {})
     tracks = report["tracks"]
     audit = report["claim_safety_audit"]
     truth = report["copy_zero_copy_truth_table"]
@@ -743,10 +857,23 @@ def write_markdown_summary(
         f"- CORE_BACKEND: `{machine['CORE_BACKEND'] or '(default python)'}`",
         f"- core_rs import: {machine['core_rs'].get('import_succeeded')}",
         f"- using_rust(): {machine['using_rust']}",
-        "",
-        "## 3. Exact CGA recall",
+        f"- Native status: `{backend_status.get('native_status', 'unknown')}`",
+        f"- diffusion_step eligible: {backend_status.get('diffusion_step_eligible')}",
+        f"- vault_recall Rust zero-copy eligible: "
+        f"{backend_status.get('vault_recall_rust_zero_copy_eligible')}",
         "",
     ]
+    if backend_status.get("activation_hint"):
+        lines.append(f"- Activation hint: {backend_status['activation_hint']}")
+        lines.append("")
+    rust_notes = audit.get("rust_backend_notes", [])
+    if rust_notes:
+        lines.append("### Rust backend notes")
+        lines.append("")
+        for note in rust_notes:
+            lines.append(f"- {note}")
+        lines.append("")
+    lines.extend(["", "## 3. Exact CGA recall", ""])
     recall = tracks["exact_cga_recall"]
     for case in recall.get("cases", []):
         lines.append(
