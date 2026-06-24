@@ -122,6 +122,7 @@ export function App() {
                 element={ROUTE_ELEMENTS[route.id]}
               />
             ))}
+            <Route path="apple-uma" element={ROUTE_ELEMENTS["apple-uma"]} />
           </Route>
           <Route path="/preview" element={lazyRoute(<PreviewPage />)} />
         </Routes>
