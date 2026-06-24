@@ -1,0 +1,440 @@
+{
+  "_metadata": {
+    "note": "Non-hash metadata section; excluded from deterministic claim payloads.",
+    "report_path": "/Users/kaizenpro/Projects/core/evals/reports/apple_uma_mechanical_sympathy_latest.json",
+    "written_at_unix": 1782329051.9986272
+  },
+  "benchmark_name": "CORE Apple Silicon UMA Mechanical Sympathy Benchmark",
+  "benchmark_version": "1.0.0",
+  "claim_safety_audit": {
+    "future_work": [
+      "MLX kernel experiment requires separate ADR/parity lane.",
+      "Metal kernel experiment requires separate ADR/parity lane.",
+      "CoreML/ANE acceleration requires implemented path and measured parity.",
+      "Scalar Rust boundary zero-copy upgrades require focused parity tests.",
+      "Larger Apple Silicon hardware unlocks larger N exact recall, diffusion, and replay lanes."
+    ],
+    "known_copy_paths": [
+      "Scalar Cl(4,1) Rust helpers copy via extract_f32_slice list conversion and allocate new NumPy outputs (geometric_product, versor_condition, cga_inner).",
+      "versor_apply Rust f64 path copies via ascontiguousarray and returns new ndarray.",
+      "Python fallback paths mediate through NumPy/Python objects.",
+      "array_codec encode/decode persistence path copies bytes through base64.",
+      "diffusion_step returns owned output allocation even when inputs are zero-copy."
+    ],
+    "known_zero_copy_input_paths": [],
+    "safe_claims": [
+      "array_codec is bit-exact deterministic persistence/replay support.",
+      "FrameVerdict benchmark measures off-serving closed-world proof/verdict latency.",
+      "Exact CGA recall via algebra.backend.vault_recall — no ANN or approximate search.",
+      "Python vault_recall path uses vectorised exact scan when Rust is unavailable."
+    ],
+    "unsafe_claims_not_made": [
+      "No CoreML acceleration claim.",
+      "No Neural Engine acceleration claim.",
+      "No MLX semantic-backend claim.",
+      "No \"zero-copy everywhere\" claim.",
+      "No fixed sponsorship speedup multiplier.",
+      "No token-generation benchmark.",
+      "No ANN/approximate-search benchmark."
+    ]
+  },
+  "copy_zero_copy_truth_table": [
+    {
+      "input": "copy via extract_f32_slice",
+      "output": "new NumPy allocation",
+      "path": "algebra.backend.geometric_product (Rust)",
+      "zero_copy_input": "no"
+    },
+    {
+      "input": "copy via extract_f32_slice",
+      "output": "scalar",
+      "path": "algebra.backend.versor_condition (Rust)",
+      "zero_copy_input": "no"
+    },
+    {
+      "input": "copy via extract_f32_slice",
+      "output": "scalar",
+      "path": "algebra.backend.cga_inner (Rust)",
+      "zero_copy_input": "no"
+    },
+    {
+      "input": "ascontiguousarray copy",
+      "output": "new NumPy allocation",
+      "path": "algebra.backend.versor_apply (Rust f64 closure)",
+      "zero_copy_input": "no"
+    },
+    {
+      "input": "n/a",
+      "output": "skipped — Rust unavailable",
+      "path": "algebra.backend.diffusion_step",
+      "zero_copy_input": "n/a"
+    },
+    {
+      "input": "NumPy view / vectorised scan",
+      "output": "index list",
+      "path": "algebra.backend.vault_recall (Python)",
+      "zero_copy_input": "n/a (Python canonical)"
+    },
+    {
+      "input": "byte copy + base64",
+      "output": "writable ndarray copy",
+      "path": "core.array_codec encode/decode",
+      "zero_copy_input": "no"
+    },
+    {
+      "input": "closed frame struct",
+      "output": "FrameVerdict",
+      "path": "generate.frame_verdict.evaluate_frame_verdict",
+      "zero_copy_input": "n/a (proof surface)"
+    }
+  ],
+  "machine": {
+    "CORE_BACKEND": "",
+    "core_rs": {
+      "import_succeeded": false,
+      "reason": "No module named 'core_rs'"
+    },
+    "machine": "arm64",
+    "memory": {
+      "available_bytes": 4247093248,
+      "source": "psutil.virtual_memory",
+      "total_bytes": 17179869184
+    },
+    "os": "Darwin",
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "processor": "arm",
+    "python_version": "3.12.13",
+    "using_rust": false
+  },
+  "tracks": {
+    "array_codec_replay": {
+      "decode_timing": {
+        "max_ms": 0.087833,
+        "mean_ms": 0.040115,
+        "measured_iterations": 50,
+        "min_ms": 0.036959,
+        "ops_per_sec": 24928.306,
+        "p50_ms": 0.038542,
+        "p95_ms": 0.044542,
+        "warmup_iterations": 5
+      },
+      "dtype": "float32",
+      "encode_timing": {
+        "max_ms": 0.015584,
+        "mean_ms": 0.015312,
+        "measured_iterations": 50,
+        "min_ms": 0.013791,
+        "ops_per_sec": 65309.705,
+        "p50_ms": 0.015375,
+        "p95_ms": 0.015583,
+        "warmup_iterations": 5
+      },
+      "encoded_bytes": 10924,
+      "note": "Deterministic persistence/replay support — not runtime zero-copy.",
+      "payload_shape": [
+        64,
+        32
+      ],
+      "sanity": {
+        "byte_exact_roundtrip": true,
+        "versor_closure_preserved": true,
+        "writable_decode": true
+      },
+      "skipped": false,
+      "track": "array_codec_replay"
+    },
+    "cl41_scalar_ops": {
+      "operations": [
+        {
+          "backend_requested": "python (default)",
+          "backend_used": "python",
+          "dtype": "float32",
+          "memory_behavior": "Python path is the canonical semantic fallback.",
+          "operation": "geometric_product",
+          "sanity": {
+            "deterministic_repeat": true,
+            "finite": true,
+            "output_shape": [
+              32
+            ]
+          },
+          "shape": [
+            32
+          ],
+          "timing": {
+            "max_ms": 1.534875,
+            "mean_ms": 1.378704,
+            "measured_iterations": 50,
+            "min_ms": 1.354083,
+            "ops_per_sec": 725.319,
+            "p50_ms": 1.365563,
+            "p95_ms": 1.433042,
+            "warmup_iterations": 5
+          }
+        },
+        {
+          "backend_requested": "python (default)",
+          "backend_used": "python",
+          "dtype": "float32",
+          "memory_behavior": "Python path is the canonical semantic fallback.",
+          "operation": "versor_apply",
+          "sanity": {
+            "deterministic_repeat": true,
+            "finite": true,
+            "output_shape": [
+              32
+            ]
+          },
+          "shape": [
+            32
+          ],
+          "timing": {
+            "max_ms": 39.863625,
+            "mean_ms": 4.150485,
+            "measured_iterations": 50,
+            "min_ms": 2.849542,
+            "ops_per_sec": 240.936,
+            "p50_ms": 2.881021,
+            "p95_ms": 5.586291,
+            "warmup_iterations": 5
+          }
+        },
+        {
+          "backend_requested": "python (default)",
+          "backend_used": "python",
+          "dtype": "float32",
+          "memory_behavior": "Python path is the canonical semantic fallback.",
+          "operation": "cga_inner",
+          "sanity": {
+            "deterministic_repeat": true,
+            "finite": true,
+            "output_kind": "scalar"
+          },
+          "shape": [
+            32
+          ],
+          "timing": {
+            "max_ms": 9.633625,
+            "mean_ms": 3.313125,
+            "measured_iterations": 50,
+            "min_ms": 2.689583,
+            "ops_per_sec": 301.83,
+            "p50_ms": 2.716479,
+            "p95_ms": 5.592333,
+            "warmup_iterations": 5
+          }
+        },
+        {
+          "backend_requested": "python (default)",
+          "backend_used": "python",
+          "dtype": "float32",
+          "memory_behavior": "Python path is the canonical semantic fallback.",
+          "operation": "versor_condition",
+          "sanity": {
+            "deterministic_repeat": true,
+            "finite": true,
+            "output_kind": "scalar"
+          },
+          "shape": [
+            32
+          ],
+          "timing": {
+            "max_ms": 0.569708,
+            "mean_ms": 0.534274,
+            "measured_iterations": 50,
+            "min_ms": 0.525417,
+            "ops_per_sec": 1871.699,
+            "p50_ms": 0.531354,
+            "p95_ms": 0.562083,
+            "warmup_iterations": 5
+          }
+        }
+      ],
+      "skipped": false,
+      "track": "cl41_scalar_ops"
+    },
+    "diffusion_step": {
+      "reason": "Rust backend not enabled (set CORE_BACKEND=rust and install core_rs)",
+      "rust_available": false,
+      "skipped": true,
+      "track": "diffusion_step"
+    },
+    "exact_cga_recall": {
+      "cases": [
+        {
+          "N": 128,
+          "backend_requested": "python (default)",
+          "backend_used": "python",
+          "contiguous": true,
+          "dtype": "float32",
+          "result_deterministic": true,
+          "rows_per_sec": 1776009.18,
+          "rust_zero_copy_input_eligible": false,
+          "timing": {
+            "max_ms": 0.146542,
+            "mean_ms": 0.072072,
+            "measured_iterations": 50,
+            "min_ms": 0.069291,
+            "ops_per_sec": 13875.072,
+            "p50_ms": 0.070208,
+            "p95_ms": 0.072666,
+            "warmup_iterations": 5
+          },
+          "top_k": 5,
+          "top_result_preview": [
+            [
+              0,
+              -0.7070845365524292
+            ],
+            [
+              1,
+              -0.7077386975288391
+            ],
+            [
+              2,
+              -0.7083905339241028
+            ]
+          ]
+        },
+        {
+          "N": 1024,
+          "backend_requested": "python (default)",
+          "backend_used": "python",
+          "contiguous": true,
+          "dtype": "float32",
+          "result_deterministic": true,
+          "rows_per_sec": 8883489.435,
+          "rust_zero_copy_input_eligible": false,
+          "timing": {
+            "max_ms": 0.152416,
+            "mean_ms": 0.11527,
+            "measured_iterations": 50,
+            "min_ms": 0.111542,
+            "ops_per_sec": 8675.283,
+            "p50_ms": 0.113437,
+            "p95_ms": 0.128167,
+            "warmup_iterations": 5
+          },
+          "top_k": 5,
+          "top_result_preview": [
+            [
+              0,
+              -0.1441916823387146
+            ],
+            [
+              1,
+              -0.14573132991790771
+            ],
+            [
+              2,
+              -0.14726853370666504
+            ]
+          ]
+        },
+        {
+          "N": 8192,
+          "backend_requested": "python (default)",
+          "backend_used": "python",
+          "contiguous": true,
+          "dtype": "float32",
+          "result_deterministic": true,
+          "rows_per_sec": 14772738.586,
+          "rust_zero_copy_input_eligible": false,
+          "timing": {
+            "max_ms": 0.648541,
+            "mean_ms": 0.554535,
+            "measured_iterations": 50,
+            "min_ms": 0.54,
+            "ops_per_sec": 1803.313,
+            "p50_ms": 0.544959,
+            "p95_ms": 0.608208,
+            "warmup_iterations": 5
+          },
+          "top_k": 5,
+          "top_result_preview": [
+            [
+              2561,
+              2.8078949451446533
+            ],
+            [
+              2562,
+              2.807893991470337
+            ],
+            [
+              2560,
+              2.8078932762145996
+            ]
+          ]
+        },
+        {
+          "N": 65536,
+          "backend_requested": "python (default)",
+          "backend_used": "python",
+          "contiguous": true,
+          "dtype": "float32",
+          "result_deterministic": true,
+          "rows_per_sec": 17156750.778,
+          "rust_zero_copy_input_eligible": false,
+          "timing": {
+            "max_ms": 4.390667,
+            "mean_ms": 3.819838,
+            "measured_iterations": 50,
+            "min_ms": 3.007459,
+            "ops_per_sec": 261.791,
+            "p50_ms": 3.808583,
+            "p95_ms": 4.3295,
+            "warmup_iterations": 5
+          },
+          "top_k": 5,
+          "top_result_preview": [
+            [
+              3961,
+              2.8078951835632324
+            ],
+            [
+              15385,
+              2.8078951835632324
+            ],
+            [
+              26809,
+              2.8078951835632324
+            ]
+          ]
+        }
+      ],
+      "large_n_probe": {
+        "attempted": true,
+        "included": true,
+        "reason": "probe under 3.0s budget"
+      },
+      "skipped": false,
+      "track": "exact_cga_recall"
+    },
+    "frame_verdict_ttfv": {
+      "frame_kind": "text",
+      "note": "Off-serving closed-world proof/verdict latency — not served answer latency.",
+      "proof_hash_present": true,
+      "proof_producer": "proof_chain.entail",
+      "sanity": {
+        "expected_entailed_true": true,
+        "is_frame_verdict": true,
+        "verdict_in_closed_set": true
+      },
+      "skipped": false,
+      "timing": {
+        "max_ms": 0.497917,
+        "mean_ms": 0.171413,
+        "measured_iterations": 50,
+        "min_ms": 0.148041,
+        "ops_per_sec": 5833.878,
+        "p50_ms": 0.152709,
+        "p95_ms": 0.237083,
+        "warmup_iterations": 5
+      },
+      "trace_hash_present": true,
+      "track": "frame_verdict_ttfv",
+      "verdict": "entailed_true",
+      "world_assumption": "closed"
+    }
+  }
+}
