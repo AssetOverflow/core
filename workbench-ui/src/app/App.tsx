@@ -62,6 +62,11 @@ const PacksRoute = lazy(() =>
 const LogosRoute = lazy(() =>
   import("./logos/LogosRoute").then((module) => ({ default: module.LogosRoute })),
 );
+const AppleUmaReportRoute = lazy(() =>
+  import("./apple-uma/AppleUmaReportRoute").then((module) => ({
+    default: module.AppleUmaReportRoute,
+  })),
+);
 const SettingsRoute = lazy(() =>
   import("./settings/SettingsRoute").then((module) => ({
     default: module.SettingsRoute,
@@ -99,6 +104,7 @@ export const ROUTE_ELEMENTS: RouteElementMap = {
   calibration: lazyRoute(<CalibrationRoute />),
   packs: lazyRoute(<PacksRoute />),
   logos: lazyRoute(<LogosRoute />),
+  "apple-uma": lazyRoute(<AppleUmaReportRoute />),
   settings: lazyRoute(<SettingsRoute />),
 };
 
