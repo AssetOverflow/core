@@ -67,11 +67,11 @@ surface/process cue
 ```
 - **Closeness Proposes:** Surface text matching or process-frame triggers authorize the creation of a `ConstructionProposal(status="proposed")`. This proposal is a pure *hypothesis* and is created *before* role binding or validation.
 - **Bindings Ground:** Spans from the text are bound to roles (e.g. `base_quantity`, `scale`, `state_entity`).
-- **Contracts Determine:** The organ-specific `ContractAssessment` evaluates these bindings and decides if the contract is `runnable` or `refused` (with typed blocker codes). 
-- **Diagnostic Posture:** All proposal-first families (such as `proportional_change.decrease_to_fraction` and `partition.percent_partition`) enforce `diagnostic_only=True` and `serving_allowed=False`. The UI must never display these constructions as runnable in serving or active in response generation.
+- **Contracts Determine:** The organ-specific `ContractAssessment` evaluates these bindings and decides if the contract is `runnable` or refused (with typed blocker codes).
+- **Diagnostic Posture:** All proposal-first families (such as `proportional_change.decrease_to_fraction`, `partition.percent_partition`, `binding.quantity_entity`, and `state_change.unary_delta`) enforce `diagnostic_only=True` and `serving_allowed=False`. The UI must never display these constructions as runnable in serving or active in response generation.
 
-### 2.2 Quantity-Entity Upcoming Seam
-The authorized foundational slice `binding.quantity_entity` introduces local quantity-to-entity grounding:
+### 2.2 Quantity-Entity Diagnostic Seam
+The implemented diagnostic foundational slice `binding.quantity_entity` introduces local quantity-to-entity grounding:
 - Quantities are bound to entities (`MentionBinding(binding_type="quantity_entity")`) and optionally to units (`MentionBinding(binding_type="quantity_unit")`).
 - Spans must match the source text exactly.
 - The UI must render these relations as diagnostic grounding facts in the frame, rather than generic entity extractions or semantic ontology mappings.
@@ -93,7 +93,7 @@ The current Workbench UI contains several conceptual and routing gaps relative t
 
 1. **Proposals Route Collision:** The `/proposals` route reads primarily like a Human-In-The-Loop (HITL) teaching/memory proposal queue. It needs to distinguish:
    - **Teaching Proposals:** Persisted corrections in the teaching loop awaiting review.
-   - **Construction Proposals:** Ephemeral/diagnostic structural hypotheses extracted from a turn's `ProblemFrame` (with `status="proposed"`, `"partial"`, `"closed"`, or `"refused"`).
+   - **Construction Proposals:** Ephemeral/diagnostic structural hypotheses extracted from a turn's `ProblemFrame` with `status="proposed"` only. Runnable/refused authority belongs to `ContractAssessment`, not to proposal status.
    - **Contract Assessments:** The runnable/refused evaluations that prove or refuse a construction proposal.
 2. **Trace Route Deficit:** The `/trace` detail view lacks visual support for `ProblemFrame` constructions. It needs a dedicated **Construction** or **ProblemFrame** panel displaying the entire pipeline:
    `proposals` → `evidence spans` → `mention bindings` → `contract assessments` → `dispatch status/blockers`.
