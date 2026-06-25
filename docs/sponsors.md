@@ -56,15 +56,9 @@ GitHub Sponsors on `AssetOverflow/core` accepts recurring monthly commitments at
 3. Patent continuation filings and IP maintenance
 4. Open-source infrastructure and documentation
 
-### Path B — Institutional Grant & Contract Path (Active Outreach)
+### Path B — Institutional Grant & Contract Path (Planned)
 
-Parallel outreach is underway to:
-
-- **NSF SBIR Phase I** — deterministic AI safety architecture
-- **DARPA** — inspectable cognition for embodied systems
-- **AI safety foundations** — alignment-by-construction research
-
-Institutional sponsors at the $500+ tier receive briefing materials structured to support institutional due diligence and grant evaluation contexts.
+Future outreach targets include AI safety foundations and federal research programs aligned with deterministic AI and inspectable cognition. No formal applications or relationships are currently active. Institutional sponsors at the $500+ tier receive briefing materials structured to support institutional due diligence and grant evaluation contexts when those processes are initiated.
 
 ---
 
@@ -75,7 +69,7 @@ Institutional sponsors at the $500+ tier receive briefing materials structured t
 | Full Rust zero-allocation kernel (v1) | $18,000 | Path A accumulation or single Founding Sponsor |
 | CORE-native benchmark suite publication | $4,500 | Research Backer cohort (6 months) |
 | Provisional → non-provisional patent conversion | $8,000 | Institutional Sponsor (14 months) |
-| Embodied robotics pilot (sensor integration) | $32,000 | NSF SBIR Phase I or enterprise contract |
+| Embodied robotics pilot (sensor integration) | $32,000 | Institutional grant or enterprise contract |
 
 ---
 
