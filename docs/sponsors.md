@@ -1,8 +1,8 @@
 # CORE Sponsorship & Capitalization Manifesto
 
-> **Provisional Patent Filed:** U.S. 64/080,054  
-> **Research Program:** CORE — Coherent Operational Reasoning Engine  
-> **Operator:** AssetOverflow LLC · Joshua Matthew-Catudio Shay  
+> **Provisional Patent Filed:** U.S. 64/080,054
+> **Research Program:** CORE — Coherent Operational Reasoning Engine
+> **Operator:** AssetOverflow LLC · Joshua Matthew-Catudio Shay
 > **Contact:** [github.com/AssetOverflow](https://github.com/AssetOverflow)
 
 ---
@@ -38,7 +38,7 @@ Sponsors gain direct access to the research program, milestone ledgers, technica
 | **Supporter** | $5 | Early access to public experiment results; welcome message in the CORE verification system |
 | **Research Backer** | $25 | Monthly experiment ledger and milestone updates |
 | **Project Sponsor** | $100 | Technical release log with named attribution; priority issue queue |
-| **Institutional Sponsor** | $500 | Quarterly technical briefings; co-authorship consideration on applied research outputs |
+| **Institutional Sponsor** | $500 | Quarterly technical briefings; may be acknowledged in applied research outputs at the researcher's discretion |
 | **Founding Sponsor** | $1,500 | Enterprise roadmapping access; bimonthly briefings; named in provisional patent continuation filings |
 
 ---
@@ -64,7 +64,7 @@ Parallel outreach is underway to:
 - **DARPA** — inspectable cognition for embodied systems
 - **AI safety foundations** — alignment-by-construction research
 
-Institutional sponsors at the $500+ tier receive briefing materials formatted for co-submission on these instruments.
+Institutional sponsors at the $500+ tier receive briefing materials structured to support institutional due diligence and grant evaluation contexts.
 
 ---
 
@@ -85,7 +85,7 @@ Institutional sponsors at the $500+ tier receive briefing materials formatted fo
 - **Primary Research Repository:** [AssetOverflow/core](https://github.com/AssetOverflow/core)
 - **Open Collective:** [opencollective.com/assetoverflow-core](https://opencollective.com/assetoverflow-core)
 
-For institutional inquiries, technical briefing requests, or co-research proposals, open a discussion in `AssetOverflow/core` or reach out directly through GitHub.
+For institutional inquiries or technical briefing requests, open a discussion in `AssetOverflow/core` or reach out directly through GitHub.
 
 ---
 
