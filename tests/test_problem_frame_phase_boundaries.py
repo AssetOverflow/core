@@ -80,7 +80,7 @@ def test_builder_smoke_shapes_remain_grounded() -> None:
     assert {mention.surface.lower() for mention in simple.mentions} >= {"7", "apples"}
     assert simple.bindings
 
-    gained = build_problem_frame("Tom gained 3 apples. How many apples did Tom gain?")
+    gained = build_problem_frame("Tom gained 3 apples")
     assert "state_change.unary_delta" in {
         proposal.family_id for proposal in gained.proposals
     }
