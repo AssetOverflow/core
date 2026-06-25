@@ -9,6 +9,22 @@ Coherence is algebraic by construction — not monitored, not corrected.
 
 ---
 
+## Sponsoring the CORE Research Program
+
+CORE is an independent deterministic AI architecture — inspectable, replayable, and evidence-governed. It is not an LLM wrapper. It is a coherence-first cognitive substrate built in Rust and Zig with zero-allocation execution paths, versor-based geometric algebra, and a formal claim-lifecycle governance model.
+
+**Provisional Patent No. 64/080,054** · U.S. Patent and Trademark Office
+
+If you are an institutional backer, AI safety researcher, or technical sponsor evaluating CORE, the full capitalization manifesto — including tier structure, capital efficiency metrics, and parallel funding paths — is here:
+
+📄 **[docs/sponsors.md](docs/sponsors.md)**
+
+👉 **[Sponsor AssetOverflow on GitHub](https://github.com/sponsors/AssetOverflow)**
+
+👉 **[Support via Open Collective](https://opencollective.com/assetoverflow-core)**
+
+---
+
 ## The Three Engineering Pillars
 
 Every architectural decision in CORE is measured against three engineering pillars. These are not aspirations — they are hard constraints.
@@ -183,7 +199,6 @@ core demo audit-tour                       # 4-scene pack-layer audit walkthroug
 core demo pack-measurements                # ADR-0043 — pack-layer claims as per-pack measurements
 core demo long-context-comparison          # ADR-0045 — CORE NIAH recall + frozen transformer baselines
 core demo anti-regression                  # ADR-0057 — three-gate defense against learning harm
-core demo learning-loop                    # ADR-0055..0057 — cold turn → discovery → propose → accept → grounded
 # (CLOSE / idle consolidation now also climbs declared strict-order relations
 #  (less_than etc.); see docs/runtime_contracts.md § "Idle consolidation (Step D — CLOSE)"
 #  and the PR-1 analysis note for contracts + evidence)
