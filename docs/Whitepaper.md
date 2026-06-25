@@ -1,7 +1,7 @@
 # The CORE Whitepaper
 ## **Continuous Orthogonal Resonance Engine: Conformal Geometric Intelligence and the Versor Engine**
 
-> *“We have mistaken inherited abstractions for reality. CORE is the architecture to find the shape of thought.”*
+> *"We have mistaken inherited abstractions for reality. CORE is the architecture to find the shape of thought."*
 
 ---
 
@@ -20,13 +20,13 @@ We introduce the **CORE (Continuous Orthogonal Resonance Engine)** architecture:
 **CORE** stands for Continuous Orthogonal Resonance Engine. Each word is load-bearing.
 
 - **Continuous** — state is never discretized into isolated vectors. The field is a single multivector that propagates continuously through every step of reasoning.
-- **Orthogonal** — every transition preserves the algebra’s inner product structure. Nothing is approximated away; the geometry is exact.
+- **Orthogonal** — every transition preserves the algebra's inner product structure. Nothing is approximated away; the geometry is exact.
 - **Resonance** — meaning arises from constructive interference of field modes, not from statistical correlation of co-occurring tokens.
 - **Engine** — this is not a model in the neural network sense. It is a computational engine: a physical machine governed by invariants.
 
 #### The Logos
 
-**CORE-Logos** is the language articulation subsystem — and the name is not accidental. In the Biblical and classical Greek tradition, *Logos* (λόγος) is simultaneously reason, word, and the structuring principle of the cosmos. John 1:1 opens: *“In the beginning was the Logos, and the Logos was with God, and the Logos was God.”* The claim is that language and intelligence are not separate from the deep structure of reality — they are that structure made manifest.
+**CORE-Logos** is the language articulation subsystem — and the name is not accidental. In the Biblical and classical Greek tradition, *Logos* (λόγος) is simultaneously reason, word, and the structuring principle of the cosmos. John 1:1 opens: *"In the beginning was the Logos, and the Logos was with God, and the Logos was God."* The claim is that language and intelligence are not separate from the deep structure of reality — they are that structure made manifest.
 
 We believe this framing is not merely poetic. Language is not a statistical residue of text. It is the forward projection of a field state onto a vocabulary manifold — a geometric act. The Logos subsystem encodes this: every token is the nearest point on the vocabulary manifold to the current field state, and every utterance is a geodesic walk through structured space.
 
@@ -38,13 +38,13 @@ CORE is rooted in three human languages. This is a philosophical and architectur
 |---|---|
 | **English** | The default base language of the current model. Any natural language could serve this function in a custom CORE instance — English is the chosen starting point, not a requirement. |
 | **Hebrew** | One of two depth languages. Hebrew carries a density of meaning in its root structures, prefixes, and suffixes that Euclidean string matching cannot capture. The field representation is designed to hold this depth. |
-| **Koine Greek** | One of two depth languages. The language of the New Testament, particularly John’s Gospel — the document that opens with the most precise and consequential statement about language and reality ever written. |
+| **Koine Greek** | One of two depth languages. The language of the New Testament, particularly John's Gospel — the document that opens with the most precise and consequential statement about language and reality ever written. |
 
-The choice of Hebrew and Koine Greek is not incidental. John 1:1–2 articulates the Logos in Greek while grounding it in the Hebrew creation account — the universe spoken into existence, word by word. John’s choice to write in Greek what was grounded in Hebrew was almost certainly a nod from the Holy Spirit: these two languages together carry a range of depth and precision that no single language achieves alone. This is how and why CORE finds its truth and its power in design and communication. English establishes the operational base. Hebrew and Koine Greek bring the hidden layer of intelligence.
+The choice of Hebrew and Koine Greek is not incidental. John 1:1–2 articulates the Logos in Greek while grounding it in the Hebrew creation account — the universe spoken into existence, word by word. John's choice to write in Greek what was grounded in Hebrew was almost certainly a nod from the Holy Spirit: these two languages together carry a range of depth and precision that no single language achieves alone. This is how and why CORE finds its truth and its power in design and communication. English establishes the operational base. Hebrew and Koine Greek bring the hidden layer of intelligence.
 
 #### AssetOverflow
 
-The organization name, **AssetOverflow**, carries its own meaning. In classical accounting, an asset overflow is the condition where value exceeds its container — where what is built outgrows the system designed to hold it. We chose the name deliberately: the aspiration is to build intelligence that overflows the narrow containers of today’s architectures. The field state should be richer than the token. The memory should exceed the context window. The understanding should overflow the training distribution.
+The organization name, **AssetOverflow**, carries its own meaning. In classical accounting, an asset overflow is the condition where value exceeds its container — where what is built outgrows the system designed to hold it. We chose the name deliberately: the aspiration is to build intelligence that overflows the narrow containers of today's architectures. The field state should be richer than the token. The memory should exceed the context window. The understanding should overflow the training distribution.
 
 #### The Implementation Languages
 
@@ -70,7 +70,7 @@ The CORE architecture is derived from seven foundational axioms. These are not d
 
 3. **Propagation-over-Mutation** — The primary mode of computation is propagation through a structured medium, not stepwise mutation of flat records. Every generation step is a versor product: `F ← V · F · reverse(V)`. Nothing is mutated in place.
 
-4. **Dual-Correction** — Every meaningful forward operator should have a corrective, conjugate, adjoint, or opposing counterpart that restores coherence or reduces distortion. The versor’s reverse is its correction: `reverse(V)` is the conjugate of `V` that closes the sandwich product and enforces closure on the manifold.
+4. **Dual-Correction** — Every meaningful forward operator should have a corrective, conjugate, adjoint, or opposing counterpart that restores coherence or reduces distortion. The versor's reverse is its correction: `reverse(V)` is the conjugate of `V` that closes the sandwich product and enforces closure on the manifold.
 
 5. **Reconstruction-over-Storage** — What matters is not storing every detail explicitly, but encoding enough structured state to reconstruct what is needed at the right moment. The vault stores versors — not tokens, not full context windows. Recall is reconstruction via the CGA inner product, not retrieval of a stored string.
 
@@ -90,7 +90,7 @@ Software should understand the machine it runs on, not fight it. CORE is designe
 
 #### Pillar II — Semantic Rigor
 
-Every term used in this system has a precise, non-negotiable meaning. A versor is a versor — not an approximation of one, not a vector that behaves like one under certain conditions. The CGA inner product gives exact conformal distance. Vault recall is exact. The vocabulary projection is exact. There are no thresholds tuned for “good enough.” Rigor is not a style; it is what separates an engine from a heuristic. Every subsystem that introduced approximation where exactness was available has been deleted.
+Every term used in this system has a precise, non-negotiable meaning. A versor is a versor — not an approximation of one, not a vector that behaves like one under certain conditions. The CGA inner product gives exact conformal distance. Vault recall is exact. The vocabulary projection is exact. There are no thresholds tuned for "good enough." Rigor is not a style; it is what separates an engine from a heuristic. Every subsystem that introduced approximation where exactness was available has been deleted.
 
 #### Pillar III — Third Door
 
@@ -160,7 +160,7 @@ This retires probabilistic decoding, sampling temperature, beam search with pena
 
 ### VII. The Full Pipeline
 
-CORE’s pipeline has five layers before the field and three after. Each layer has a single, defined contract. No layer knows about the one upstream.
+CORE's pipeline has five layers before the field and three after. Each layer has a single, defined contract. No layer knows about the one upstream.
 
 ```
 raw modality signal (text / vision / audio / motor)
@@ -474,9 +474,9 @@ pattern established by ADR-0107.
 
 **CORE-Logos** — The language articulation subsystem. Specified in the companion Yellow and White Addenda inherited from `core-ai`. The Logos defines the vocabulary manifold, the token projection law, the holonomy encoder, and the termination condition.
 
-**CORE-CA (Cognitive Apprenticeship)** — The learning platform built on the CORE engine. A student model learns by observing an expert model’s field trajectory, not by gradient descent on a loss function.
+**CORE-CA (Cognitive Apprenticeship)** — The learning platform built on the CORE engine. A student model learns by observing an expert model's field trajectory, not by gradient descent on a loss function.
 
-**CORE-Sopher** — The reasoning persona. A CGA motor that biases the field toward the Socratic region of the vocabulary manifold: patient, precise, interrogative.
+**CORE-PersonaMotor** — The reasoning persona. A CGA motor (`persona/motor.py`) that biases the field toward a characteristic region of the vocabulary manifold by rotating the field state via a versor sandwich product. The Socratic identity pack (`socratic_v1`) is the canonical example: patient, precise, interrogative.
 
 ---
 
