@@ -291,3 +291,13 @@ git diff --stat c6d0e2a92004 f5c6914d0083 -- packs/{identity,safety,ethics,regis
 get_git_revision()  ──▶ code_revision  (hashed into engine_identity)   engine_identity.py:99   → strict raise
                     └─▶ written_at_revision (provenance, unhashed)      __init__.py:350         → ADR-0157 warn
 ```
+
+## Governance Cross-Reference (ADR-0225)
+
+This late-corpus ADR is governed by [ADR-0225](./ADR-0225-adr-corpus-hygiene.md):
+
+- Safety boundaries: changes must preserve ADR-0027/0028/0029 identity and safety-pack boundaries; no identity, safety, or policy mutation is implied unless explicitly reviewed.
+- Versor closure: runtime field paths must preserve `versor_condition(F) < 1e-6`; this ADR does not authorize hidden normalization or hot-path drift repair.
+- Reconstruction-over-storage: evidence must remain reconstructive and content-addressed rather than duplicating opaque state.
+- Replay-equivalence: serving, teaching, promotion, or checkpoint changes require a named deterministic replay / byte-equivalence gate.
+- Mutation standing: any durable corpus, pack, policy, or epistemic-status mutation remains reviewed, proposal-only until accepted, or proof-carrying as applicable.

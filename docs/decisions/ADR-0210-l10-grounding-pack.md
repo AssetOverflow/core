@@ -123,3 +123,13 @@ To be completed in the Claude lane or local CI after review:
 - No loader mutation.
 - No new dependency.
 - No empirical claim that the fixtures pass before they are run.
+
+## Governance Cross-Reference (ADR-0225)
+
+This late-corpus ADR is governed by [ADR-0225](./ADR-0225-adr-corpus-hygiene.md):
+
+- Safety boundaries: changes must preserve ADR-0027/0028/0029 identity and safety-pack boundaries; no identity, safety, or policy mutation is implied unless explicitly reviewed.
+- Versor closure: runtime field paths must preserve `versor_condition(F) < 1e-6`; this ADR does not authorize hidden normalization or hot-path drift repair.
+- Reconstruction-over-storage: evidence must remain reconstructive and content-addressed rather than duplicating opaque state.
+- Replay-equivalence: serving, teaching, promotion, or checkpoint changes require a named deterministic replay / byte-equivalence gate.
+- Mutation standing: any durable corpus, pack, policy, or epistemic-status mutation remains reviewed, proposal-only until accepted, or proof-carrying as applicable.

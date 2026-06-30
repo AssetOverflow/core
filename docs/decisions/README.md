@@ -252,6 +252,29 @@ ADRs record significant architectural decisions: what was decided, why, what alt
 | [ADR-0197](ADR-0197-vision-compiler-delta-crdt.md) | CORE-native Vision Compiler over the Delta-CRDT Substrate | Proposed |
 | [ADR-0198](ADR-0198-motor-efferent-decoder-spike.md) | Motor as Efferent Modality — Protocol Gap & Governance (Design Spike) | Proposed (design spike — no implementation) |
 | [ADR-0199](ADR-0199-cross-domain-learning-arena-contract.md) | Cross-Domain Learning Arena Contract | Proposed |
+| [ADR-0200](ADR-0200-expert-claim-reconciliation.md) | Expert-Claim Reconciliation: Record the Fail-Closed Revert as Designed Behavior | Accepted |
+| [ADR-0201](ADR-0201-proposition-canonicalizer.md) | Propositional Canonicalizer (`proof_chain`) | Accepted |
+| [ADR-0201.1](ADR-0201.1-out-of-regime-detector.md) | Principled Out-of-Regime Detector | Accepted |
+| [ADR-0202](ADR-0202-proposition-representation-contract.md) | Proposition Representation Contract (`proof_chain`) | Accepted |
+| [ADR-0203](ADR-0203-binding-graph-acyclicity-invariant.md) | Binding-Graph Acyclicity Invariant | Accepted |
+| [ADR-0204](ADR-0204-proof-graph-builder.md) | Proof-Graph Builder | Accepted |
+| [ADR-0205](ADR-0205-modus-ponens-disagreement-rule.md) | Modus Ponens + Disagreement Rule | Accepted |
+| [ADR-0206](ADR-0206-response-governance-bridge.md) | Response Governance Bridge | Accepted |
+| [ADR-0207](ADR-0207-gsm8k-substrate-ratification.md) | GSM8K Comprehension/Composition Substrate Ratification | Accepted |
+| [ADR-0208](ADR-0208-environmental-sensorium-loop.md) | Environmental Sensorium Loop | Accepted |
+| [ADR-0209](ADR-0209-sensorimotor-feedback-contract.md) | Sensorimotor Feedback Is Afferent | Accepted |
+| [ADR-0210](ADR-0210-l10-grounding-pack.md) | L10 Finite Grounding Pack and Adversarial Wrong=0 Fixtures | Accepted |
+| [ADR-0211](ADR-0211-conformal-falsification-bench.md) | Conformal Falsification Bench | Accepted |
+| [ADR-0216](ADR-0216-motor-verdict-lowering.md) | Motor Verdict Lowering Prerequisite | Accepted |
+| [ADR-0217](ADR-0217-r2-finite-integer-constraint-compiler.md) | R2 Finite-Integer Constraint Compiler | Accepted |
+| [ADR-0218](ADR-0218-proof-carrying-coherence-promotion.md) | Proof-Carrying Coherence Promotion | Accepted |
+| [ADR-0219](ADR-0219-generation-checkpoint-atomicity.md) | Generation-dir Atomic Checkpoint | Accepted |
+| [ADR-0220](ADR-0220-engine-identity-vs-build-provenance.md) | Engine Identity vs. Build Provenance | Accepted |
+| [ADR-0221](ADR-0221-codeowners-review-topology.md) | Codeowners Review Topology | Accepted |
+| [ADR-0222](ADR-0222-frame-verdict-closed-world.md) | FrameVerdict — Frame-General Closed-World Verdict | Accepted |
+| [ADR-0223](ADR-0223-semantic-substrate-affordance-audit.md) | Semantic Substrate Affordance Audit and Foundation Alignment | Accepted |
+| [ADR-0224](ADR-0224-foundational-substrate-readiness-map.md) | Foundational Subject Substrate Readiness and Cross-Domain Affordance Map | Accepted |
+| [ADR-0225](ADR-0225-adr-corpus-hygiene.md) | ADR Corpus Hygiene, Numbering Policy, and Cross-Reference Governance | Accepted (2026-06-30) |
 | [ADR-0200](ADR-0200-expert-claim-reconciliation.md) | Expert-Claim Reconciliation: record the math fail-closed revert as designed behavior | Proposed |
 
 ---
@@ -456,6 +479,10 @@ Establishes calibrated attempt-and-eliminate learning under a strict two-regime 
 ### Multimodal Audio modality & CRDT substrate — ADR-0180 through ADR-0183 (2026-05-29)
 
 Shifts the engine toward concurrent multi-modal pipelines. Decouples physical lock contention on vision/audio from the logical manifold using Delta-CRDT sharding in Rust (ADR-0180), implements `audio_core_v1` as a deterministic acoustic compiler (ADR-0181), and stubs ASR serving boundaries to prevent learned Whisper models from contaminating production serving paths (ADR-0183).
+
+### ADR Corpus Governance — ADR-0225 (2026-06-30)
+
+ADR-0225 makes this README the living ADR reference matrix and requires future ADRs touching runtime state, packs, teaching, memory, replay, or invariants to cite safety boundaries, versor closure (`versor_condition(F) < 1e-6`), reconstruction-over-storage, replay-equivalence gates, and mutation standing. The verified Phase 1 dependency map is `docs/analysis/adr-corpus-cohesion-dependency-map-2026-06-30.md`.
 
 ---
 
