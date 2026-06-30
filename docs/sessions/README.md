@@ -1,0 +1,25 @@
+# Session Logs
+
+Chronological index of session logs.
+
+- [2026-05-13.md](2026-05-13.md)
+- [2026-05-15-capability-gates.md](2026-05-15-capability-gates.md)
+- [2026-05-21-articulation-arc.md](2026-05-21-articulation-arc.md)
+- [2026-05-22-contract-layer-arc.md](2026-05-22-contract-layer-arc.md)
+- [2026-05-23-pedagogy-research-and-teaching-loop-pivot.md](2026-05-23-pedagogy-research-and-teaching-loop-pivot.md)
+- [2026-05-26-corridor-closure.md](2026-05-26-corridor-closure.md)
+- [2026-05-28-risk-reward-learning-architecture.md](2026-05-28-risk-reward-learning-architecture.md)
+- [2026-05-29-comprehension-and-overfitting-discipline.md](2026-05-29-comprehension-and-overfitting-discipline.md)
+- [2026-05-29-multistep-build-arc.md](2026-05-29-multistep-build-arc.md)
+- [2026-06-04-deductive-pivot-and-universal-structure.md](2026-06-04-deductive-pivot-and-universal-structure.md)
+- [2026-06-08-epistemic-question-articulation-first-skill-of-contemplation.md](2026-06-08-epistemic-question-articulation-first-skill-of-contemplation.md)
+- [2026-06-08-practice-attempts-and-servability-blade.md](2026-06-08-practice-attempts-and-servability-blade.md)
+- [2026-06-19-semantic-substrate-affordance-foundation.md](2026-06-19-semantic-substrate-affordance-foundation.md)
+- [2026-06-20-gsm8k-train-proxy-rebaseline.md](2026-06-20-gsm8k-train-proxy-rebaseline.md)
+- [2026-06-20-pr846-reconciliation-audit.md](2026-06-20-pr846-reconciliation-audit.md)
+- [2026-06-20-quantity-entity-foundational-slice-authorization.md](2026-06-20-quantity-entity-foundational-slice-authorization.md)
+- [2026-06-20-quantity-entity-implementation-preflight.md](2026-06-20-quantity-entity-implementation-preflight.md)
+- [2026-06-20-workbench-proposal-first-alignment-scope.md](2026-06-20-workbench-proposal-first-alignment-scope.md)
+- [2026-06-21-unary-state-change-delta-authorization.md](2026-06-21-unary-state-change-delta-authorization.md)
+- [2026-06-21-unary-state-change-delta-conformance-decision.md](2026-06-21-unary-state-change-delta-conformance-decision.md)
+- [2026-06-21-unary-state-change-delta-preflight.md](2026-06-21-unary-state-change-delta-preflight.md)
