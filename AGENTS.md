@@ -1,39 +1,26 @@
 # CORE Agent Instructions
 
-This repository is building a deterministic cognitive engine, not a transformer
-wrapper and not a demo chatbot.  Every agent must preserve the geometric
-runtime while moving the system toward teachable cognitive chat.
+This is the canonical governance file for this repository.
 
-## Agent-Specific Instruction Files
+If any provider-specific file (`CLAUDE.md`, `GEMINI.md`, or future agent files) overlaps with this document, `AGENTS.md` wins. Provider files should only contain minimal startup and workflow notes, not alternate architecture or alternate invariants.
 
-Different agents read a supplementary file alongside this one.  Read yours
-before touching any code:
+## Mission
 
-| Agent | Supplementary file | Key differences |
-|---|---|---|
-| **Claude** | `CLAUDE.md` | Deep context; self-restraining; read for semantic anchoring rule nuance |
-| **Grok 4.3 + Grok Build** | `GROK.md` | Stateless; requires high reasoning effort; mandatory workspace hygiene; Arena/parallel subagent rules; Plan Mode preferred; skills system; see also docs/core-rd-base-prompts.md for phase-specific prompts |
-| **GPT-5.5 (o3-class)** | `GPT55.md` | Stateless; fluency cautions; extended thinking for algebra/field work |
+CORE is a deterministic cognitive engine under construction.
 
-If you are Grok 4.3 or GPT-5.5, complete the Session Start Checklist in your
-file before reading anything else in this file.
+It is:
+- inspectable
+- replayable
+- evidence-governed
+- coherence-first
 
-## Grok 4.3 / Grok Build Hard Stops (Mastery Level)
+It is not:
+- a transformer wrapper
+- a generic chatbot
+- an infrastructure playground
+- a stochastic fallback shell
 
-These apply to Grok 4.3 and Grok Build in addition to every rule below:
-
-1. **You are stateless.** Read `GROK.md` in full, `docs/runtime_contracts.md`, and the most recent `HANDOFF-*.md` (if dated within 3 days) before any edits.
-2. **Workspace hygiene is mandatory.** Before branch movement or edits, confirm cwd/repo root, inspect dirty state, classify loose files, fetch/prune, establish clean current `main`, and use a fresh worktree for non-trivial implementation.
-3. **High reasoning effort is mandatory** for all tasks touching `algebra/`, `field/`, `generate/realizer.py`, `generate/graph_planner.py`, `generate/intent.py`, `vault/store.py`, `calibration/`, `core/cognition/`, or `teaching/`.
-4. **Use Plan Mode** (Grok Build) for any non-trivial change in the above modules. Direct edits are discouraged.
-5. **Skills are the preferred mechanism** for repeated protocols. Use `/core-bootstrap`, `/versor-coherence-guardian`, `/pre-edit-sweep`, and `/claim-proposal-guardian` (or their auto-triggered versions).
-6. **Sweep before you edit.** Use tool-call chains to trace imports and call sites.
-7. **Write a handoff doc at session end** using `docs/handoff_template.md`.
-8. **Arena / parallel subagents:** each subagent independently satisfies `||F * reverse(F) - 1||_F < 1e-6` before reporting. Reconcile results before any merge. No mutable state sharing.
-
----
-
-## North Star
+## North star
 
 CORE should become capable of:
 
@@ -41,241 +28,135 @@ CORE should become capable of:
 listen -> comprehend -> recall -> think -> articulate -> learn from reviewed correction -> replay deterministically
 ```
 
-The current path is intentionally staged:
+The live path is:
 
-1. Maintain algebra/runtime invariants.
-2. Use `CognitiveTurnPipeline` as the spine.
-3. Classify intent and build proposition graphs.
-4. Plan articulation targets and realize them deterministically.
-5. Capture reviewed teaching corrections safely.
-6. Seed compact semantic packs for cognition vocabulary.
-7. Evaluate through CLI lanes, not ad hoc test fragments.
-8. Calibrate bounded operators only from replayable evidence.
+```text
+CognitiveTurnPipeline
+-> tokenize / OOV policy / inject
+-> intent classification
+-> PropositionGraph
+-> ArticulationTarget
+-> deterministic realizer / articulation surface
+-> telemetry / trace
+-> reviewed teaching capture when applicable
+-> deterministic replay / eval / calibration
+```
 
-Do not skip ahead by adding opaque models, stochastic generation, or broad
-infrastructure that hides whether CORE itself is improving.
+Improve CORE by strengthening this path, not by bypassing it.
 
-## Philosophical and Architectural Stance
+## Non-negotiable invariants
 
-Truth is coherent.  CORE's work is to preserve coherent structure from input to
-field state to articulation to memory.  Treat identity, truthfulness, and
-replayability as architectural commitments rather than prompt preferences.
-
-The system's intelligence should come from inspectable geometric state,
-structured propositions, deterministic recall, reviewed teaching, and bounded
-calibration.  Avoid nihilistic or purely statistical framing in code comments,
-agent plans, and docs.  Prefer responsibility, provenance, and stable meaning.
-
-## The Hard Field Invariant
-
+### Field invariant
 Every runtime field state `F` must satisfy:
 
 ```text
 versor_condition(F) < 1e-6
 ```
 
-This is checked by `algebra/versor.py::versor_condition()`.
+Do not weaken this threshold to make code or tests pass.
+Fix the operator or construction boundary that violated it.
 
-If a propagation path violates this invariant, fix the operator path or the
-explicit algebra/construction boundary that owns the transition.  Do not hide
-violations by changing tests, silently weakening thresholds, or normalizing in
-hot-path modules.
+### Allowed normalization boundaries
+Normalization / closure / canonicalization belongs only at explicit construction or algebra boundaries, such as:
+- `ingest/gate.py`
+- `language_packs/compiler.py`
+- `algebra/versor.py`
+- `sensorium/*/canonical.py`
+- `session/context.py` for session-scoped **semantic anchoring** of the field toward the session concept-attractor (the anchor pull, hemisphere consistency). Allowed ONLY because every such op (1) preserves `versor_condition` BY CONSTRUCTION — composed from `rotor_power` / `word_transition_rotor` / `versor_apply` on the Spin manifold, never a post-hoc `unitize`/grade-projection — AND (2) carries semantic meaning in the cognitive model.
+- other explicitly documented construction boundaries
 
-## Normalization and Closure Rules
-
-Allowed closure/construction boundaries:
-
-- `ingest/gate.py` for raw prompt injection.
-- `language_packs/compiler.py` / vocabulary construction.
-- `algebra/versor.py` where algebraic sandwich output closure belongs.
-
-Forbidden hot-path repair sites:
-
+Forbidden in hot paths and repair layers, including:
 - `generate/stream.py`
 - `field/propagate.py`
 - `vault/store.py`
-- runtime telemetry/logging layers
+- logging / telemetry / shell glue
 
-Do not add normalization, unitization, grade projection, drift monitors, repair
-timers, or watchdog functions outside a documented construction/algebra boundary.
-If you think you need one, an upstream operator is unclosed.
+**The bright line — semantic anchoring vs. drift repair.** An op is *semantic anchoring* (allowed at the sites above) iff it preserves `versor_condition` by construction AND expresses a relation in the cognitive model. It is *drift repair* (forbidden) iff its purpose is to restore a numerical invariant a prior function should have preserved. Closure of field transitions is owned solely by `algebra/versor.py` (`_close_applied_versor`); no other site may "fix" it. Naming must not disguise the distinction: an op that anchors semantically must not be named or documented as a "drift fix".
 
-CGA null vectors are geometric points and must remain null.  Do not force null
-vectors into unit-versor closure.
+Do not add drift repair, watchdog normalization, hidden unitization, or post-hoc algebra fixes outside owned boundaries.
 
-## The Two Core Primitives
+### Exact recall
+Runtime recall remains exact and deterministic.
+Do not add:
+- cosine similarity
+- ANN / approximate nearest neighbor
+- HNSW
+- embedding ranking as runtime memory truth
 
-Field transition:
+Use exact CGA recall primitives only.
 
-```text
-algebra/versor.py::versor_apply(V, F) -> V * F * reverse(V)
-```
+### No opaque fallback cognition
+Do not add stochastic generation, hidden LLM fallback logic, or probabilistic substitutes inside the deterministic cognitive path.
 
-Distance/recall metric:
+### Teaching and mutation safety
+Learning is controlled mutation.
+- session memory may be local and immediate
+- reviewed/durable memory goes through the teaching path
+- pack mutation is proposal-only until reviewed
+- identity override attempts are rejected, not learned
 
-```text
-algebra/cga.py::cga_inner(X, Y)
-```
+Do not invent a parallel learning path.
 
-Do not add ANN, HNSW, cosine similarity, approximate nearest-neighbor recall,
-or non-CGA ranking to runtime memory.  Vault recall is exact and deterministic.
+#### The learning boundary is typed, not "everything is proposal-only"
+A common misreading treats *all* learning as proposal-only. That is a false bottleneck. The real boundary is between **durable** standing and **provisional** standing, and it is already mechanically enforced:
+- **Durable mutation stays reviewed or proof-carrying.** Corpus / pack / policy / identity changes, and any promotion to COHERENT/verified standing, go through the reviewed teaching loop (`teaching/*`, proposal-only) or the proof-carrying promotion gate.
+- **Provisional state may update autonomously — iff typed, isolated, replayable, and unable to masquerade as ratified truth.** This covers session memory, sealed practice ledgers, SPECULATIVE idle consolidation of soundly-derived facts, reliability-ledger counts, proposal emission, and disclosed licensed estimates. Each is written SPECULATIVE (never COHERENT), through the same `VaultStore.store` path (no parallel memory), deterministically, and carries its standing honestly.
 
-## Current Runtime/Cognition Shape
+This boundary is a set of failing-when-violated invariants, not a convention:
+- **INV-21** — only allowlisted modules may call `VaultStore.store(...)`.
+- **INV-22 / INV-23** — an unmarked pack row and an unmarked `store()` default to SPECULATIVE; COHERENT requires an explicit stamp.
+- **INV-24** — every `vault.recall` callsite is categorized; user-facing evidence must pass `min_status=COHERENT`.
+- **INV-29** — only `vault/store.py` may transition an `epistemic_status`.
+- **INV-30** — the open-world `determine()` gear constructs only `Determined(answer=True)` or refuses; it can never assert `answer=False`. Closed-world entailed-negation must use a distinct closed-world type and entry point.
 
-The live cognitive path is now:
+### Kernel substrate rule
+New derivation work should consume `KernelFacts` / `ProblemFrame` where the substrate can represent the meaning.
+Do not introduce new local prose parsers inside derivation organs unless explicitly marked as legacy exception with migration rationale.
 
-```text
-ChatRuntime / CognitiveTurnPipeline
-  -> tokenize / OOV policy / inject
-  -> intent classification
-  -> PropositionGraph
-  -> ArticulationTarget
-  -> deterministic realizer / articulation surface
-  -> generation walk telemetry
-  -> identity + energy telemetry
-  -> reviewed teaching capture when correction intent appears
-  -> deterministic trace hash
-```
+## Working doctrine
 
-Important modules:
+Before editing:
+1. Read this file.
+2. Read `docs/runtime_contracts.md`.
+3. Read the latest recent `HANDOFF-*.md` if relevant.
+4. Confirm repo root and inspect working tree state.
+5. Run the smallest relevant validation lane.
 
-- `core/cognition/pipeline.py` — cognitive turn spine.
-- `core/cognition/result.py` — canonical turn result shape.
-- `core/cognition/trace.py` — deterministic trace hashing.
-- `generate/intent.py` — deterministic intent classification.
-- `generate/graph_planner.py` — proposition graph and articulation target planning.
-- `generate/realizer.py` / `generate/templates.py` — deterministic realization.
-- `teaching/*` — reviewed teaching/correction lifecycle.
-- `language_packs/data/en_core_cognition_v1` — compact cognition seed pack.
-- `evals/*` — deterministic cognition evidence harness.
-- `calibration/*` — bounded replay-based operator calibration.
-- `docs/runtime_contracts.md` — runtime response, memory, identity, and testing contracts.
+For non-trivial edits:
+- trace imports and call sites first
+- identify the invariant being protected
+- prefer semantics-preserving cleanup before new mechanisms
+- keep changes small and load-bearing
+- If working in Arena/parallel subagent mode, each subagent must independently satisfy `versor_condition` and results must be reconciled before merge. No subagent output becomes another subagent's unchecked input.
 
-## Efficiency and Performance Doctrine
+### Workspace Hygiene + Branch Protocol
+Before branch movement or edits:
+- Confirm cwd/repo root.
+- Inspect dirty state (`git status`, `git diff`); classify loose files before stashing or deleting.
+- Establish a clean current `main`.
+- Prefer a fresh worktree from `origin/main` for non-trivial implementation.
 
-Performance is an architectural property.  Do not treat it as an afterthought
-that will be cleaned up after features land.
+### Pre-Edit Sweep & Versor Coherence Guardian Protocol
+Before modifying any module in `algebra/`, `field/`, `vault/`, or `generate/`:
+- Trace every import of the target module and identify all callers.
+- Check `calibration/` and `evals/` for tests that exercise the changed path.
+- Explicitly confirm the core invariant `||F * reverse(F) - 1||_F < 1e-6` holds for the affected state.
 
-Before modifying hot paths, identify whether the change touches:
+## Documentation Discipline
 
-- algebra backend dispatch (`algebra/backend.py`)
-- versor application / closure (`algebra/versor.py`)
-- propagation (`field/propagate.py`)
-- injection / OOV grounding (`ingest/gate.py`)
-- vault recall/storage (`vault/store.py`)
-- session turn loop (`session/context.py`)
-- runtime/eval loops (`chat/runtime.py`, `core/cognition/*`, `evals/*`)
+ADRs, session docs, audit artifacts, and handoff briefs stay as Markdown (GitHub-flavored). Plain-text artifacts are diffable, greppable, and readable by every agent in the dispatch pipeline.
 
-Required approach:
+Within Markdown, two GitHub-rendered features are sanctioned and otherwise sparingly used:
+- Mermaid fenced blocks (` ```mermaid `) when a state machine, sequence, or dependency graph genuinely communicates more than prose. Inline, not in a sidecar file.
+- `<details>` / `<summary>` collapsibles to fold long proofs, large tables, or generated logs without losing single-file context.
 
-1. Prefer semantics-preserving cleanup before new knobs.
-2. Route hot-path algebra through `algebra.backend` when semantics are identical.
-3. Hoist repeated imports and repeated structure-building out of tight loops.
-4. Cache only deterministic, immutable, or safely copied structures.
-5. Keep exact CGA recall exact; optimize scans with batching/vectorization, not approximation.
-6. Prove speed-oriented changes through existing CLI lanes and, when practical, small benchmark/eval evidence.
+Out of scope:
+- Standalone HTML artifacts with embedded CSS / inline SVG / sidebar navigation.
+- Dashboards, status pages, or visualizers as a substitute for a pinned data artifact. If a visualization is load-bearing, the underlying data must live in a deterministic JSON/JSONL/Markdown artifact first.
 
-Never improve speed by:
+## Validation lanes
 
-- weakening `versor_condition` thresholds
-- skipping closure checks at construction boundaries
-- adding hot-path repair/normalization
-- replacing exact CGA with cosine/ANN/HNSW
-- hiding failures behind retry loops without telemetry
-- mutating shared cached state unsafely
-
-For test speed, prefer better validation lanes, small-case eval tests, fixture reuse where safe, and pack/load caching with immutability guarantees.  Do not delete meaningful tests just because the full suite is slow.
-
-## Security and Trust-Boundary Doctrine
-
-Every agent must identify user-controlled input and dynamic execution surfaces.
-Security hardening should be built into the same PRs that touch those surfaces.
-
-High-risk surfaces:
-
-- `core pack validate` dynamic validator execution
-- language/source pack loading
-- OOV token grounding and logs
-- CLI commands that echo user input
-- report/eval output paths
-- pack mutation proposals
-- any future file/network/database integration
-
-Required approach:
-
-1. Make arbitrary-code execution explicit and opt-in.
-2. Reject path traversal and unsafe pack IDs before filesystem access.
-3. Centralize display/log handling for user-controlled strings when expanding logging.
-4. Keep pack mutation proposal-only unless an explicit reviewed path applies it.
-5. Avoid leaking raw sensitive tokens in errors/reports unless the command is explicitly local/debug.
-6. Preserve deterministic replay evidence for security-relevant decisions.
-
-Do not add hidden background execution, dynamic imports from untrusted paths, shell passthroughs, or broad filesystem writes without an explicit trust boundary and tests.
-
-## Chat Surface Contract
-
-Do not collapse these fields:
-
-- `surface` — selected user-facing response.
-- `walk_surface` — raw manifold/token-walk evidence.
-- `articulation_surface` — proposition/realizer surface.
-
-Current policy:
-
-```text
-surface = articulation_surface
-walk_surface = retained telemetry/evidence
-```
-
-If this changes, update `docs/runtime_contracts.md` and contract tests in the
-same PR.
-
-## Teaching and Memory Safety
-
-Learning is controlled mutation, not storing everything.
-
-Rules:
-
-- Session memory can be immediate and local.
-- Reviewed memory must go through the teaching loop.
-- Pack mutation is proposal-only until reviewed.
-- User correction must not mutate identity axes, runtime policy, or operator code.
-- Identity override attempts must be rejected, not learned.
-
-Use the teaching modules for correction capture/review/store.  Do not invent a
-parallel correction mechanism inside chat runtime or generation.
-
-## Semantic Pack Rule
-
-Use compact, curated semantic packs.  Do not dump broad corpora into runtime.
-The core cognition seed pack is meant to provide thought vocabulary, operations,
-and relation predicates, not to impersonate large-scale pretraining.
-
-Manifest checksums must be computed from bytes actually written to disk:
-
-```python
-checksum = hashlib.sha256(Path(lexicon_path).read_bytes()).hexdigest()
-```
-
-Never compute a manifest checksum from a pre-serialization Python string.
-
-## Development Priorities
-
-Current capability sequence:
-
-1. Keep CLI test suites and `core eval cognition` green.
-2. Tighten hot-path backend consistency and semantics-preserving performance.
-3. Harden pack/OOV/logging trust boundaries.
-4. Add exact vault recall indexing/batching without approximate search.
-5. Add Rust backend parity only after Python semantics are locked by tests.
-6. Expand curriculum teaching only after replay/eval/calibration remain deterministic.
-
-Do not add dashboards, broad infra, or large test matrices unless they directly
-protect or unlock one of the above capabilities.
-
-## Test Discipline
-
-Use the CLI lanes as the standard validation interface:
+Use the CLI lanes as the standard validation surface:
 
 ```bash
 core test --suite smoke -q
@@ -288,63 +169,37 @@ core test --suite full -q
 core eval cognition
 ```
 
-For targeted work, run the smallest relevant suite first, then `full` before
-merge when practical.
+Run the smallest relevant suite first.
+Run broader suites before merge when the change touches runtime, algebra, cognition, teaching, packs, or trust boundaries.
 
-Good tests protect:
+## Security and trust boundaries
 
-- versor closure
-- deterministic replay / trace hash stability
-- runtime surface contracts
-- exact memory/recall behavior
-- identity protection
-- reviewed correction safety
-- semantic pack loadability and deterministic ordering
-- eval/calibration determinism
-- hot-path performance semantics
-- explicit security trust boundaries
+Any change touching user-controlled text, files, dynamic imports, pack loading, validators, logs, or report output must state its trust boundary.
 
-Bad tests preserve private helper shapes, stale constructors, punctuation trivia
-outside documented contracts, or legacy behavior that contradicts the current
-architecture.
+Required defaults:
+- explicit opt-in for arbitrary execution
+- reject unsafe paths before filesystem access
+- centralize safe display/log handling
+- no hidden background execution
+- no broad filesystem mutation without explicit boundary and tests
 
-## PR Standard
+## PR checklist
 
-Every PR must answer:
+Before merge, answer:
 
 ```text
-What cognitive capability, performance property, or security boundary did this add or protect?
-What invariant proves it did not corrupt the field?
-Which CLI suite/eval proves the relevant lane?
-Did it avoid hidden normalization, stochastic fallback, approximate recall, and unreviewed mutation?
-If it touches user input, files, dynamic imports, or logs, what trust boundary was enforced?
+What capability, performance property, or security boundary did this add or protect?
+Which invariant proves the field remained valid?
+Which validation lane proves the change?
+Did this avoid hidden normalization, stochastic fallback, approximate recall, and unreviewed mutation?
+If it touched user input, files, dynamic imports, or logs, what trust boundary was enforced?
 ```
 
-Prefer small, load-bearing PRs.  Do not mix baseline fixes, feature work, and
-large reorganization unless the coupling is unavoidable.
+## Provider-file policy
 
-## Kernel Substrate / No-New-Legacy Rule
-
-After PR #829, the preferred math comprehension construction path is:
-
-```text
-raw problem text → KernelFacts → ProblemFrame → contract-backed derivation organs
-```
-
-- Use `generate/problem_frame_builder.py::build_problem_frame` for substrate-backed
-  fact extraction (scalars, units, hazards, process-frame candidates).
-- New derivation capabilities must consume ProblemFrame facts where the substrate can
-  represent the needed meaning.
-- New raw-prose/local-regex parsing inside a derivation organ requires an explicit
-  `LEGACY_EXCEPTION` comment and migration rationale.
-- Guard test: `tests/test_kernel_no_new_legacy_derivation_surfaces.py`.
-- Audit map: `docs/analysis/kernel-substrate-deprecation-audit-2026-06-18.md`.
-
-Do not add another isolated benchmark organ with a local prose parser.
-
-## Architecture in One Sentence
-
-Raw input becomes a closed versor field once; thought evolves through exact
-versor transitions and CGA recall; cognition is structured as intent,
-proposition graph, articulation target, deterministic realization, reviewed
-memory, eval/calibration replay, and traceable evidence.
+`CLAUDE.md`, `GEMINI.md`, and any future provider file must:
+- be short
+- point here as canonical
+- avoid duplicating architecture
+- avoid introducing provider-only truth
+- differ only where tool startup behavior genuinely requires it

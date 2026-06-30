@@ -1,4 +1,4 @@
-# CORE Agent Instructions for Claude
+# CORE Agent Instructions for Gemini
 
 Read this file before modifying the repository.
 
