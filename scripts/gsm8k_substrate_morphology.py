@@ -14,9 +14,9 @@ from generate.problem_frame_builder import (
     recognized_process_frame_names,
     recognized_scalar_surfaces,
     recognized_unit_surfaces,
-    surface_in_text,
 )
 from generate.problem_frame_contracts import assess_contracts, recommended_migration_target as contract_target
+from generate.problem_frame_extractors import surface_in_text
 from generate.process_frames import frame_by_name, lookup_frame
 from language_packs.loader import lookup_container
 from language_packs.scalar_equivalence import list_unsupported_surfaces
