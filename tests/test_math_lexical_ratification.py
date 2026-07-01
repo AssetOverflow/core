@@ -100,6 +100,7 @@ def test_apply_lexical_claim_writes_lemma(pack_copy: Path) -> None:
         "category": "drain_token",
         "aliases": [],
         "provenance": receipt.provenance,
+        "ratifier_kind": "cli",
     }
     lex = comprehension_lexicon.load_lexicon(pack_copy)
     resolved = comprehension_lexicon.lookup(lex, "widgets")

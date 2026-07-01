@@ -75,4 +75,3 @@ per-prompt, not against frozen hash values.
 - No relaxation of ADR-0075 guard rules.
 - No corpus mutation; relation-confirmation surfaces are reconstructed
   from mounted pack lemmas and semantic domains.
-

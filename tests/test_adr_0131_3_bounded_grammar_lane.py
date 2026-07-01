@@ -142,9 +142,19 @@ class TestOperationKindCoverage:
                 for op in graph.operations:
                     exercised_kinds.add(op.kind)
 
-        # The unknown resolution might also contain total summation (entity=None),
-        # but operations cover the 8 main kinds.
-        assert VALID_OPERATION_KINDS.issubset(exercised_kinds), (
-            f"VALID_OPERATION_KINDS {VALID_OPERATION_KINDS} not subset of "
+        expected_kinds = frozenset(
+            {
+                "add",
+                "subtract",
+                "transfer",
+                "multiply",
+                "divide",
+                "apply_rate",
+                "compare_additive",
+                "compare_multiplicative",
+            }
+        )
+        assert expected_kinds.issubset(exercised_kinds), (
+            f"expected_kinds {expected_kinds} not subset of "
             f"exercised kinds {exercised_kinds}"
         )

@@ -37,7 +37,7 @@ If an item is not applicable, the ADR must say why. Absence is not acceptable.
 
 ## Index Maintenance
 
-`docs/decisions/README.md` is the living reference matrix for ADR navigation. Every new ADR must update it in the same change set with:
+`docs/adr/README.md` is the living reference matrix for ADR navigation. Every new ADR must update it in the same change set with:
 
 - ADR number, title, and status;
 - cluster / chain membership when applicable;
@@ -51,7 +51,7 @@ This policy affects all future ADRs and all amendments to existing ADRs.
 This remediation batch specifically updates or audits:
 
 - ADRs: `ADR-0001`, `ADR-0027`, `ADR-0028`, `ADR-0029`, `ADR-0055`, `ADR-0056`, `ADR-0057`, `ADR-0200` through `ADR-0224`, and this `ADR-0225`.
-- Index / map artifacts: `docs/decisions/README.md`, `docs/analysis/adr-corpus-cohesion-dependency-map-2026-06-30.md`.
+- Index / map artifacts: `docs/adr/README.md`, `docs/analysis/adr-corpus-cohesion-dependency-map-2026-06-30.md`.
 - Safety / identity code surfaces: `packs/safety/loader.py`, `packs/safety/check.py`, `core/proposal_review/safety.py`, `chat/pack_resolver.py`.
 - Foundational / versor code surfaces: `vocab/manifold.py`, `core_ingest/manifold.py`.
 - Teaching / memory / epistemic code surfaces: `teaching/review.py`, `teaching/replay.py`, `teaching/proposals.py`, `teaching/promotion.py`, `teaching/supersede.py`, `teaching/contemplation.py`, `teaching/epistemic.py`, `teaching/discovery.py`.

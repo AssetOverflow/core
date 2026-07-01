@@ -315,6 +315,8 @@ def test_all_eight_operation_kinds_round_trip() -> None:
             "apply_rate",
             "compare_additive",
             "compare_multiplicative",
+            "fraction_portion",
+            "unit_partition",
         }
     )
 

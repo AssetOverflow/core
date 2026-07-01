@@ -27,7 +27,7 @@
   "tool": "core.semantic_derivation.verify",
   "trace": {
     "adr0184_pin": {
-      "corpus_sha": "58c2b219530e817e5eb4d0eda83b552767415139379b75b5aed1f76cb20ab5af",
+      "corpus_sha": "b04a9f31080b4fde15373f61ca9e89ab93cf5b18168ec6f9c5c4d28ce779bf3f",
       "status": "not_in_adr0184_corpus"
     },
     "ask": {
@@ -133,7 +133,7 @@
     "derivation_trace_sha": "368abca1932f3f61a566a5a4aae1d5f5dac61e525c7237595665eca5bd48b88d",
     "faithfulness_violations": []
   },
-  "trace_hash": "3c751beda82ca08cbafdc0932e0e868bc744507500b08dfd7f624dc017b5e5fc",
+  "trace_hash": "c355b1f4d4edb2b0e02b0f8f05214994eda0fb7c6cc954817e98148629c2cab0",
   "trace_summary": {
     "ask": {
       "attempted": true,

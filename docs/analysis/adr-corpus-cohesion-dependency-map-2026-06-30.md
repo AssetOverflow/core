@@ -6,8 +6,8 @@ Ground truth:
 
 - Local repository root: `/Users/kaizenpro/Projects/core`
 - Local branch / GitHub `main` SHA: `63464144c53f2499b1ea9e5bf3799e80c57a0b53`
-- GitHub tree verification used `gh api repos/AssetOverflow/core/contents...` for `/`, `/core`, `/core_ingest`, `/core-rs`, and `/docs/decisions`.
-- ADR-0200 exists as `docs/decisions/ADR-0200-expert-claim-reconciliation.md`.
+- GitHub tree verification used `gh api repos/AssetOverflow/core/contents...` for `/`, `/core`, `/core_ingest`, `/core-rs`, and `/docs/adr`.
+- ADR-0200 exists as `docs/adr/ADR-0200-expert-claim-reconciliation.md`.
 - Baseline lane `make test-fast` is red on current `main`: `54 failed, 10884 passed, 23 skipped, 912 deselected`.
 
 ## Map

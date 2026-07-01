@@ -92,4 +92,3 @@ modify or weaken their claims.
 - Gate credibility increases: promotions are recorded only when evidence and
   contract shape align.
 - Next move is explicit: lane-shape amendment ADR, then re-attempt promotion.
-

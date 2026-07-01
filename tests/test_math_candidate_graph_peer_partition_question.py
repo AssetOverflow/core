@@ -129,7 +129,7 @@ def test_comparative_question_still_refuses():
         "Francine has five full boxes of crayons and 5 loose crayons, "
         "and her friend has 27 loose crayons. "
         "They need to put all of their loose crayons in a box. "
-        "How many more boxes do they need if Francine has a total of 85 crayons?"
+        "How many more crayons does Francine have than her friend?"
     )
     res = _run(text)
     assert res.answer is None

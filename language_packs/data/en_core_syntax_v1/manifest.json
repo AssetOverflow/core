@@ -10,7 +10,7 @@
   "version": "1.0.0",
   "gate_engaged": true,
   "oov_policy": "tagged_fallback",
-  "definitional_layer": true,
+  "definitional_layer": false,
   "provenance": "foundation-curriculum:reviewed:2026-05-30",
   "glosses_checksum": "aebb2191739722d54c48fe10d10ab6bae2efb44bfd14f04ce72b6333a4a1ca98"
 }

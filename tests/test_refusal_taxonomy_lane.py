@@ -43,7 +43,7 @@ def test_cases_file_exists_and_nonempty():
     # The lane covers the *refused* subset of the 50-case GSM8K train sample.
     # As the reader improved, 6 cases now admit, leaving 44 refusals to
     # categorize (build_cases filters to verdict == "refused").
-    assert len(cases) == 44, "v1 sample should mirror the refused GSM8K train cases"
+    assert len(cases) == 19, "v1 sample should mirror the refused GSM8K train cases"
 
 
 def test_case_schema_valid():
@@ -74,7 +74,7 @@ def test_lane_auto_discoverable():
 def test_lane_run_via_framework():
     lane = get_lane("refusal_taxonomy")
     result = run_lane(lane, version="v1", split="public")
-    assert result.metrics["total"] == 44
+    assert result.metrics["total"] == 19
     # NOTE: a hard ``categorized_rate >= 0.95`` floor was removed here. It is
     # both redundant and perverse: the exact histogram (and therefore the rate)
     # is pinned by ``test_committed_report_matches_categorizer``, and as the

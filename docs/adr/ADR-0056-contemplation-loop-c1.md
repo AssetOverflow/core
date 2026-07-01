@@ -497,3 +497,13 @@ re-decision against my earlier instinct to land C2 first. Reasoning
 recorded in Call 3 above. Future sessions that re-encounter the
 question "should the review surface ship first?" can re-derive
 the no-answer from that record without re-arguing.
+
+## Governance Cross-Reference (ADR-0225)
+
+This contemplation loop ADR is governed by [ADR-0225](./ADR-0225-adr-corpus-hygiene.md):
+
+- Safety boundaries: contemplation probe execution (`teaching/contemplation.py`) is deterministic, read-only, and synchronous; off-limits to safety/identity mutation.
+- Versor closure: sub-question decomposition and evidence composition preserve exact geometric field invariants (`versor_condition(F) < 1e-6`).
+- Reconstruction-over-storage: contemplation probes derive evidence at runtime from pack manifests and exact recall indices.
+- Replay-equivalence: synchronous contemplation loops execute deterministically and produce byte-identical candidate structures across identical traces.
+- Mutation standing: contemplation loop outputs remain `SPECULATIVE` / unreviewed candidates until promoted via the reviewed teaching path.
