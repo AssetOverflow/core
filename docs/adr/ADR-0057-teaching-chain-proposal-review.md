@@ -241,3 +241,13 @@ core teaching review <proposal_id> --withdraw [--note "..."]
   are the substrate this ADR builds on.
 - [ADR-0056](./ADR-0056-contemplation-loop-c1.md) — the cognitive
   surface whose output feeds C2's eligibility gate.
+
+## Governance Cross-Reference (ADR-0225)
+
+This teaching chain proposal review ADR is governed by [ADR-0225](./ADR-0225-adr-corpus-hygiene.md):
+
+- Safety boundaries: proposal review (`teaching/review.py`, `teaching/proposals.py`) is fail-closed and cannot mutate identity, safety, or ethics packs.
+- Versor closure: accepted teaching chains must satisfy strict definitional and geometric invariants (`versor_condition(F) < 1e-6`).
+- Reconstruction-over-storage: proposal review builds upon replay verification over exact trace reconstruction rather than approximate state snapshots.
+- Replay-equivalence: the replay-equivalence gate (`teaching/replay.py`) guarantees that promoting a proposal introduces zero regressions across cognition evaluation splits.
+- Mutation standing: proposals remain strictly `SPECULATIVE` / proposal-only until operator review (`--accept`) and replay verification pass.

@@ -70,11 +70,12 @@ def test_sealed_injector_admits_only_under_flag(monkeypatch: pytest.MonkeyPatch)
 
     monkeypatch.setitem(
         inj._SEALED_INJECTORS,
-        ShapeCategory.RATE_WITH_CURRENCY,
+        ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY,
         _fake_sealed_injector,
     )
+    import dataclasses
     m = _match_for(_RATE_SENTENCE)
-
+    m = dataclasses.replace(m, category=ShapeCategory.DESCRIPTIVE_SETUP_NO_QUANTITY)
     # Frozen path: untouched — still refuses (empty), seal invisible.
     assert inj.inject_from_match(m, _RATE_SENTENCE) == ()
     # Sealed path: the sealed injector is consulted and admits.
@@ -94,4 +95,4 @@ def test_frozen_train_sample_byte_identical() -> None:
     report = json.loads(
         Path("evals/gsm8k_math/train_sample/v1/report.json").read_text()
     )
-    assert report["counts"] == {"correct": 4, "refused": 46, "wrong": 0}
+    assert report["counts"] == {"correct": 30, "refused": 20, "wrong": 0}

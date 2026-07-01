@@ -111,3 +111,13 @@ This ADR is satisfied when:
 - All three v1 packs ratify cleanly under the v1 schema with the `surface_preferences` block and load in production mode (`require_ratified=None`).
 - The cognition / runtime / smoke / formation / teaching suites are green at the same revision.
 - `tests/test_identity_packs.py` continues to pass (loader bounds checks, runtime wiring, ratification-script idempotency, tamper detection).
+
+## Governance Cross-Reference (ADR-0225)
+
+This identity surface wiring ADR is governed by [ADR-0225](./ADR-0225-adr-corpus-hygiene.md):
+
+- Safety boundaries: surface context shaping (`chat/surface.py`) is deterministic and immutable under user interaction.
+- Versor closure: surface shaping transforms do not violate geometric or manifold invariants (`versor_condition(F) < 1e-6`).
+- Reconstruction-over-storage: surface preferences are derived at runtime from pack manifests.
+- Replay-equivalence: exact surface string generation is reproducible across identical execution traces.
+- Mutation standing: surface preference blocks are proposal-only until ratified.

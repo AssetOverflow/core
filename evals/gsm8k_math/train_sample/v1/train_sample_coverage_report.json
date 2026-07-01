@@ -1,125 +1,125 @@
 {
   "adr": "0131.G",
   "metrics": {
-    "admission_rate": 0.08,
-    "admitted_solved": 4,
+    "admission_rate": 0.6,
+    "admitted_solved": 30,
     "admitted_wrong": 0,
     "cases_total": 50,
-    "refused": 46,
-    "refused_rate": 0.92,
+    "refused": 20,
+    "refused_rate": 0.4,
     "safety_rail_intact": true,
     "wrong_count_is_zero": true,
     "wrong_rate": 0.0
   },
   "per_case": [
     {
-      "actual_answer": null,
+      "actual_answer": 990.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0001",
       "expected_answer": 990.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Tina makes $18.00 an hour.' (category=rate_with_currency)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
-      "actual_unit": null,
+      "actual_answer": 15.0,
+      "actual_unit": "sections",
       "case_id": "gsm8k-train-sample-v1-0002",
       "expected_answer": 15.0,
       "expected_unit": "",
-      "outcome": "refused",
-      "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She splits it up into 25-foot sections.' (category=discrete_count_statement)",
-      "trace_hash": null
+      "outcome": "correct",
+      "realized_prose": "Jan buys 1000 more feet, raising the total to 1000. Jan splits 1000 feet into 25-feet sections, yielding 40 sections. Jan gives away 10 (1/4 of the prior total), leaving 30. Jan gives away 15 (1/2 of the prior total), leaving 15. Jan has 15 sections.",
+      "reason": "",
+      "trace_hash": "ff45e337639a5a3e07f0fb0574088290e41771f818180a79e7b61186104f6895"
     },
     {
-      "actual_answer": null,
+      "actual_answer": 864.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0003",
       "expected_answer": 864.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The local bookstore donated 48 boxes of erasers.' (category=discrete_count_statement)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 2000.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0004",
       "expected_answer": 2000.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Half of the kids are going to soccer camp, and 1/4 of the kids going to soccer camp are going to soccer camp in the morning.'",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 21.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0005",
       "expected_answer": 21.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: \"In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature.\"",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 480.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0006",
       "expected_answer": 480.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Mandy started reading books with only 8 pages when she was 6 years old.' (category=multiplicative_aggregation)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 2.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0007",
       "expected_answer": 2.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for question: 'How many more boxes do they need if Francine has a total of 85 crayons?'",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
-      "actual_unit": null,
+      "actual_answer": 9.0,
+      "actual_unit": "bracelets",
       "case_id": "gsm8k-train-sample-v1-0008",
       "expected_answer": 9.0,
       "expected_unit": "",
-      "outcome": "refused",
-      "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for question: 'If 50 beads are used to make one bracelet, how many bracelets will Marnie be able to make out of the beads she bought?'",
-      "trace_hash": null
+      "outcome": "correct",
+      "realized_prose": "Marnie has 450 beads. Marnie splits 450 beads into 50-bead bracelets, yielding 9 bracelets. Marnie has 9 bracelets.",
+      "reason": "",
+      "trace_hash": "798f0307c6d5d502ac233285d3a1189f3fc2e4d5fa4d9568b03770eb9ac02732"
     },
     {
-      "actual_answer": null,
+      "actual_answer": 185.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0009",
       "expected_answer": 185.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for question: 'If Jen has 150 ducks, how many total birds does she have?'",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 9.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0010",
       "expected_answer": 9.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Marion has 1/4 more than what Yun currently has, plus 7.'",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
@@ -130,7 +130,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup.' (category=rate_with_currency)",
+      "reason": "candidate_graph: no branch produced a solvable graph",
       "trace_hash": null
     },
     {
@@ -145,14 +145,14 @@
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 450.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0013",
       "expected_answer": 450.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel.' (category=multiplicative_aggregation)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
@@ -167,36 +167,36 @@
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 38.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0015",
       "expected_answer": 38.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours.' (category=discrete_count_statement)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 2.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0016",
       "expected_answer": 2.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs.\" (category=discrete_count_statement)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 800.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0017",
       "expected_answer": 800.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He\u2019s charging $50.00 per day or $500.00 for 14 days.' (category=temporal_aggregation)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
@@ -233,14 +233,14 @@
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 450.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0021",
       "expected_answer": 450.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He bench presses 15 pounds for 10 reps and does 3 sets.' (category=discrete_count_statement)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
@@ -251,7 +251,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish.' (category=rate_with_currency)",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She goes out fishing today and catches twice as many fish as she caught in total in the past four months.' (category=discrete_count_statement)",
       "trace_hash": null
     },
     {
@@ -277,15 +277,15 @@
       "trace_hash": "1f4cbf1a1329ca9ced05578dd27eba9f5a111590173b1e6b183ab56eac291b46"
     },
     {
-      "actual_answer": null,
-      "actual_unit": null,
+      "actual_answer": 1200.0,
+      "actual_unit": "strawberries",
       "case_id": "gsm8k-train-sample-v1-0025",
       "expected_answer": 1200.0,
       "expected_unit": "",
-      "outcome": "refused",
-      "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for question: \"If three of Lilibeth's friends pick the same amount as her, how many strawberries do Lilibeth and her friends pick in all?\"",
-      "trace_hash": null
+      "outcome": "correct",
+      "realized_prose": "Lilibeth has 300 strawberries. Lilibeth multiplies their strawberries by 4, reaching 1200. In total, they have 1200 strawberries.",
+      "reason": "",
+      "trace_hash": "350d19df4be5495709d96b00e535339a5105e6b80d888dd59172435eefac0146"
     },
     {
       "actual_answer": null,
@@ -299,14 +299,14 @@
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 3840.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0027",
       "expected_answer": 3840.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The number of followers he has on Twitter is half the number of followers he has on Instagram and Facebook combined.' (category=descriptive_setup_no_quantity)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
@@ -321,25 +321,25 @@
       "trace_hash": null
     },
     {
-      "actual_answer": null,
-      "actual_unit": null,
+      "actual_answer": 64.0,
+      "actual_unit": "dollars",
       "case_id": "gsm8k-train-sample-v1-0029",
       "expected_answer": 64.0,
       "expected_unit": "",
-      "outcome": "refused",
-      "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The cost of the keyboard was three times greater than the cost of the mouse.' (category=discrete_count_statement)",
-      "trace_hash": null
+      "outcome": "correct",
+      "realized_prose": "Mouse has 16 dollars. Keyboard has 3 times as many dollars as Mouse, giving Keyboard a total of 48 dollars. In total, they have 64 dollars.",
+      "reason": "",
+      "trace_hash": "2cb95548802d329baf1bfda1e7a7ea846ca4a75c1b8dc0c1bc5b5850e3d36235"
     },
     {
-      "actual_answer": null,
+      "actual_answer": 14.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0030",
       "expected_answer": 14.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for statement: 'It is a 2-hour drive each way.'",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
@@ -376,25 +376,25 @@
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 112.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0034",
       "expected_answer": 112.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He can run 40 yards within 5 seconds.' (category=discrete_count_statement)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 4.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0035",
       "expected_answer": 4.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: no admissible candidate for question: 'How many more apples would Martha need to give away to be left with only 4 of them?'",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
@@ -409,36 +409,36 @@
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 3.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0037",
       "expected_answer": 3.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Michael wants to lose 10 pounds by June.' (category=discrete_count_statement)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
-      "actual_unit": null,
+      "actual_answer": 400.0,
+      "actual_unit": "people",
       "case_id": "gsm8k-train-sample-v1-0038",
       "expected_answer": 400.0,
       "expected_unit": "",
-      "outcome": "refused",
-      "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'There are three times that many girls at a party being held on the second floor of the building.' (category=discrete_count_statement)",
-      "trace_hash": null
+      "outcome": "correct",
+      "realized_prose": "Ladies has 100 people. Girls has 3 times as many people as Ladies, giving Girls a total of 300 people. In total, they have 400 people.",
+      "reason": "",
+      "trace_hash": "cfd6504e6d62722bf23717846474bf7ead908e65c1ab56d87470ca1676863098"
     },
     {
-      "actual_answer": null,
+      "actual_answer": 20.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0039",
       "expected_answer": 20.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Orlando gained 5 pounds.' (category=discrete_count_statement)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
@@ -482,7 +482,7 @@
       "expected_unit": "",
       "outcome": "refused",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Her mother gave her an additional $4, and her father twice as much as her mother.' (category=currency_amount)",
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She saved $10 for this purpose.' (category=currency_amount)",
       "trace_hash": null
     },
     {
@@ -497,25 +497,25 @@
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 14.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0045",
       "expected_answer": 14.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Each survey has 10 questions.' (category=multiplicative_aggregation)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
-      "actual_answer": null,
+      "actual_answer": 15.0,
       "actual_unit": null,
       "case_id": "gsm8k-train-sample-v1-0046",
       "expected_answer": 15.0,
       "expected_unit": "",
-      "outcome": "refused",
+      "outcome": "correct",
       "realized_prose": null,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Half of the students are girls, the other half are boys.' (category=descriptive_setup_no_quantity)",
+      "reason": "fast-path",
       "trace_hash": null
     },
     {
@@ -567,30 +567,6 @@
   "refused_reasons_top": [
     {
       "count": 1,
-      "reason": "candidate_graph: no admissible candidate for question: \"If three of Lilibeth's friends pick the same amount as her, how "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for question: 'How many more apples would Martha need to give away to be left w"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for question: 'How many more boxes do they need if Francine has a total of 85 c"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for question: 'If 50 beads are used to make one bracelet, how many bracelets wi"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for question: 'If Jen has 150 ducks, how many total birds does she have?'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: \"In one hour, Addison mountain's temperature will decrease to 3/"
-    },
-    {
-      "count": 1,
       "reason": "candidate_graph: no admissible candidate for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner."
     },
     {
@@ -599,19 +575,11 @@
     },
     {
       "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Half of the kids are going to soccer camp, and 1/4 of the kids "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'It is a 2-hour drive each way.'"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: no admissible candidate for statement: 'Marion has 1/4 more than what Yun currently has, plus 7.'"
-    },
-    {
-      "count": 1,
       "reason": "candidate_graph: no admissible candidate for statement: 'Mark does a gig every other day for 2 weeks.'"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: no branch produced a solvable graph"
     },
     {
       "count": 1,
@@ -619,39 +587,7 @@
     },
     {
       "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: \"On Rudolph's car trip across town, he trav"
-    },
-    {
-      "count": 1,
       "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'After the first appointment, John paid $10"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Alexa has a lemonade stand where she sells"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Allison, a YouTuber, uploads 10 one-hour v"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Each survey has 10 questions.' (category=m"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Erica lives near a lake where most locals "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Half of the students are girls, the other "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He bench presses 15 pounds for 10 reps and"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He can run 40 yards within 5 seconds.' (ca"
     },
     {
       "count": 1,
@@ -671,14 +607,6 @@
     },
     {
       "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Her mother gave her an additional $4, and "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He\u2019s charging $50.00 per day or $500.00 fo"
-    },
-    {
-      "count": 1,
       "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'It cost $100,000 to open initially.' (cate"
     },
     {
@@ -695,23 +623,15 @@
     },
     {
       "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Mandy started reading books with only 8 pa"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Michael wants to lose 10 pounds by June.' "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Orlando gained 5 pounds.' (category=discre"
-    },
-    {
-      "count": 1,
       "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Rachel is 12 years old, and her grandfathe"
     },
     {
       "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She splits it up into 25-foot sections.' ("
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She goes out fishing today and catches twi"
+    },
+    {
+      "count": 1,
+      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She saved $10 for this purpose.' (category"
     },
     {
       "count": 1,
@@ -719,31 +639,7 @@
     },
     {
       "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The cost of the keyboard was three times g"
-    },
-    {
-      "count": 1,
       "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The guests eat all of 1 pan, and 75% of th"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The local bookstore donated 48 boxes of er"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The number of followers he has on Twitter "
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'There are three times that many girls at a"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Tina makes $18.00 an hour.' (category=rate"
-    },
-    {
-      "count": 1,
-      "reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Traveling from Manhattan to the Bronx, And"
     },
     {
       "count": 1,

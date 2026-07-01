@@ -82,3 +82,13 @@ This ADR is satisfied when:
 - `core pulse --identity precision_first_v1 "Q"` produces a different `identity_score.deviation_axes` than the default.
 - The identity-divergence eval can swap mock identities for real ones by referencing pack ids.
 - Tests covering all of the above pass in CI.
+
+## Governance Cross-Reference (ADR-0225)
+
+This identity-anchor ADR is governed by [ADR-0225](./ADR-0225-adr-corpus-hygiene.md):
+
+- Safety boundaries: establishes identity pack loading (`packs/identity/loader.py`); identity packs are immutable at runtime and isolated from user prompt mutation.
+- Versor closure: identity manifolds preserve exact geometric orientation invariants (`versor_condition(F) < 1e-6`).
+- Reconstruction-over-storage: identity axes are loaded into structured runtime manifolds from verified pack checksums.
+- Replay-equivalence: identity pack evaluation is deterministic and exact across runs.
+- Mutation standing: identity axes cannot be altered by conversational interaction or unreviewed teaching proposals.

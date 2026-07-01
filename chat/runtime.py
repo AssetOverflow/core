@@ -60,6 +60,10 @@ from core.engine_identity import (
     IdentityReconciliation,
     engine_identity_for_config,
     reconcile_loaded_identity,
+    compute_engine_identity,
+    DEFAULT_SAFETY_PACK,
+    DEFAULT_REGISTER_PACK,
+    DEFAULT_ANCHOR_LENS,
 )
 from recognition.anti_unifier import derive_recognizer
 from recognition.outcome import FeatureBundle
@@ -758,7 +762,14 @@ class ChatRuntime:
         # next checkpoint). ``_loaded_engine_identity`` stays "" at genesis.
         # ADR-0220: identity is the ratified PACKS only — the build revision is
         # provenance (manifest written_at_revision), not an identity input.
-        self._engine_identity: str = engine_identity_for_config(self.config)
+        pack_ids = {
+            "identity": self.identity_pack_id,
+            "safety": DEFAULT_SAFETY_PACK,
+            "ethics": self.ethics_pack_id,
+            "register": self.register_pack_id or DEFAULT_REGISTER_PACK,
+            "anchor_lens": self.anchor_lens_id or DEFAULT_ANCHOR_LENS,
+        }
+        self._engine_identity: str = compute_engine_identity(pack_ids)
         self._loaded_engine_identity: str = ""
         # CL — the persistent reviewed-learning proposal log. ``idle_tick()``
         # advances it during idle (proposal-only); it lives alongside the engine
@@ -2409,6 +2420,8 @@ class ChatRuntime:
         )
 
     def chat(self, text: str, max_tokens: int | None = None) -> ChatResponse:
+        self._last_plan_findings = ()
+        self._last_plan_metrics = None
         self._last_input_text = text  # W-013: store for explain_last_turn()
         tokens = self._tokenize(text)
         filtered = self._apply_oov_policy(tokens)

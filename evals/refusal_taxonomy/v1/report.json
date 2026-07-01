@@ -1,94 +1,10 @@
 {
   "cases": [
     {
-      "case_id": "gsm8k-train-sample-v1-0001",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Tina makes $18.00 an hour.' (category=rate_with_currency)",
-      "shape_category": "rate_with_currency",
-      "statement": "Tina makes $18.00 an hour."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0002",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She splits it up into 25-foot sections.' (category=discrete_count_statement)",
-      "shape_category": "unit_partition",
-      "statement": "She splits it up into 25-foot sections."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0004",
-      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Half of the kids are going to soccer camp, and 1/4 of the kids going to soccer camp are going to soccer camp in the morning.'",
-      "shape_category": "discrete_count_statement",
-      "statement": "Half of the kids are going to soccer camp, and 1/4 of the kids going to soccer camp are going to soccer camp in the morning."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0005",
-      "refusal_reason": "candidate_graph: no admissible candidate for statement: \"In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature.\"",
-      "shape_category": "fractional_rate_of_change",
-      "statement": "In one hour, Addison mountain's temperature will decrease to 3/4  of its temperature."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0006",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Mandy started reading books with only 8 pages when she was 6 years old.' (category=multiplicative_aggregation)",
-      "shape_category": "discrete_count_statement",
-      "statement": "Mandy started reading books with only 8 pages when she was 6 years old."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0007",
-      "refusal_reason": "candidate_graph: no admissible candidate for question: 'How many more boxes do they need if Francine has a total of 85 crayons?'",
-      "shape_category": "indefinite_quantity",
-      "statement": "How many more boxes do they need if Francine has a total of 85 crayons?"
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0008",
-      "refusal_reason": "candidate_graph: no admissible candidate for question: 'If 50 beads are used to make one bracelet, how many bracelets will Marnie be able to make out of the beads she bought?'",
-      "shape_category": "nested_question_target",
-      "statement": "If 50 beads are used to make one bracelet, how many bracelets will Marnie be able to make out of the beads she bought?"
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0009",
-      "refusal_reason": "candidate_graph: no admissible candidate for question: 'If Jen has 150 ducks, how many total birds does she have?'",
-      "shape_category": "nested_question_target",
-      "statement": "If Jen has 150 ducks, how many total birds does she have?"
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0010",
-      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Marion has 1/4 more than what Yun currently has, plus 7.'",
-      "shape_category": "comparative_with_unit",
-      "statement": "Marion has 1/4 more than what Yun currently has, plus 7."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0011",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Alexa has a lemonade stand where she sells lemonade for $2 for one cup.' (category=rate_with_currency)",
-      "shape_category": "rate_with_currency",
-      "statement": "Alexa has a lemonade stand where she sells lemonade for $2 for one cup."
-    },
-    {
       "case_id": "gsm8k-train-sample-v1-0012",
       "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He put all of them in his aquarium but his fish ate half of them.' (category=descriptive_setup_no_quantity)",
       "shape_category": "fractional_rate_of_change",
       "statement": "He put all of them in his aquarium but his fish ate half of them."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0013",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel.' (category=multiplicative_aggregation)",
-      "shape_category": "temporal_aggregation",
-      "statement": "Allison, a YouTuber, uploads 10 one-hour videos of food reviews each day to her channel."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0015",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours.' (category=discrete_count_statement)",
-      "shape_category": "comparative_with_unit",
-      "statement": "Traveling from Manhattan to the Bronx, Andrew rides the subway for 10 hours, takes the train and rides for twice as much time as the subway ride, and then bikes the remaining distance for 8 hours."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0016",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: \"On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs.\" (category=discrete_count_statement)",
-      "shape_category": "comparative_with_unit",
-      "statement": "On Rudolph's car trip across town, he traveled 2 more than 5 miles and encountered 3 less than 17 stop signs."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0017",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He’s charging $50.00 per day or $500.00 for 14 days.' (category=temporal_aggregation)",
-      "shape_category": "rate_with_currency",
-      "statement": "He’s charging $50.00 per day or $500.00 for 14 days."
     },
     {
       "case_id": "gsm8k-train-sample-v1-0019",
@@ -104,9 +20,9 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0022",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish.' (category=rate_with_currency)",
-      "shape_category": "rate_with_currency",
-      "statement": "Erica lives near a lake where most locals sell fish as their main source of income, earning $20 per kg of fish."
+      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She goes out fishing today and catches twice as many fish as she caught in total in the past four months.' (category=discrete_count_statement)",
+      "shape_category": "comparative_with_unit",
+      "statement": "She goes out fishing today and catches twice as many fish as she caught in total in the past four months."
     },
     {
       "case_id": "gsm8k-train-sample-v1-0023",
@@ -115,40 +31,16 @@
       "statement": "Cindy collected twice as many, and Rex collected half of Nicole and Cindy's combined total."
     },
     {
-      "case_id": "gsm8k-train-sample-v1-0025",
-      "refusal_reason": "candidate_graph: no admissible candidate for question: \"If three of Lilibeth's friends pick the same amount as her, how many strawberries do Lilibeth and her friends pick in all?\"",
-      "shape_category": "nested_question_target",
-      "statement": "If three of Lilibeth's friends pick the same amount as her, how many strawberries do Lilibeth and her friends pick in all?"
-    },
-    {
       "case_id": "gsm8k-train-sample-v1-0026",
       "refusal_reason": "candidate_graph: no admissible candidate for statement: 'Aaron and his brother Carson each saved up $40 to go to dinner.'",
       "shape_category": "currency_amount",
       "statement": "Aaron and his brother Carson each saved up $40 to go to dinner."
     },
     {
-      "case_id": "gsm8k-train-sample-v1-0027",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The number of followers he has on Twitter is half the number of followers he has on Instagram and Facebook combined.' (category=descriptive_setup_no_quantity)",
-      "shape_category": "uncategorized",
-      "statement": "The number of followers he has on Twitter is half the number of followers he has on Instagram and Facebook combined."
-    },
-    {
       "case_id": "gsm8k-train-sample-v1-0028",
       "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'It cost $100,000 to open initially.' (category=currency_amount)",
       "shape_category": "currency_amount",
       "statement": "It cost $100,000 to open initially."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0029",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'The cost of the keyboard was three times greater than the cost of the mouse.' (category=discrete_count_statement)",
-      "shape_category": "discrete_count_statement",
-      "statement": "The cost of the keyboard was three times greater than the cost of the mouse."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0030",
-      "refusal_reason": "candidate_graph: no admissible candidate for statement: 'It is a 2-hour drive each way.'",
-      "shape_category": "unit_partition",
-      "statement": "It is a 2-hour drive each way."
     },
     {
       "case_id": "gsm8k-train-sample-v1-0031",
@@ -169,40 +61,10 @@
       "statement": "Rachel is 12 years old, and her grandfather is 7 times her age."
     },
     {
-      "case_id": "gsm8k-train-sample-v1-0034",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'He can run 40 yards within 5 seconds.' (category=discrete_count_statement)",
-      "shape_category": "temporal_aggregation",
-      "statement": "He can run 40 yards within 5 seconds."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0035",
-      "refusal_reason": "candidate_graph: no admissible candidate for question: 'How many more apples would Martha need to give away to be left with only 4 of them?'",
-      "shape_category": "indefinite_quantity",
-      "statement": "How many more apples would Martha need to give away to be left with only 4 of them?"
-    },
-    {
       "case_id": "gsm8k-train-sample-v1-0036",
       "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She studied for 2 hours on Wednesday and three times as long on Thursday.' (category=discrete_count_statement)",
       "shape_category": "temporal_aggregation",
       "statement": "She studied for 2 hours on Wednesday and three times as long on Thursday."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0037",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Michael wants to lose 10 pounds by June.' (category=discrete_count_statement)",
-      "shape_category": "discrete_count_statement",
-      "statement": "Michael wants to lose 10 pounds by June."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0038",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'There are three times that many girls at a party being held on the second floor of the building.' (category=discrete_count_statement)",
-      "shape_category": "indefinite_quantity",
-      "statement": "There are three times that many girls at a party being held on the second floor of the building."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0039",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Orlando gained 5 pounds.' (category=discrete_count_statement)",
-      "shape_category": "discrete_count_statement",
-      "statement": "Orlando gained 5 pounds."
     },
     {
       "case_id": "gsm8k-train-sample-v1-0040",
@@ -218,27 +80,15 @@
     },
     {
       "case_id": "gsm8k-train-sample-v1-0043",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Her mother gave her an additional $4, and her father twice as much as her mother.' (category=currency_amount)",
+      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'She saved $10 for this purpose.' (category=currency_amount)",
       "shape_category": "currency_amount",
-      "statement": "Her mother gave her an additional $4, and her father twice as much as her mother."
+      "statement": "She saved $10 for this purpose."
     },
     {
       "case_id": "gsm8k-train-sample-v1-0044",
       "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'John invests in a bank and gets 10% simple interest.' (category=discrete_count_statement)",
       "shape_category": "uncategorized",
       "statement": "John invests in a bank and gets 10% simple interest."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0045",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Each survey has 10 questions.' (category=multiplicative_aggregation)",
-      "shape_category": "multiplicative_aggregation",
-      "statement": "Each survey has 10 questions."
-    },
-    {
-      "case_id": "gsm8k-train-sample-v1-0046",
-      "refusal_reason": "candidate_graph: recognizer matched but produced no injection for statement: 'Half of the students are girls, the other half are boys.' (category=descriptive_setup_no_quantity)",
-      "shape_category": "uncategorized",
-      "statement": "Half of the students are girls, the other half are boys."
     },
     {
       "case_id": "gsm8k-train-sample-v1-0047",
@@ -268,26 +118,26 @@
   "lane": "refusal_taxonomy",
   "metrics": {
     "by_category": {
-      "comparative_with_unit": 5,
+      "comparative_with_unit": 3,
       "conditional_quantity": 0,
       "currency_amount": 4,
       "descriptive_setup_no_quantity": 0,
-      "discrete_count_statement": 11,
-      "fractional_rate_of_change": 3,
-      "indefinite_quantity": 3,
-      "multiplicative_aggregation": 1,
-      "nested_question_target": 3,
-      "rate_with_currency": 4,
-      "temporal_aggregation": 5,
-      "uncategorized": 3,
-      "unit_partition": 2
+      "discrete_count_statement": 6,
+      "fractional_rate_of_change": 2,
+      "indefinite_quantity": 0,
+      "multiplicative_aggregation": 0,
+      "nested_question_target": 0,
+      "rate_with_currency": 0,
+      "temporal_aggregation": 3,
+      "uncategorized": 1,
+      "unit_partition": 0
     },
-    "case_digest": "f352d0bd4d49b9f48d71b5d4f44443ae68e78d721352fa891d3002ec72445dbb",
-    "categorized_rate": 0.9318181818181818,
-    "total": 44,
-    "uncategorized": 3
+    "case_digest": "d8886a09e1c7f3741b5fe3d439c9823914ac49f329b4603c8cd47a4db9665687",
+    "categorized_rate": 0.9473684210526315,
+    "total": 19,
+    "uncategorized": 1
   },
-  "source_cases": "/Users/kaizenpro/Projects/core/.claude/worktrees/tender-raman-028946/evals/refusal_taxonomy/public/v1/cases.jsonl",
+  "source_cases": "/Users/kaizenpro/Projects/core/evals/refusal_taxonomy/public/v1/cases.jsonl",
   "split": "public",
   "version": "v1"
 }

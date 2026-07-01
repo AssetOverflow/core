@@ -63,7 +63,7 @@ def test_trace_practice_route_returns_missing_evidence_for_legacy_entry() -> Non
     assert data["schema_version"] == "practice_evidence_v1"
     assert data["turn_id"] == 7
     assert data["status"] == "missing_evidence"
-    assert data["record_kind"] == "none"
+    assert data["record_kind"] is None
     assert data["diagnostic_only"] is True
     assert data["serving_allowed"] is False
     assert data["mutation_allowed"] is False

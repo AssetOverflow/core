@@ -159,3 +159,13 @@ This ADR is satisfied when:
 `core_safety_axes_v1` → `ee1249acdf8c273aeb656d803c37ef915e536d85f177f5cc18c6e2f6c995ce29`
 
 Re-running `python scripts/ratify_safety_pack.py` on an unchanged pack is idempotent; re-running after editing the boundary set produces a new SHA which must be committed alongside.
+
+## Governance Cross-Reference (ADR-0225)
+
+This safety-pack ADR is governed by [ADR-0225](./ADR-0225-adr-corpus-hygiene.md):
+
+- Safety boundaries: establishes core safety pack loading (`packs/safety/loader.py`), fail-closed semantics, and immutability.
+- Versor closure: safety boundary evaluation and composition maintain strict manifold geometric constraints (`versor_condition(F) < 1e-6`).
+- Reconstruction-over-storage: safety boundaries are loaded from verified pack manifests rather than stored runtime state.
+- Replay-equivalence: safety checks and boundary composition execute deterministically across identical traces.
+- Mutation standing: safety boundaries are strictly read-only at runtime and cannot be overridden by unreviewed learning or user prompts.

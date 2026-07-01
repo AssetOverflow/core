@@ -384,3 +384,13 @@ criteria, expressed up front so later ADRs had a contract:
 The non-negotiable field invariant (`versor_condition(F) < 1e-6`)
 is preserved by construction at every phase — none of this work
 touches the algebra path.
+
+## Governance Cross-Reference (ADR-0225)
+
+This inter-session memory discovery ADR is governed by [ADR-0225](./ADR-0225-adr-corpus-hygiene.md):
+
+- Safety boundaries: candidate discovery (`teaching/discovery.py`) is strictly passive and proposal-only; off-limits to identity, safety, and ethics pack mutation.
+- Versor closure: candidate generation and promotion do not modify algebra or field representation invariants (`versor_condition(F) < 1e-6`).
+- Reconstruction-over-storage: promoted memories append to structured JSONL corpora with explicit typed provenance.
+- Replay-equivalence: candidates emit deterministically from turn traces, and promotion requires non-regressing replay verification on eval lanes.
+- Mutation standing: discovery candidates start unreviewed (`SPECULATIVE` / proposal-only) and only enter active recall upon explicit review and replay verification.

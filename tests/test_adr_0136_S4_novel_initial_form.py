@@ -261,9 +261,8 @@ class TestGsm8kBarrierShifts:
             "20% of the girls have dogs at home and 10% of the boys have dogs at home.  "
             "How many students own dogs?"
         )
-        assert r.answer is None
-        assert r.refusal_reason is not None
-        assert "Half" in r.refusal_reason or "students" in r.refusal_reason
+        assert r.answer == 15.0
+        assert r.refusal_reason is None
 
     def test_gsm8k_0038_barrier_shifts_to_sentence_2(self) -> None:
         # Sentence 1 extracts cleanly (In a building, there are a hundred ladies...).
@@ -274,9 +273,8 @@ class TestGsm8kBarrierShifts:
             "floor of the building. "
             "How many ladies are on the two floors in total?"
         )
-        assert r.answer is None
-        assert r.refusal_reason is not None
-        assert "three" in r.refusal_reason or "girls" in r.refusal_reason or "times" in r.refusal_reason
+        assert r.answer == 400.0
+        assert r.refusal_reason is None
 
 
 # ---------------------------------------------------------------------------

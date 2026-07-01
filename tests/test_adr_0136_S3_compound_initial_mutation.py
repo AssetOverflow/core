@@ -121,10 +121,8 @@ class TestGsm8k0010BarrierShift:
             "Marion has 1/4 more than what Yun currently has, plus 7. "
             "How many paperclips does Marion have?"
         )
-        assert r.answer is None
-        assert r.refusal_reason is not None
-        assert "Marion" in r.refusal_reason
-        assert "1/4" in r.refusal_reason
+        assert r.answer == 9.0
+        assert r.refusal_reason is None
 
 
 class TestCrossLaneRegression:

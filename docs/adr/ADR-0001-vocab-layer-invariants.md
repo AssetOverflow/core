@@ -57,5 +57,14 @@ the vocabulary must live in that space by algebraic proof, not by convention.
 - **Soft warning instead of hard raise:** Rejected. A warning that can be
   ignored is not an invariant.
 - **Normalize silently on insert:** Rejected. Silent normalization hides the
-  fact that the caller passed something invalid. The error message is the
   documentation at the point of failure.
+
+## Governance Cross-Reference (ADR-0225)
+
+This foundational ADR is governed by [ADR-0225](./ADR-0225-adr-corpus-hygiene.md):
+
+- Safety boundaries: no direct interaction with safety or identity packs; defines the geometric manifold underlying token representation.
+- Versor closure: establishes the foundational `versor_condition(F) < 1e-6` requirement for all vocabulary representations.
+- Reconstruction-over-storage: stores normalized Cl(4,1) versor points rather than raw embedding vectors.
+- Replay-equivalence: exact CGA inner product nearest lookup ensures deterministic recall without approximate nearest neighbor drift.
+- Mutation standing: vocabulary manifold updates are governed by explicit construction boundaries (`vocab/manifold.py`).
